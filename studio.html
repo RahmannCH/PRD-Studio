@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio — Wawancara 7 Langkah sampai Prompt, PRD Studio</title>
+<meta name="description" content="Jawab 7 langkah wawancara produk, terima PRD markdown, roadmap 4 fase, diagram Mermaid, dan 10 prompt eksekusi berantai. Tersimpan lokal di browser.">
+<meta name="theme-color" content="#0B132B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B132B'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='16' font-weight='bold' fill='%2348CAE4' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem('prd_studio_theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/studio.css">
+<link rel="stylesheet" href="css/print.css" media="print">
+</head>
+<body>
+<a class="skip" href="#wizard">Lewati ke wizard</a>
+<div class="pwa-banner" id="offlineBanner" role="status" hidden>Kamu sedang offline. Semua fitur lokal tetap jalan; font dan diagram mungkin tampil dari cache.</div>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brandmark" href="index.html" aria-label="PRD Studio beranda"><span class="brandmark-mark" aria-hidden="true">P</span><span>PRD Studio<small>Wawancara ide, PRD, roadmap, prompt</small></span></a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav" aria-label="Navigasi utama">
+      <a href="index.html">Beranda</a>
+      <a href="studio.html" aria-current="page">Studio</a>
+      <a href="#riwayat">Riwayat</a>
+      <a href="#pengaturan">Pengaturan</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">Tema: Gelap</button>
+      <a class="btn btn-primary btn-sm" href="#hasil">Lihat hasil</a>
+    </nav>
+  </div>
+</header>
+
+<noscript><div class="wrap noscript-note"><p class="err show">Studio butuh JavaScript. Semua proses wawancara dan generator berjalan di browser, tanpa server.</p></div></noscript>
+
+<main class="wrap studio">
+  <h1 class="sr-only">Studio PRD, wawancara 7 langkah sampai prompt siap eksekusi</h1>
+
+  <div class="proj-switch" role="group" aria-label="Pengelolaan proyek">
+    <label class="sr-only" for="projSelect">Pilih proyek</label>
+    <select autocomplete="off" class="proj-select" id="projSelect"></select>
+    <button type="button" id="projNew">Proyek baru</button>
+    <button type="button" id="projDup">Duplikat</button>
+    <button type="button" id="projRen">Ganti nama</button>
+    <button type="button" id="projDel" class="danger">Hapus proyek</button>
+    <button type="button" id="projImport">Impor .json</button>
+    <input autocomplete="off" type="file" id="projImportFile" accept="application/json,.json" hidden>
+    <span class="autosave" id="projMeta" role="status"></span>
+  </div>
+
+  <div class="studio-grid">
+    <section class="card neu" id="wizard" aria-label="Wizard 7 langkah" tabindex="-1">
+      <p class="step-meta" id="stepMeta" aria-live="polite">Langkah 1 dari 7</p>
+      <div class="progress" id="progress" aria-hidden="true"><i class="now"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="readiness" aria-live="polite" aria-atomic="true">
+        <div class="readiness-track"><div class="readiness-fill" id="readyFill"></div></div>
+        <span class="readiness-score" id="readyScore">Skor 0</span>
+      </div>
+      <p class="readiness-tip" id="readyTip">Isi nama dan masalah untuk menaikkan skor.</p>
+      <ul class="rubric" id="rubric" aria-label="Rincian skor"></ul>
+      <div class="err" id="formErr" role="alert"></div>
+
+      <div class="step" data-step="1">
+        <h2 id="step1Title">Apa yang mau dibikin dan masalah apa yang diselesaikan</h2>
+        <p class="hint">Jawab dengan kalimat sendiri. Tidak perlu rapi, yang penting jujur. <span aria-hidden="true">Ctrl+Enter</span> untuk lanjut cepat.</p>
+        <button type="button" class="btn btn-ghost btn-sm" id="ideBtn" hidden>Punya ide? Isi draft dari ide</button>
+        <div class="field"><label for="productName">Nama produk</label><input type="text" id="productName" placeholder="Contoh: Kasir Warung Pintar" autocomplete="off" aria-describedby="productNameHint"><small id="productNameHint">Minimal 3 karakter. Dipakai sebagai judul PRD dan nama file.</small></div>
+        <div class="row2">
+          <div class="field"><label for="productType">Jenis produk</label>
+            <select autocomplete="off" id="productType"><option value="Aplikasi web">Aplikasi web</option><option value="Aplikasi mobile">Aplikasi mobile</option><option value="Landing page">Landing page</option><option value="Dashboard internal">Dashboard internal</option><option value="Marketplace">Marketplace</option></select>
+          </div>
+          <div class="field"><label for="industry">Industri (penyesuaikan PRD)</label>
+            <select autocomplete="off" id="industry"><option value="Umum / belum tentu">Umum / belum tentu</option><option value="Retail &amp; F&B">Retail &amp; F&amp;B</option><option value="Jasa &amp; agency">Jasa &amp; agency</option><option value="SaaS internal">SaaS internal</option><option value="Marketplace &amp; konten">Marketplace &amp; konten</option><option value="Layanan publik &amp; klinik">Layanan publik &amp; klinik</option></select>
+          </div>
+        </div>
+        <div class="field"><label for="problem">Masalah utama yang diselesaikan</label><textarea autocomplete="off" id="problem" placeholder="Contoh: Pemilik warung mencatat transaksi di buku, sering hilang dan sulit rekap harian" aria-describedby="problemHint"></textarea><small id="problemHint">Minimal 20 karakter. Hindari kata samar seperti segera atau cepat tanpa angka.</small></div>
+        <div class="field"><label for="whyNow">Kenapa harus dibangun sekarang</label><textarea autocomplete="off" id="whyNow" placeholder="Contoh: Ada 20 warung mitra menunggu versi digital bulan depan"></textarea></div>
+      </div>
+
+      <div class="step" data-step="2" hidden>
+        <h2>Siapa penggunanya dan di mana dijalankan</h2>
+        <p class="hint">Satu persona utama lebih baik daripada tiga yang samar.</p>
+        <div class="field"><label for="primaryUser">Pengguna utama</label><input autocomplete="off" type="text" id="primaryUser" placeholder="Contoh: Ibu pemilik warung usia 35-50, pakai HP Android RAM kecil"></div>
+        <div class="field"><span class="field-label" id="platformLabel">Platform</span><div class="chips" id="platformChips" role="group" aria-labelledby="platformLabel">
+          <button type="button" class="chip" data-val="Web responsif" aria-pressed="true">Web responsif</button>
+          <button type="button" class="chip" data-val="Android" aria-pressed="false">Android</button>
+          <button type="button" class="chip" data-val="iOS" aria-pressed="false">iOS</button>
+          <button type="button" class="chip" data-val="Desktop" aria-pressed="false">Desktop</button>
+        </div></div>
+        <div class="field"><label for="roles">Peran pengguna (satu per baris)</label><textarea autocomplete="off" id="roles" placeholder="Pemilik&#10;Kasir&#10;Pelanggan (lihat struk)"></textarea></div>
+      </div>
+
+      <div class="step" data-step="3" hidden>
+        <h2>Fitur wajib ada dan yang jelas tidak dikerjakan</h2>
+        <p class="hint">Minimal 3 Must have. Tulis satu fitur per baris. Ini yang mengunci scope PRD.</p>
+        <div class="field"><label for="mustHave">Must have (wajib di v1)</label><textarea autocomplete="off" id="mustHave" placeholder="Catat transaksi offline&#10;Cetak struk thermal&#10;Rekap harian otomatis" aria-describedby="mustHaveHint"></textarea><small id="mustHaveHint">Tambah kata kerja dan objek yang jelas. Contoh baik: Cetak struk 58mm dalam 2 detik.</small></div>
+        <div class="field"><label for="shouldHave">Should have (kalau sempat)</label><textarea autocomplete="off" id="shouldHave" placeholder="Grafik mingguan&#10;Export Excel"></textarea></div>
+        <div class="field"><label for="wontHave">Won't have (tegas di luar scope)</label><textarea autocomplete="off" id="wontHave" placeholder="Tidak ada pembayaran online di v1&#10;Tidak ada multi cabang"></textarea></div>
+      </div>
+
+      <div class="step" data-step="4" hidden>
+        <h2>Alur utama dan struktur layar</h2>
+        <p class="hint">Ceritakan alur senang dan alur gagal. Keduanya masuk ke PRD dan diagram.</p>
+        <div class="field"><label for="mainFlow">Alur utama (langkah 1, 2, 3)</label><textarea autocomplete="off" id="mainFlow" placeholder="1 Buka kasir, 2 input barang, 3 bayar, 4 struk keluar"></textarea></div>
+        <div class="field"><label for="failFlow">Kalau gagal bagaimana</label><textarea autocomplete="off" id="failFlow" placeholder="Contoh: Listrik mati, data tersimpan lokal lalu sinkron saat online"></textarea></div>
+        <div class="field"><label for="navStructure">Struktur navigasi atau menu</label><textarea autocomplete="off" id="navStructure" placeholder="Beranda, Kasir, Stok, Laporan, Pengaturan"></textarea></div>
+      </div>
+
+      <div class="step" data-step="5" hidden>
+        <h2>Tampilan, layout, visual, dan audio</h2>
+        <p class="hint">Bagian ini yang membuat PRD-mu beda dari template generik.</p>
+        <div class="row2">
+          <div class="field"><label for="styleDirection">Gaya visual</label><select autocomplete="off" id="styleDirection"><option value="Bersih profesional terang">Bersih profesional terang</option><option value="Dark navy + kaca tipis">Dark navy + kaca tipis</option><option value="Playful cerah">Playful cerah</option><option value="Editorial minimal">Editorial minimal</option></select></div>
+          <div class="field"><label for="layoutPref">Layout utama</label><select autocomplete="off" id="layoutPref"><option value="Satu layar kasir fokus">Satu layar kasir fokus</option><option value="Sidebar dashboard">Sidebar dashboard</option><option value="Tab bawah mobile">Tab bawah mobile</option><option value="Landing satu halaman">Landing satu halaman</option></select></div>
+        </div>
+        <div class="field"><label for="visualNeeds">Kebutuhan visual dan ilustrasi</label><textarea autocomplete="off" id="visualNeeds" placeholder="Contoh: Ikon besar untuk jari, foto produk dari HP, tanpa ilustrasi stok"></textarea></div>
+        <div class="field"><span class="field-label" id="audioLabel">Kebutuhan audio</span><div class="chips" id="audioChips" role="group" aria-labelledby="audioLabel">
+          <button type="button" class="chip" data-val="Tanpa audio" aria-pressed="true">Tanpa audio</button>
+          <button type="button" class="chip" data-val="Bunyi klik kasir (SFX)" aria-pressed="false">Bunyi klik kasir</button>
+          <button type="button" class="chip" data-val="Notifikasi suara" aria-pressed="false">Notifikasi suara</button>
+          <button type="button" class="chip" data-val="BGM lembut" aria-pressed="false">BGM lembut</button>
+        </div></div>
+      </div>
+
+      <div class="step" data-step="6" hidden>
+        <h2>Batasan teknis dan target kualitas</h2>
+        <p class="hint">Tulis sejujurnya. Target tanpa angka akan ditandai sebagai gap.</p>
+        <div class="row2">
+          <div class="field"><label for="stackPref">Stack pilihan</label><select autocomplete="off" id="stackPref"><option value="HTML CSS JS vanilla">HTML CSS JS vanilla</option><option value="Next.js + Tailwind">Next.js + Tailwind</option><option value="Flutter">Flutter</option><option value="Belum tahu, minta saran">Belum tahu, minta saran</option></select></div>
+          <div class="field"><label for="integrations">Integrasi (satu per baris)</label><textarea autocomplete="off" id="integrations" placeholder="Printer thermal XPrinter&#10;WhatsApp untuk kirim struk"></textarea></div>
+        </div>
+        <div class="field"><label for="nfr">Target non fungsional</label><textarea autocomplete="off" id="nfr" placeholder="Buka di HP RAM 2GB di bawah 3 detik, bisa offline, PIN untuk kasir" aria-describedby="nfrHint"></textarea><small id="nfrHint">Contoh baik menyebut angka: di bawah 3 detik, 100 persen offline tersimpan.</small></div>
+        <div class="field"><label for="successMetrics">Metrik sukses (opsional, satu per baris)</label><textarea autocomplete="off" id="successMetrics" placeholder="Checkout selesai di bawah 3 menit&#10;Nol order hilang saat sinkron" aria-describedby="metricsHint"></textarea><small id="metricsHint">Kosongkan untuk memakai metrik baku sesuai jenis produk.</small></div>
+      </div>
+
+      <div class="step" data-step="7" hidden>
+        <h2>Periksa skor lalu susun</h2>
+        <p class="hint">Di bawah 60, tombol Susun di hasil akan menahan dan memberi perbaikan.</p>
+        <div class="live-box" id="reviewBox" tabindex="0" aria-label="Ringkasan jawaban untuk review">Ringkasan akan muncul di sini.</div>
+        <ul class="gap-list" id="reviewGaps" role="status"></ul>
+        <p class="gap-clear" id="reviewClear">Semua gap tertutup. Skor siap.</p>
+      </div>
+
+      <div class="wizard-nav">
+        <button class="btn btn-ghost" id="backBtn" type="button">Kembali</button>
+        <button class="btn btn-primary" id="nextBtn" type="button">Lanjut</button>
+      </div>
+      <p class="autosave" id="autosaveNote" role="status" aria-live="polite">Belum ada perubahan.</p>
+    </section>
+
+    <aside class="card live" aria-label="Ringkasan live">
+      <h3>Arah PRD yang terbentuk</h3>
+      <div class="live-box" id="liveBox" tabindex="0">Isi langkah 1 untuk melihat arah.</div>
+      <ul class="gap-list" id="liveGaps" role="status" aria-live="polite"></ul>
+      <p class="gap-clear" id="liveClear">Belum ada gap. Jawabanmu rapi.</p>
+      <div class="row2 aside-actions">
+        <button class="btn btn-ghost btn-sm" id="resetBtn" type="button">Hapus jawaban</button>
+        <button class="btn btn-ghost btn-sm" id="fillSampleBtn" type="button">Isi contoh warung</button>
+      </div>
+    </aside>
+  </div>
+
+    <section class="card neu" id="hasil" aria-labelledby="hasilTitle" tabindex="-1" data-title="Hasil">
+    <div class="hasil-head">
+      <h2 id="hasilTitle">Hasil: PRD, Roadmap, Diagram, Prompt</h2>
+      <p>Tekan Susun, lalu pindah tab. Skor dan gap tampil di atas dokumen.</p>
+      <div class="gen-row">
+        <button class="btn btn-accent" id="generateBtn" type="button">Susun PRD, roadmap, dan prompt</button>
+        <span class="loading" id="genStatus" role="status" aria-live="polite"></span>
+        <span class="score-badge" id="scoreBadge"></span>
+      </div>
+    </div>
+    <ul class="result-gaps" id="resultGaps" aria-label="Gap hasil susunan"></ul>
+    <p class="result-gaps-clear" id="resultGapsClear">Semua gap tertutup. Tidak ada perbaikan tersisa.</p>
+    <div class="tabs" role="tablist" aria-label="Tab hasil">
+      <button class="tab" type="button" role="tab" data-tab="prd" aria-selected="true" id="tab-prd" aria-controls="out-prd" tabindex="0">PRD markdown</button>
+      <button class="tab" type="button" role="tab" data-tab="roadmap" aria-selected="false" id="tab-roadmap" aria-controls="out-roadmap" tabindex="-1">Roadmap</button>
+      <button class="tab" type="button" role="tab" data-tab="diagram" aria-selected="false" id="tab-diagram" aria-controls="out-diagram" tabindex="-1">Diagram</button>
+      <button class="tab" type="button" role="tab" data-tab="prompt" aria-selected="false" id="tab-prompt" aria-controls="out-prompt" tabindex="-1">Prompt P0-P9</button>
+    </div>
+    <div class="output" id="out-prd" role="tabpanel" aria-labelledby="tab-prd" tabindex="0">
+      <div class="toc" id="prdToc" aria-label="Daftar isi PRD"></div>
+      <div id="prdSections"><p class="empty">Belum ada hasil. Selesaikan 7 langkah lalu tekan Susun.</p></div>
+      <div class="output-actions">
+        <button class="btn btn-primary btn-sm" data-act="copy-prd" type="button" disabled>Salin PRD</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-prd" type="button" disabled>Unduh .md</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-bab" type="button" disabled>Unduh semua (.md)</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-json" type="button" disabled>Unduh .json</button>
+        <button class="btn btn-ghost btn-sm" data-act="print" type="button" disabled>Cetak / PDF</button>
+        <button class="btn btn-ghost btn-sm" data-act="ai-polish" type="button" disabled>Rapikan dengan AI</button>
+      </div>
+      <p class="action-hint" id="actionHint">Tombol di atas aktif setelah kamu menekan Susun.</p>
+    </div>
+    <div class="output" id="out-roadmap" role="tabpanel" aria-labelledby="tab-roadmap" tabindex="0" hidden>
+      <div id="roadmapDiv"><p class="empty">Roadmap akan muncul setelah kamu menekan Susun.</p></div>
+      <div class="output-actions"><button class="btn btn-ghost btn-sm" data-act="dl-roadmap-csv" type="button" disabled>Unduh CSV roadmap</button></div>
+    </div>
+    <div class="output" id="out-diagram" role="tabpanel" aria-labelledby="tab-diagram" tabindex="0" hidden>
+      <div id="diagramDiv"><p class="empty">Diagram use case, ERD, dan flowchart akan muncul setelah kamu menekan Susun. Render Mermaid butuh koneksi sekali, kode sumber tetap tersimpan offline.</p></div>
+      <div class="output-actions"><button class="btn btn-ghost btn-sm" data-act="copy-mermaid" type="button" disabled>Salin kode Mermaid</button></div>
+    </div>
+    <div class="output" id="out-prompt" role="tabpanel" aria-labelledby="tab-prompt" tabindex="0" hidden>
+      <div class="prompt-vars">
+        <fieldset class="pv">
+          <legend>Variabel prompt</legend>
+          <label for="varRole">Peran AI</label>
+          <input autocomplete="off" type="text" id="varRole" value="senior engineer dan PM" placeholder="senior engineer dan PM">
+          <label for="varTone">Gaya jawaban</label>
+          <input autocomplete="off" type="text" id="varTone" value="ringkas dan biner" placeholder="ringkas dan biner">
+          <label for="varTarget">Target pembaca</label>
+          <input autocomplete="off" type="text" id="varTarget" value="tim engineering lokal" placeholder="tim engineering lokal">
+          <label for="varFormat">Format output</label>
+          <input autocomplete="off" type="text" id="varFormat" value="Markdown" placeholder="Markdown">
+        </fieldset>
+      </div>
+      <div id="promptDiv"><p class="empty">10 prompt akan muncul setelah kamu menekan Susun.</p></div>
+      <div class="output-actions">
+        <button class="btn btn-ghost btn-sm" data-act="copy-all-prompt" type="button" disabled>Salin semua prompt terbuka</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-prompts" type="button" disabled>Unduh PROMPTS.md</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card neu" id="pengaturan" aria-labelledby="pengaturanTitle">
+    <h2 id="pengaturanTitle" class="h-sm">Pengaturan AI (opsional)</h2>
+    <p class="settings-note">Generator utama jalan penuh tanpa AI. Isi bagian ini hanya jika kamu mau tombol "Rapikan dengan AI" memakai endpoint OpenAI-compatible milikmu. Key disimpan TIDAK terenkripsi di localStorage browser ini (kunci <code class="inline">prd_studio_llm</code>), jadi pakai key khusus, bukan key produksi utama. Key hanya dikirim ke endpoint yang kamu isi.</p>
+    <div class="settings-grid">
+      <div class="row2">
+        <div class="field"><label for="llmBaseUrl">Endpoint base URL</label><input type="text" id="llmBaseUrl" placeholder="https://api.openai.com/v1" autocomplete="off"></div>
+        <div class="field"><label for="llmModel">Model</label><input type="text" id="llmModel" placeholder="gpt-4.1-mini" autocomplete="off"></div>
+      </div>
+        <div class="field"><label for="llmKey">API key</label>
+        <div class="pw-wrap">
+          <input type="password" id="llmKey" placeholder="sk-..." autocomplete="off" aria-describedby="llmKeyHint">
+          <button class="btn btn-ghost btn-sm" id="llmKeyToggle" type="button" aria-pressed="false">Tampil</button>
+          <button class="btn btn-ghost btn-sm" id="llmKeyDel" type="button">Hapus key</button>
+        </div>
+        <small id="llmKeyHint">Isi key baru lalu Simpan untuk mengganti. Kosongkan lalu Simpan untuk mempertahankan key lama.</small>
+      </div>
+      <div class="gen-row">
+        <button class="btn btn-primary btn-sm" id="llmSave" type="button">Simpan pengaturan</button>
+        <button class="btn btn-ghost btn-sm" id="llmTest" type="button">Uji koneksi</button>
+        <span class="loading" id="llmStatus" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card neu" id="riwayat" aria-labelledby="riwayatTitle">
+    <h2 id="riwayatTitle" class="h-sm">Riwayat tersimpan di browser ini</h2>
+    <p class="note-sm">Maksimal 10 per proyek dengan skor. Klik Muat untuk membuka lagi, Bandingkan untuk diff, Hapus untuk membuang permanen.</p>
+    <div class="hist-tools">
+      <label class="sr-only" for="histSearch">Cari riwayat</label>
+      <input autocomplete="off" type="text" id="histSearch" placeholder="Cari nama produk...">
+    </div>
+    <div class="hist-list" id="histList"></div>
+    <div id="diffBox"></div>
+  </section>
+</main>
+
+<footer class="footer"><div class="wrap footer-inner"><span>PRD Studio, data hanya di perangkatmu.</span><span><a href="index.html">Beranda</a></span></div></footer>
+
+<div class="modal-back" id="modalBack" role="presentation">
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalText" id="modal">
+<h2 id="modalTitle"></h2>
+<p id="modalText"></p>
+<div class="field" id="modalInputWrap" hidden>
+<label class="sr-only" for="modalInput">Nilai</label>
+<input type="text" id="modalInput" autocomplete="off">
+</div>
+<div class="modal-actions">
+<button class="btn btn-ghost btn-sm" id="modalCancel" type="button">Batal</button>
+<button class="btn btn-accent btn-sm" id="modalOk" type="button">Lanjutkan</button>
+</div>
+</div>
+</div>
+<!-- E: reverse-wizard — modal terpisah (textarea) agar tidak mengganggu
+     alur confirm/prompt yang merender ulang konten modal bawaan. -->
+<div class="modal-back" id="ideBack" role="presentation" hidden>
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="ideTitle" id="ideModal">
+<h2 id="ideTitle">Isi draft dari ide</h2>
+<p id="ideHelp">Tulis ide produkmu dalam 2-6 kalimat. AI akan mengisikan jawaban 7 langkah sebagai DRAFT. Kamu tetap wajib memeriksa dan mengoreksinya sebelum susun.</p>
+<div class="field">
+<label for="ideText">Ide kamu</label>
+<textarea autocomplete="off" id="ideText" rows="6" placeholder="Contoh: Aplikasi langganan sayur untuk ibu di kompleks, antar tiap pagi, bayar transfer..." aria-describedby="ideStatus"></textarea>
+</div>
+<p class="hint" id="ideStatus" role="alert"></p>
+<div class="modal-actions">
+<button class="btn btn-ghost btn-sm" id="ideCancel" type="button">Batal</button>
+<button class="btn btn-accent btn-sm" id="ideOk" type="button">Buat draft</button>
+</div>
+</div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="toast toast-err" id="toastErr" role="alert" aria-live="assertive"></div>
+<div class="pwa-update" id="pwaUpdate" role="status" hidden>
+  <span>Versi baru tersedia. Muat ulang untuk memakainya.</span>
+  <button type="button" id="pwaReload">Muat ulang</button>
+</div>
+
+<script src="js/studio/theme.js"></script>
+<script src="js/studio/shared.js"></script>
+<script src="js/studio/state.js"></script>
+<script src="js/studio/templates.js"></script>
+<script src="js/studio/validator.js"></script>
+<script src="js/studio/scorer.js"></script>
+<script src="js/studio/generator-prd.js"></script>
+<script src="js/studio/generator-roadmap.js"></script>
+<script src="js/studio/generator-prompt.js"></script>
+<script src="js/studio/diagrams.js"></script>
+<script src="js/studio/exporter.js"></script>
+<script src="js/studio/render.js"></script>
+<script src="js/studio/llm-adapter.js"></script>
+<script src="js/studio/reverse.js"></script>
+<script src="js/studio/wizard.js"></script>
+<script src="js/studio/app.js"></script>
+<script>
+(function(){
+  var btn = document.getElementById('menuBtn');
+  var nav = document.getElementById('nav');
+  function setOpen(open){
+    nav.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  btn.addEventListener('click', function(){ setOpen(!nav.classList.contains('open')); });
+  nav.addEventListener('click', function(e){ if (e.target.closest('a')) setOpen(false); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && nav.classList.contains('open')) { setOpen(false); btn.focus(); }
+  });
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script></body>
+</html>

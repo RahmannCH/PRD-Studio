@@ -1,0 +1,51 @@
+@media print {
+  .topbar, .wizard-nav, .output-actions, .tabs, .hist-tools, .menu-btn, .skip,
+  #wizard, #riwayat, #pengaturan, .modal-back, .toast, .proj-switch, .live, .readiness-tip,
+  .prompt-vars, .gen-row > .btn, #genStatus, footer, .doc-mock, .hero-actions,
+  .toc, .sect .row, .prompt-actions, .diagram-note, .diagram-src,
+  #offlineBanner, #pwaUpdate, .empty, .action-hint { display:none !important; }
+  /* Cetak semua panel hasil, bukan hanya tab yang sedang aktif */
+  .output[hidden] { display:block !important; }
+  .faq-a[hidden] { display:block !important; }
+  .faq-q { cursor:default; }
+  body::before { display:none; }
+  :root, [data-theme] {
+    --bg:#fff; --bg-2:#fff; --surface:#fff; --surface-2:#fff; --inset:#fff;
+    --text:#111; --muted:#3a3a3a;
+    --line:#999; --line-strong:#666;
+    --glass-bg:#fff; --glass-line:#999; --glass-spec:none; --glass-blur:0px;
+    --brand:#00699F; --brand-ink:#fff;
+    --accent:#8F5B00; --accent-ink:#fff;
+    --ok:#0E7A3D; --danger:#A31515;
+    --ok-soft:#E6F4EC; --danger-soft:#FBE9E9;
+    --scrim:transparent; --blob-a:transparent; --blob-b:transparent;
+    --neu-dark:none; --neu-light:none; --neu-in-dark:none; --neu-in-light:none; --neu-press:none; --lift:none;
+  }
+  body { background:#fff; color:#111; }
+  .card, .neu, .glass, .output, .sect, .prompt-item, .roadmap-fase, .diagram-box, .hist-item, .hasil-head {
+    box-shadow:none !important; border:1px solid #999 !important; background:#fff !important; color:#111 !important;
+    backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+  }
+  .output pre, .sect pre, .prompt-item pre, .diagram-box pre, .live-box {
+    max-height:none !important; overflow:visible !important; white-space:pre-wrap !important;
+  }
+  .prompt-item.locked { opacity:1 !important; }
+  .roadmap-bar { background:#eee !important; border:1px solid #999 !important; }
+  .roadmap-bar i { background:#0E7A3D !important; }
+  .studio-grid { display:block; }
+  a { text-decoration:underline; color:#111; }
+  @page { margin:16mm; }
+  #out-roadmap, #out-diagram, #out-prompt { break-before:page; }
+  /* U8: skor dan gap ikut tercetak agar arsip kertas memuat konteks kesiapan. */
+  .score-badge { display:inline-block !important; border:1px solid #8F5B00 !important; padding:2px 8px !important; }
+  .result-gaps-clear { display:block !important; color:#0E7A3D !important; }
+  /* Gap marker per seksi ikut tercetak. */
+  .sect.gapmark { border-color:#8F5B00 !important; }
+  /* U12: judul halaman cetak mengikuti data-title — h2 hasil & lede
+     disembunyikan agar judul tidak muncul dua kali (C8). */
+  .hasil-head h2, .hasil-head p { display:none !important; }
+  #hasil::before { content:attr(data-title); display:block; font-weight:700; font-size:16pt; margin-bottom:6pt; }
+  #out-roadmap::before { content:"Roadmap"; display:block; font-weight:700; font-size:16pt; margin-bottom:6pt; break-before:page; }
+  #out-diagram::before { content:"Diagram"; display:block; font-weight:700; font-size:16pt; margin-bottom:6pt; break-before:page; }
+  #out-prompt::before { content:"Prompt P0-P9"; display:block; font-weight:700; font-size:16pt; margin-bottom:6pt; break-before:page; }
+}

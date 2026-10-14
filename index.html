@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD Studio — Wawancara Ide sampai Prompt Siap Eksekusi</title>
+<meta name="description" content="Isi jawaban step by step, terima PRD markdown, roadmap fase, dan 10 prompt eksekusi yang bisa disalin ke AI coding agent. Tersimpan lokal, tanpa akun.">
+<meta name="theme-color" content="#0B132B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B132B'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='16' font-weight='bold' fill='%2348CAE4' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem('prd_studio_theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/print.css" media="print">
+</head>
+<body>
+<a class="skip" href="#isi">Lewati ke isi</a>
+<noscript><div class="wrap"><p class="noscript-note">Beranda ini butuh JavaScript untuk menu mobile. Isi utama tetap terbaca tanpa JS.</p></div></noscript>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brandmark" href="index.html" aria-label="PRD Studio beranda">
+      <span class="brandmark-mark" aria-hidden="true">P</span>
+      <span>PRD Studio<small>Wawancara ide, PRD, roadmap, prompt</small></span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Navigasi utama">
+      <a href="index.html" aria-current="page">Beranda</a>
+      <a href="studio.html">Studio</a>
+      <a href="studio.html#riwayat">Riwayat</a>
+      <a href="#cara">Cara kerja</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">Tema: Gelap</button>
+      <a class="btn btn-primary btn-sm" href="studio.html">Buka Studio <span class="btn-arrow" aria-hidden="true">→</span></a>
+    </nav>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav">Menu</button>
+  </div>
+</header>
+
+<main id="isi" tabindex="-1">
+  <section class="hero wrap">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">Untuk web dan aplikasi, offline dulu</p>
+        <h1>Jawab <span>7 langkah</span>, terima PRD, roadmap, dan prompt yang tinggal ditempel.</h1>
+        <p class="lede">Kamu menjawab 7 langkah wawancara; studio menyusun PRD 12 bagian, roadmap 4 fase, diagram alur, dan 10 prompt AI berurutan. Semua tersimpan di browser, tanpa akun, tanpa server.</p>
+        <ul class="check hero-check">
+          <li>Skor kesiapan 0-100, gap ditandai per langkah</li>
+          <li>Ekspor <code class="inline">.md</code>, <code class="inline">.json</code>, dan CSV roadmap</li>
+          <li>Jalan offline setelah sekali dibuka</li>
+        </ul>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="studio.html">Mulai wawancara ide <span class="btn-arrow" aria-hidden="true">→</span></a>
+          <a class="btn btn-ghost" href="#contoh">Lihat contoh output</a>
+        </div>
+        <p class="hero-meta">Di bawah 60 poin kesiapan, tombol Susun menahan dan menampilkan daftar perbaikan lengkap. Tidak ada asumsi diam diam.</p>
+      </div>
+      <div class="doc-mock neu" id="contoh" role="group" aria-label="Contoh output PRD">
+        <div class="doc-mock-bar glass"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="doc-mock-name">PRD-Kasir-Warung-Pintar.md, skor 86</span></div>
+        <div class="doc-mock-body">
+          <div class="doc-tabs" aria-hidden="true"><span class="doc-tab on">PRD</span><span class="doc-tab">Roadmap</span><span class="doc-tab">Diagram</span><span class="doc-tab">Prompt P0-P9</span></div>
+<pre># PRD: Aplikasi Kasir Warung Pintar
+## 3. Tujuan dan metrik sukses
+Rekap harian di bawah 5 menit...
+## 4. Scope MoSCoW
+M1 Catat transaksi offline [M]...
+## Roadmap Fase 2, Inti
+## Prompt P0, tanam konteks</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap reveal" id="cara">
+    <div class="section-head">
+      <h2>Alurnya mengikuti cara analis produk bekerja</h2>
+      <p>Jawabanmu di langkah awal mengunci arah langkah berikutnya. Meter kesiapan naik setiap jawaban dilengkapi.</p>
+    </div>
+    <div class="flow">
+      <a class="flow-card neu" href="studio.html"><span class="flow-num" aria-hidden="true">1</span><h3>Ide dan masalah</h3><p>Nama produk, masalah, kenapa harus dibangun sekarang.</p></a>
+      <a class="flow-card neu" href="studio.html"><span class="flow-num" aria-hidden="true">2</span><h3>Pengguna dan platform</h3><p>Siapa pengguna, web atau aplikasi, peran yang ada.</p></a>
+      <a class="flow-card neu" href="studio.html"><span class="flow-num" aria-hidden="true">3</span><h3>Fitur Must dan Won't</h3><p>Minimal 3 wajib ada dan daftar tegas di luar scope.</p></a>
+      <a class="flow-card neu" href="studio.html"><span class="flow-num" aria-hidden="true">4</span><h3>Alur dan navigasi</h3><p>Alur utama plus alur gagal, struktur menu.</p></a>
+      <a class="flow-card neu" href="studio.html"><span class="flow-num" aria-hidden="true">5</span><h3>Tampilan dan media</h3><p>Layout, gaya visual, kebutuhan audio dan ilustrasi.</p></a>
+      <a class="flow-card neu" href="studio.html"><span class="flow-num" aria-hidden="true">6</span><h3>Batasan teknis</h3><p>Stack pilihan, integrasi, target performa dan keamanan.</p></a>
+      <a class="flow-card neu" href="studio.html"><span class="flow-num" aria-hidden="true">7</span><h3>Skor dan susun</h3><p>Periksa skor 0 sampai 100, tutup gap, tekan susun.</p></a>
+    </div>
+  </section>
+
+  <section class="section wrap reveal">
+    <div class="section-head">
+      <h2>Empat output yang saling nyambung</h2>
+      <p>PRD jadi sumber kebenaran. Roadmap memecahnya jadi fase. Diagram memetakan alur dan data. Prompt memandu AI mengeksekusi satu per satu.</p>
+    </div>
+    <div class="trio">
+      <article class="trio-main neu">
+        <div class="trio-main-head glass">
+          <h3>PRD markdown 12 bagian + skor</h3>
+          <p>Masalah, persona, tujuan terukur, stories biner, fungsional dan non fungsional, model data adaptif, endpoint, risiko, out of scope.</p>
+        </div>
+        <div class="trio-main-body">
+          <ul class="check"><li>Unduh sebagai <code class="inline">.md</code> atau <code class="inline">.json</code></li><li>Lompat lewat daftar isi, salin per bagian</li><li>Gap ditandai, skor tampil di dokumen</li></ul>
+          <a class="btn btn-primary btn-sm" href="studio.html">Susun PRD sekarang</a>
+        </div>
+      </article>
+      <div class="trio-side">
+        <article class="trio-card neu">
+          <h3>Roadmap 4 fase + diagram</h3>
+          <p>Estimasi XS sampai L dari kata kunci, dependensi nyata, progress per fase, diagram use case dan ERD.</p>
+          <ul class="check"><li>Centang tersimpan per proyek</li><li>Cetak rapi ke PDF</li></ul>
+        </article>
+        <article class="trio-card neu">
+          <h3>Prompt P0 sampai P9, P5 ke atas terkunci urut</h3>
+          <p>Tanam konteks, verifikasi, pecah task, eksekusi, poles, uji, review dengan token selesai jelas.</p>
+          <ul class="check"><li>Variabel bisa diedit sebelum salin</li><li>P5 ke atas terkunci sampai urutannya disalin</li></ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap reveal">
+    <div class="section-head">
+      <h2>Penyimpanan lokal dan pertanyaan umum</h2>
+      <p>Semua data tinggal di browser kamu. Ini jawaban untuk pertanyaan yang paling sering muncul.</p>
+    </div>
+    <div class="split">
+      <div class="panel neu">
+        <h3>Disimpan di mana</h3>
+        <p>Di <code class="inline">localStorage</code> browser dengan kunci <code class="inline">prd_studio_v3</code> (multi proyek, migrasi otomatis dari v1 dan v2). Maksimal 10 riwayat per proyek dengan skor dan snapshot centang. Jawabanmu tidak pernah dikirim ke server kami; halaman memuat font Google dan renderer diagram Mermaid dari CDN, dan itu sudah di-cache untuk pemakaian offline berikutnya.</p>
+        <ul><li>Tanpa akun dan tanpa database</li><li>Jalan penuh offline, diagram Mermaid opsional butuh koneksi sekali</li><li>Bisa dipasang sebagai aplikasi lewat Pasang di layar utama setelah sekali kunjungan</li><li>AI opsional diatur di bagian Pengaturan Studio lewat <code class="inline">js/studio/llm-adapter.js</code></li></ul>
+      </div>
+      <div class="panel neu" id="faq">
+        <h3>Pertanyaan yang sering ditanyakan</h3>
+        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a-1">Apakah butuh API key?</button><p class="faq-a" id="faq-a-1" hidden>Tidak. Generator memakai template lokal plus validator dan scorer. API key hanya dibutuhkan kalau kamu memakai tombol Rapikan dengan AI atau Uji koneksi di bagian Pengaturan Studio. Key disimpan tidak terenkripsi di browser ini, jadi pakai key khusus, bukan key produksi utama.</p></div>
+        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a-2">Apakah bisa untuk aplikasi mobile?</button><p class="faq-a" id="faq-a-2" hidden>Bisa. Pilih Jenis produk "Aplikasi mobile" di langkah 1: model data otomatis memakai antrean offline dan sinkronisasi. Platform di langkah 2 ikut tercetak di PRD dan konteks prompt.</p></div>
+        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a-3">Bagaimana cara pakai promptnya?</button><p class="faq-a" id="faq-a-3" hidden>Buka tab Prompt di Studio, salin P0, tempel ke AI favoritmu, lanjut berurutan. P5 ke atas terkunci sampai prompt sebelumnya disalin, jadi urutannya dijaga sampai P9.</p></div>
+        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a-4">Apakah ada mode terang?</button><p class="faq-a" id="faq-a-4" hidden>Ada. Tekan tombol Tema di navigasi. Kedua tema diuji kontras teks 4.5:1 dan otomatis mengikuti setelan sistem saat pertama dibuka.</p></div>
+        <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a-5">Kalau data browser dibersihkan, PRD hilang?</button><p class="faq-a" id="faq-a-5" hidden>Ya. Semua data hanya hidup di localStorage browser ini, tanpa server dan tanpa akun, jadi menghapus data situs berarti menghapus proyek dan riwayatnya. Unduh <code class="inline">.json</code> dari Studio secara berkala sebagai cadangan, lalu impor lagi lewat tombol Impor ketika dibutuhkan.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap reveal">
+    <div class="cta-strip neu glass">
+      <div class="cta-strip-text">
+        <h2>Siap mulai susun PRD produkmu?</h2>
+        <p>Jawab 7 langkah, periksa skor kesiapan, dan salin prompt eksekusi.</p>
+      </div>
+      <a class="btn btn-primary" href="studio.html">Buka Studio sekarang <span class="btn-arrow" aria-hidden="true">→</span></a>
+    </div>
+  </section>
+</main>
+<div class="pwa-banner" id="offlineBanner" role="status" hidden>Kamu sedang offline. Halaman ini sudah tersimpan di browser, tetap bisa dibuka.</div>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <span>PRD Studio, dibuat sebagai alat bantu spec sebelum coding.</span>
+    <span><a href="studio.html">Studio</a> · <a href="studio.html#riwayat">Riwayat lokal</a>.</span>
+  </div>
+</footer>
+<script src="js/studio/theme.js"></script>
+<script>
+(function(){
+  var btn = document.getElementById('menuBtn');
+  var nav = document.getElementById('nav');
+  function setOpen(open){
+    nav.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  btn.addEventListener('click', function(){ setOpen(!nav.classList.contains('open')); });
+  nav.addEventListener('click', function(e){ if (e.target.closest('a')) setOpen(false); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && nav.classList.contains('open')) { setOpen(false); btn.focus(); }
+  });
+})();
+document.querySelectorAll('.faq-q').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var ans = btn.nextElementSibling;
+    var open = ans.hidden;
+    ans.hidden = !open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  btn.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') { btn.nextElementSibling.hidden = true; btn.setAttribute('aria-expanded','false'); btn.focus(); }
+  });
+});
+/* Scroll reveal entry: halus via IntersectionObserver, respek prefers-reduced-motion */
+(function(){
+  var r = document.querySelectorAll('.reveal');
+  if (!r.length) return;
+  if (!('IntersectionObserver' in window) || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    r.forEach(function(el){ el.classList.add('revealed'); });
+    return;
+  }
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  r.forEach(function(el){ obs.observe(el); });
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+/* D5: banner offline di halaman depan — kabar jujur bahwa aset sudah di-cache. */
+(function () {
+  var b = document.getElementById('offlineBanner');
+  if (!b) return;
+  function set(off) { b.hidden = !off; }
+  window.addEventListener('online', function () { set(false); });
+  window.addEventListener('offline', function () { set(true); });
+  set(navigator.onLine === false);
+})();
+</script></body>
+</html>

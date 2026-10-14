@@ -1,0 +1,17 @@
+{
+  "name": "PRD Studio, wawancara ide sampai prompt siap eksekusi",
+  "short_name": "PRD Studio",
+  "description": "Jawab 7 langkah wawancara produk, terima PRD markdown, roadmap 4 fase, diagram Mermaid, dan 10 prompt eksekusi berantai. Tersimpan lokal di browser.",
+  "lang": "id",
+  "id": "./",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0B132B",
+  "theme_color": "#0B132B",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
