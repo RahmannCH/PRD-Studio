@@ -13,7 +13,7 @@
    - CDN lintas origin (font, Mermaid) : cache-first (sekali muat, selamanya offline).
    Tidak pakai skipWaiting: update berlaku di muat halaman berikutnya agar
    tidak ada campur aset versi lama dan baru di tengah sesi. */
-const CACHE = 'prd-studio-v3.1';
+const CACHE = 'prd-studio-v3.2';
 /* D1: cache CDN TERPISAH. Font .woff2 dari Google diambil browser dengan
    mode no-cors → respons opaque (status 0, ok=false) sehingga selama ini
    tidak pernah tersimpan dan offline selalu kehilangan font. Opaque aman
@@ -45,6 +45,8 @@ const CORE = [
   'js/studio/generator-prompt.js',
   'js/studio/diagrams.js',
   'js/studio/exporter.js',
+  'js/studio/criteria.js',
+  'js/studio/spec-pack.js',
   'js/studio/render.js',
   'js/studio/llm-adapter.js',
   'js/studio/ai-advisor.js',

@@ -95,5 +95,5 @@
     }).join('\r\n');
     return '\uFEFF' + body;
   }
-  window.Exporter = { slug: slug, download: download, parseSections: parseSections, bundle: bundle, roadmapCsv: roadmapCsv };
+  window.Exporter = { slug: slug, escMd: escMd, download: download, parseSections: parseSections, bundle: bundle, roadmapCsv: roadmapCsv };
 })();

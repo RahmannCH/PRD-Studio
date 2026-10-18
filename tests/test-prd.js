@@ -50,6 +50,8 @@ load('generator-roadmap.js');
 load('generator-prompt.js');
 load('diagrams.js');
 load('exporter.js');
+load('criteria.js');
+load('spec-pack.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
 
@@ -817,6 +819,100 @@ const diagrams = window.GenDiagrams(sample);
   // state.js menyimpan depth dan menormalkannya.
   ok(window.StudioState.blank().depth === 'standar', 'blank carries the default depth');
   ok(['cepat', 'standar', 'lengkap'].indexOf(window.StudioState.blank().depth) > -1, 'blank depth is canonical');
+}
+
+// 28. Paket 1: Criteria EARS-lite + SpecPack lima berkas untuk AI agent
+{
+  const C = window.Criteria;
+
+  // EARS-lite: pemicu eksplisit, penghubung maka, konteks cerita, idempoten.
+  ok(C.toEars('ketika pembayaran gagal, tampilkan alasan') ===
+    'KETIKA pembayaran gagal, SISTEM HARUS tampilkan alasan.',
+    'toEars maps an explicit "ketika" clause');
+  ok(C.toEars('Jika kuota habis maka blokir unggahan') ===
+    'JIKA kuota habis, SISTEM HARUS blokir unggahan.',
+    'toEars splits on the "maka" connector');
+  ok(C.toEars('Selama sinkronisasi, tampilkan indikator') ===
+    'SELAMA sinkronisasi, SISTEM HARUS tampilkan indikator.',
+    'toEars maps a state trigger (selama)');
+  ok(C.toEars('menampilkan konfirmasi', { role: 'kasir', action: 'mencatat transaksi' }) ===
+    'KETIKA kasir mencatat transaksi, SISTEM HARUS menampilkan konfirmasi.',
+    'toEars builds a default event from story context');
+  ok(C.toEars('transaksi tersimpan') === 'SISTEM HARUS transaksi tersimpan.',
+    'toEars without trigger or context stays honest');
+  const earsOnce = C.toEars('KETIKA a, SISTEM HARUS b');
+  ok(C.toEars(earsOnce) === earsOnce, 'toEars is idempotent for existing EARS sentences');
+
+  // Kata kabur: kata utuh (kecepatan tidak dihitung), frasa user-friendly ikut.
+  ok(C.vagueWords('pencarian cepat dan mudah').join(',') === 'cepat,mudah', 'vague words found in order');
+  ok(C.vagueWords('kecepatan muat 2 detik').length === 0, 'kecepatan is not flagged (whole word only)');
+  ok(C.vagueWords('antarmuka user friendly').indexOf('user-friendly') > -1, 'user-friendly phrase is flagged');
+  const li = C.lint(['beranda memuat 2 detik', 'pencarian mudah', '']);
+  ok(li.bersih.length === 1 && li.kabur.length === 1 && li.kabur[0].kata[0] === 'mudah',
+    'lint splits measurable and vague items');
+
+  // SpecPack: bentuk berkas dan isi kunci.
+  const res = { score: sc, roadmap: roadmap };
+  const slug = window.Exporter.slug(sample.productName);
+  const files = window.SpecPack.files(sample, res);
+  ok(files.length === 5, 'spec pack has five files');
+  ok(files[0].name === 'REQUIREMENTS-' + slug + '.md' && files[4].name === 'AGENTS-' + slug + '.md',
+    'spec pack filenames follow the export naming');
+  const req = files[0].text;
+  ok(req.indexOf('### Requirement 1:') > -1, 'requirements are numbered like Kiro');
+  ok(req.indexOf('**User Story:** Sebagai') > -1, 'user story line present');
+  ok(/^1\. (KETIKA|JIKA|SELAMA|DI MANA|SISTEM HARUS)/m.test(req), 'criteria render as EARS-lite sentences');
+  ok(req.indexOf('specs/' + slug + '/requirements.md') > -1, 'requirements states where the file belongs');
+
+  // Escape: Must berisi HTML mentah tidak boleh lolos.
+  const evil = Object.assign({}, sample, { mustHave: '<img src=x onerror=alert(1)>\nAbsen foto harian' });
+  const reqEvil = window.SpecPack.requirements(evil, res);
+  ok(reqEvil.indexOf('<img') < 0 && reqEvil.indexOf('&lt;img') > -1, 'raw HTML in Must is escaped');
+  ok(typeof window.Exporter.escMd === 'function' && window.Exporter.escMd('<b>x') === '&lt;b&gt;x',
+    'escMd is exported as the canonical markdown escape');
+
+  // Lint kata kabur muncul di requirements.
+  const vagueAns = Object.assign({}, sample, { mustHave: 'Pencarian cepat dan mudah' });
+  const reqVague = window.SpecPack.requirements(vagueAns, null);
+  ok(reqVague.indexOf('Kata belum terukur: cepat, mudah') > -1, 'vague words surfaced per requirement');
+
+  // tasks: kotak centang, referensi R, milestone roadmap ikut.
+  const tasks = files[2].text;
+  ok(tasks.indexOf('- [ ] T1.1') > -1, 'tasks use numbered checkboxes');
+  ok(/R1\.1 sampai R1\.\d/.test(tasks), 'tasks reference requirement criteria range');
+  ok(tasks.indexOf('## Milestone roadmap') > -1 && tasks.indexOf('### ' + roadmap[0].fase) > -1,
+    'roadmap phases become milestone sections');
+  ok(tasks.indexOf('## Definisi selesai') > -1, 'tasks close with an honest done list');
+
+  // traceability: satu baris per requirement + peta nomor bagian PRD.
+  const tr = files[3].text;
+  ok(/^\| R1 /m.test(tr), 'traceability has one row per requirement');
+  ok(tr.indexOf('§5') > -1 && tr.indexOf('| T1.1, T1.2 |') > -1, 'traceability links task ids and PRD sections');
+
+  // AGENTS.md: pointer, non-goals, dan larangan jujur.
+  const ag = files[4].text;
+  ok(ag.indexOf('## Sumber kebenaran') > -1 && ag.indexOf('specs/' + slug + '/tasks.md') > -1,
+    'agents file points at the spec pack');
+  ok(ag.indexOf('## Di luar lingkup') > -1, 'agents file lists non-goals');
+  ok(ag.indexOf('- ' + sample.wontHave.split('\n')[0]) > -1, 'agents file carries the real wont list');
+
+  // Deterministik: dua panggilan identik.
+  ok(window.SpecPack.tasks(sample, res) === tasks, 'task generation is deterministic');
+
+  // Data kosong tetap menghasilkan lima berkas yang jujur.
+  const emptyFiles = window.SpecPack.files({}, null);
+  ok(emptyFiles.length === 5 && emptyFiles.every(f => f.text.length > 0), 'empty data still yields five non-empty files');
+  ok(emptyFiles[0].text.indexOf('Belum ada Must') > -1, 'empty requirements says what to do next');
+
+  // Jalur lolos: setiap fungsi boleh dipanggil tanpa roadmap.
+  ok(window.SpecPack.traceability(sample, { score: sc }).indexOf('| R1 ') > -1,
+    'traceability works without a roadmap (fase column shows -)');
+
+  // Wiring UI: tombol + peta aksi.
+  const html2 = fs.readFileSync(path.join(__dirname, '..', 'studio.html'), 'utf8');
+  ok(/data-act="dl-spec-pack"/.test(html2), 'studio.html has the spec pack button');
+  const app2 = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  ok(app2.indexOf("'dl-spec-pack'") > -1, 'app.js maps the spec pack act');
 }
 
 console.log('PASS ' + pass + ' / FAIL ' + fail);

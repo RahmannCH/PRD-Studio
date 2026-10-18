@@ -101,7 +101,7 @@
     });
 
     /* ---------- Tombol export: aktif hanya kalau ada hasil ---------- */
-    var exportActs = ['copy-prd', 'dl-prd', 'dl-bab', 'dl-json', 'dl-roadmap-csv', 'print', 'ai-polish', 'ai-advise',
+    var exportActs = ['copy-prd', 'dl-prd', 'dl-bab', 'dl-spec-pack', 'dl-json', 'dl-roadmap-csv', 'print', 'ai-polish', 'ai-advise',
       'dl-html', 'dl-brief', 'dl-spec-yaml', 'copy-mermaid', 'copy-all-prompt', 'dl-prompts'];
     function setExportEnabled(on) {
       exportActs.forEach(function (a) {
@@ -385,6 +385,16 @@
         if (!guard()) return;
         var txt = window.Exporter.bundle(S.data.productName, S.data.lastResult);
         window.Exporter.download('PAKET-LENGKAP-' + window.Exporter.slug(S.data.productName) + '.md', txt);
+      },
+      'dl-spec-pack': function () {
+        if (!guard()) return;
+        /* Lima berkas diunduh berurutan; beri jeda kecil supaya browser
+           tidak menganggap unduhan bertubi-tubi sebagai popup beruntun. */
+        var files = window.SpecPack.files(S.data, S.data.lastResult);
+        files.forEach(function (f, i) {
+          setTimeout(function () { window.Exporter.download(f.name, f.text, f.type); }, i * 250);
+        });
+        window.UX.toast('Spec Pack: ' + files.length + ' berkas diunduh. Letakkan requirements/design/tasks di specs/, AGENTS.md di root repo.');
       },
       'dl-json': function () {
         if (!guard()) return;

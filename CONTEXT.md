@@ -92,6 +92,30 @@ menampilkan daftar perbaikan.
 
 ---
 
+## Istilah ekspor
+
+### Spec Pack
+Paket lima berkas yang diturunkan deterministik dari Spec untuk serah terima ke
+AI coding agent, mengikuti struktur Kiro dan spec-kit: requirements, design,
+tasks, traceability, dan AGENTS. Interface: `SpecPack.files(data, res)`.
+Letaknya: empat berkas di `specs/<slug>/`, AGENTS di root repo target.
+
+### Kriteria EARS-lite
+Kalimat syarat uji berpola KETIKA/JIKA/SELAMA/DI MANA + SISTEM HARUS. Lima tipe
+EARS dipetakan ke kata pemicu Indonesia di `criteria.js`. Dipakai Spec Pack;
+satu-satunya tempat konversi, jangan tulis ulang di renderer lain.
+
+### Kata kabur
+Kata sifat tanpa angka yang membuat kriteria tidak bisa diuji ("cepat",
+"mudah"). Daftar ada di `criteria.js`; lint-nya saran, bukan gerbang.
+
+### Traceability
+Tabel pemetaan Requirement ke cerita, rentang kriteria, task, milestone, dan
+nomor bagian PRD. Turunan otomatis dari Spec dan roadmap; tanda pada milestone
+selalu ditandai periksa manual.
+
+---
+
 ## Istilah AI
 
 ### Profil AI

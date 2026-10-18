@@ -140,7 +140,7 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   // export buttons aktif
   const exportEnabled = await page.evaluate(() => !document.querySelector('[data-act="copy-prd"]').disabled);
   ok(exportEnabled, 'copy-prd enabled after generate');
-  const allExportActs = ['dl-html', 'dl-brief', 'dl-spec-yaml', 'ai-advise', 'dl-json', 'dl-roadmap-csv', 'ai-polish'];
+  const allExportActs = ['dl-html', 'dl-brief', 'dl-spec-yaml', 'dl-spec-pack', 'ai-advise', 'dl-json', 'dl-roadmap-csv', 'ai-polish'];
   for (const act of allExportActs) {
     const dis = await page.evaluate(a => document.querySelector('[data-act="' + a + '"]').disabled, act);
     ok(!dis, 'export act enabled after generate: ' + act);
@@ -151,6 +151,12 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   await page.click('[data-act="dl-brief"]');
   const dl = await dlPromise;
   ok(/^BRIEF-.*\.md$/.test(dl.suggestedFilename()), 'brief download has a proper filename', dl.suggestedFilename());
+
+  // Spec Pack: berkas pertama (REQUIREMENTS) terunduh dengan nama ekspor.
+  const spPromise = page.waitForEvent('download', { timeout: 5000 });
+  await page.click('[data-act="dl-spec-pack"]');
+  const spDl = await spPromise;
+  ok(/^REQUIREMENTS-.*\.md$/.test(spDl.suggestedFilename()), 'spec pack download starts with REQUIREMENTS', spDl.suggestedFilename());
 
   // keyboard tab navigation (ArrowLeft)
   await page.focus('#tab-prompt');
