@@ -290,6 +290,40 @@
 /* Hint tombol hasil masih nonaktif (pengguna baru melihat 6 tombol mati tanpa penjelasan) */
 .action-hint { font-size:12.5px; color:var(--muted); margin-top:8px; }
 
+/* Kedalaman wawancara (F3): chip radiogroup + satu baris penjelasan. */
+.depth-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:6px 0 12px; }
+.depth-label {
+  font-size:11.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--muted);
+}
+.depth-hint { flex:1 1 100%; font-size:12.5px; color:var(--muted); }
+
+/* Panel usulan AI: kartu tinjauan. AI tidak pernah menulis langsung; setiap
+   usulan harus diterima satu per satu (atau Terima semua). */
+.ai-review {
+  margin-top:16px; padding:16px; border:1px solid var(--line);
+  border-radius:var(--radius); background:var(--inset);
+}
+.ai-review-note { font-size:12.5px; color:var(--muted); margin:6px 0 12px; }
+.ai-card {
+  border:1px solid var(--line); border-radius:var(--radius-s);
+  background:var(--bg); padding:12px; margin-bottom:10px;
+}
+.ai-card-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+.ai-card-kind {
+  font-size:11.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--brand); margin-bottom:4px;
+}
+.ai-card-text { font-size:14px; margin:0; }
+.ai-card-sub { font-size:12.5px; color:var(--muted); margin:6px 0 0; }
+.ai-card-actions { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.ai-card.done { opacity:.62; }
+.ai-card.done .ai-card-actions { display:none; }
+.ai-card-state { font-size:12.5px; font-weight:600; }
+.ai-card-state.accepted { color:var(--ok); }
+.ai-card-state.rejected { color:var(--muted); }
+.ai-review-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px; }
+
 /* Banner offline + toast update PWA: pindah ke style.css (D5) agar
    index.html yang hanya memuat style.css bisa memakai banner yang sama. */
 

@@ -3,20 +3,11 @@
 (function () {
   /* C1: helper dipindah ke shared.js (satu sumber kebenaran). */
   var lines = window.PrdShared.lines;
-  var normType = window.PrdShared.normType;
   /* Bersihkan karakter yang merusak sintaks Mermaid: kurung (mematikan bentuk `((...))`),
      kurung siku, pipe, kutip, tanda # % ; dll. Baris baru ikut dibuang: label
      berisi \n (mis. dari textarea jalur gagal) memutus statement Mermaid. */
   function safe(s) { return String(s || '').replace(/[\r\n]+/g, ' ').replace(/[\[\](){}|"'#%;<>`~]/g, '').slice(0, 42); }
   function q(s) { return '"' + safe(s) + '"'; }
-  /* G5: ERD generik dulu sadar industri agar tidak beda model dengan PRD §10. */
-  var INDUSTRY_ERD = {
-    'Retail & F&B': 'erDiagram\n  KASIR ||--o{ TRANSAKSI : membuat\n  TRANSAKSI ||--o{ TRANSAKSI_ITEM : berisi\n  ITEM ||--o{ TRANSAKSI_ITEM : dipesan\n  KASIR {\n    string id\n    string nama\n  }\n  TRANSAKSI {\n    string id\n    string status\n  }\n  ITEM {\n    string id\n    int stok\n  }',
-    'Jasa & agency': 'erDiagram\n  KLIEN ||--o{ BOOKING : memesan\n  JASA ||--o{ BOOKING : dipesan\n  BOOKING ||--o{ TAGIHAN : menagih\n  KLIEN {\n    string id\n    string nama\n  }\n  JASA {\n    string id\n    int durasi\n  }\n  BOOKING {\n    string id\n    string jadwal\n    string status\n  }',
-    'SaaS internal': 'erDiagram\n  AKUN ||--o{ PROYEK : memiliki\n  PROYEK ||--o{ TUGAS : berisi\n  AKUN ||--o{ AUDIT_LOG : menghasilkan\n  AKUN {\n    string id\n    string peran\n  }\n  PROYEK {\n    string id\n    string status\n  }\n  TUGAS {\n    string id\n    string status\n  }',
-    'Marketplace & konten': 'erDiagram\n  PENJUAL ||--o{ PRODUK : menjual\n  PESANAN ||--o{ PESANAN_ITEM : berisi\n  PRODUK ||--o{ PESANAN_ITEM : dipesan\n  PESANAN ||--o{ PEMBAYARAN : dibayar\n  PENJUAL {\n    string id\n    string nama\n  }\n  PRODUK {\n    string id\n    int harga\n    int stok\n  }\n  PESANAN {\n    string id\n    string status\n  }',
-    'Layanan publik & klinik': 'erDiagram\n  PETUGAS ||--o{ ANTREAN : memanggil\n  LAYANAN ||--o{ ANTREAN : melayani\n  ANTREAN ||--o{ KUNJUNGAN : tercatat\n  PETUGAS {\n    string id\n    string peran\n  }\n  LAYANAN {\n    string id\n    string loket\n  }\n  ANTREAN {\n    string id\n    string status\n  }\n  KUNJUNGAN {\n    string id\n    string data_klinis\n  }'
-  };
   window.GenDiagrams = function (a) {
     var roles = lines(a.roles);
     if (!roles.length) roles = ['Pengguna'];
@@ -32,23 +23,9 @@
       shown.map(function (m, i) { return '  SYS --- F' + i + '[' + q(m) + ']'; }).join('\n') +
       (extraN > 0 ? '\n  SYS --- MORE["… dan ' + extraN + ' fitur lainnya"]' : '') + '\n' +
       roles.map(function (_, i) { return '  U' + i + ' --- SYS'; }).join('\n');
-    var erd;
-    var t = normType(a.productType);
-    if (t === 'Landing page') {
-      erd = 'erDiagram\n  PAGE ||--o{ LEAD : menerima\n  PAGE {\n    string slug\n    string judul\n  }\n  LEAD {\n    string id\n    string kontak\n    string status\n  }';
-    } else if (t === 'Marketplace') {
-      erd = 'erDiagram\n  SELLER ||--o{ PRODUCT : menjual\n  ORDER ||--o{ ORDER_ITEM : berisi\n  PRODUCT ||--o{ ORDER_ITEM : dipesan\n  SELLER {\n    string id\n    string nama\n  }\n  PRODUCT {\n    string id\n    string nama\n    int harga\n    int stok\n  }\n  ORDER {\n    string id\n    string buyer\n    string status\n  }\n  ORDER_ITEM {\n    string order_id\n    string product_id\n    int qty\n  }';
-    } else if (t === 'Dashboard internal') {
-      erd = 'erDiagram\n  ACCOUNT ||--o{ REPORT : memiliki\n  ACCOUNT ||--o{ AUDIT_LOG : menghasilkan\n  DATASET ||--o{ REPORT : memberi data\n  ACCOUNT {\n    string id\n    string peran\n  }\n  DATASET {\n    string id\n    string sumber\n  }\n  REPORT {\n    string id\n    string query\n  }\n  AUDIT_LOG {\n    string id\n    string aktor\n    string aksi\n  }';
-    } else if (t === 'Aplikasi mobile') {
-      erd = 'erDiagram\n  USER ||--o{ ITEM : memiliki\n  ITEM ||--o{ SYNC_QUEUE : antre\n  ITEM ||--o{ MEDIA : menyimpan\n  USER {\n    string id\n    string token\n  }\n  ITEM {\n    string id\n    string data\n  }\n  SYNC_QUEUE {\n    string id\n    string status\n    string idempotency_key\n  }\n  MEDIA {\n    string id\n    string path\n  }';
-    } else if (INDUSTRY_ERD[a.industry]) {
-      /* G5: Aplikasi web / tipe tak dikenal mengikuti model industri agar ERD
-         selaras dengan PRD §10 (bukan hardcode USER/TRANSAKSI/ITEM). */
-      erd = INDUSTRY_ERD[a.industry];
-    } else {
-      erd = 'erDiagram\n  USER ||--o{ TRANSAKSI : membuat\n  TRANSAKSI ||--o{ ITEM : berisi\n  USER {\n    string id\n    string peran\n  }\n  TRANSAKSI {\n    string id\n    date waktu\n    string status\n  }\n  ITEM {\n    string id\n    string nama\n    int jumlah\n  }';
-    }
+    /* ERD diturunkan dari Knowledge: sumber yang sama dengan PRD bagian 10,
+       jadi teks model data dan diagram tidak bisa lagi berbeda diam-diam. */
+    var erd = window.Knowledge.resolve(a).erd;
     var nav = lines(String(a.navStructure || '').replace(/,/g, '\n'));
     if (!nav.length) nav = ['Beranda', 'Utama', 'Pengaturan'];
     var flow = 'flowchart TD\n  A["Mulai: ' + safe(nav[0]) + '"] --> B["' + safe(must[0] || 'Aksi utama') + '"]\n' +

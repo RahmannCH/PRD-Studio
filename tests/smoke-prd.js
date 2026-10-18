@@ -49,6 +49,54 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   ok(await page.inputValue('#productName') === 'Kasir Warung Pintar', 'sample fills name');
   ok(await page.textContent('#readyScore') !== 'Skor 0', 'score paints', await page.textContent('#readyScore'));
 
+  // ---------- F3: kedalaman wawancara ----------
+  const depthCount = await page.locator('#depthChips .chip').count();
+  ok(depthCount === 3, 'three depth chips rendered', depthCount);
+  ok(await page.getAttribute('#depthChips .chip[data-depth="standar"]', 'aria-checked') === 'true',
+    'standar is the default depth');
+  // isi nfr lewat DOM lalu pastikan bertahan saat mode berganti
+  await page.evaluate(() => {
+    const el = document.getElementById('nfr');
+    el.value = 'Buka di bawah 3 detik, bisa offline';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.waitForTimeout(500);
+  await page.click('#depthChips .chip[data-depth="cepat"]');
+  await page.waitForTimeout(150);
+  const cepatHidden = await page.evaluate(() => ({
+    nfr: document.getElementById('nfr').closest('.field').hidden,
+    problem: document.getElementById('problem').closest('.field').hidden,
+    visual: document.getElementById('visualNeeds').closest('.field').hidden
+  }));
+  ok(cepatHidden.nfr && cepatHidden.visual && !cepatHidden.problem,
+    'cepat hides NFR/visual but keeps core fields', JSON.stringify(cepatHidden));
+  const nfrKept = await page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('prd_studio_v3') || '{}');
+    const act = (s.projects || []).filter(p => p.id === s.activeId)[0];
+    return { value: document.getElementById('nfr').value, stored: act && act.data.nfr, depth: act && act.data.depth };
+  });
+  ok(nfrKept.value.indexOf('3 detik') > -1 && (nfrKept.stored || '').indexOf('3 detik') > -1,
+    'switching depth never wipes answered values', JSON.stringify(nfrKept));
+  ok(nfrKept.depth === 'cepat', 'depth choice persists to the store');
+  await page.click('#depthChips .chip[data-depth="lengkap"]');
+  await page.waitForTimeout(150);
+  const lengkapVis = await page.evaluate(() => ({
+    style: document.getElementById('styleDirection').closest('.field').hidden,
+    nfr: document.getElementById('nfr').closest('.field').hidden
+  }));
+  ok(!lengkapVis.style && !lengkapVis.nfr, 'lengkap shows the cosmetic fields too', JSON.stringify(lengkapVis));
+  await page.click('#depthChips .chip[data-depth="standar"]');
+  await page.waitForTimeout(150);
+  const standarVis = await page.evaluate(() => ({
+    style: document.getElementById('styleDirection').closest('.field').hidden,
+    nfr: document.getElementById('nfr').closest('.field').hidden
+  }));
+  ok(standarVis.style && !standarVis.nfr, 'standar hides only cosmetic fields', JSON.stringify(standarVis));
+  await page.reload();
+  await page.waitForTimeout(400);
+  ok(await page.getAttribute('#depthChips .chip[data-depth="standar"]', 'aria-checked') === 'true',
+    'depth survives a reload (chip re-checked from store)');
+
   // chip terakhir tidak boleh dilepas
   await page.evaluate(() => { document.querySelector('#platformChips .chip[data-val="Web responsif"]').click(); });
   const pressedCount = await page.evaluate(() => document.querySelectorAll('#platformChips .chip[aria-pressed="true"]').length);
@@ -92,6 +140,17 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   // export buttons aktif
   const exportEnabled = await page.evaluate(() => !document.querySelector('[data-act="copy-prd"]').disabled);
   ok(exportEnabled, 'copy-prd enabled after generate');
+  const allExportActs = ['dl-html', 'dl-brief', 'dl-spec-yaml', 'ai-advise', 'dl-json', 'dl-roadmap-csv', 'ai-polish'];
+  for (const act of allExportActs) {
+    const dis = await page.evaluate(a => document.querySelector('[data-act="' + a + '"]').disabled, act);
+    ok(!dis, 'export act enabled after generate: ' + act);
+  }
+  // unduhan nyata: brief (.md) harus menghasilkan file
+  await page.click('[data-tab="prd"]');
+  const dlPromise = page.waitForEvent('download', { timeout: 5000 });
+  await page.click('[data-act="dl-brief"]');
+  const dl = await dlPromise;
+  ok(/^BRIEF-.*\.md$/.test(dl.suggestedFilename()), 'brief download has a proper filename', dl.suggestedFilename());
 
   // keyboard tab navigation (ArrowLeft)
   await page.focus('#tab-prompt');
@@ -201,6 +260,49 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   ok(await page.getAttribute('#ideBack', 'class').then(c => c.indexOf('open') > -1), 'modal stays open on validation error');
   await page.keyboard.press('Escape');
   ok(await page.getAttribute('#ideBack', 'class').then(c => c.indexOf('open') === -1), 'Escape closes ide modal');
+  // ---------- F4: panel usulan AI (endpoint dimock) ----------
+  const canned = JSON.stringify({
+    asumsi: [{ teks: 'Asumsi uji AI', alasan: 'karena uji' }],
+    risiko: [{ sebab: 'Risiko uji AI', mitigasi: 'Mitigasi uji', terkait: 'M1' }],
+    kriteria: [{ mustId: 'M1', tambah: ['Kriteria uji AI biner'] }],
+    endpoint: [{ metode: 'GET', path: '/uji-ai', guard: 'sesi valid', untuk: 'M1' }],
+    pertanyaan: [{ teks: 'Pertanyaan uji AI?', untuk: 'M1' }]
+  });
+  await page.route('**/chat/completions', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ choices: [{ message: { content: canned } }] })
+  }));
+  await page.click('[data-tab="prd"]');
+  await page.click('[data-act="ai-advise"]');
+  await page.waitForSelector('#aiReviewBody .ai-card', { timeout: 5000 });
+  const nCards = await page.locator('#aiReviewBody .ai-card').count();
+  ok(nCards === 5, '5 AI proposals rendered as review cards', nCards);
+  const beforeAi = await page.textContent('#prdSections');
+  ok(beforeAi.indexOf('Risiko uji AI') < 0 && beforeAi.indexOf('Kriteria uji AI biner') < 0,
+    'nothing auto-applied before any accept');
+  await page.click('#aiReviewBody .ai-card:first-child .btn-primary');
+  await page.waitForTimeout(450);
+  const afterOne = await page.textContent('#prdSections');
+  ok(afterOne.indexOf('Kriteria uji AI biner') > -1, 'accepted criteria reaches the PRD');
+  ok(afterOne.indexOf('Risiko uji AI') < 0, 'untouched proposals stay out of the PRD');
+  const aiNotesSaved = await page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('prd_studio_v3') || '{}');
+    const act = (s.projects || []).filter(p => p.id === s.activeId)[0];
+    return act && act.data ? act.data.aiNotes : null;
+  });
+  ok(aiNotesSaved && aiNotesSaved.criteria && (aiNotesSaved.criteria.M1 || []).indexOf('Kriteria uji AI biner') > -1,
+    'accepted criteria persisted into aiNotes');
+  await page.click('#aiAcceptAll');
+  await page.waitForTimeout(450);
+  const afterAll = await page.textContent('#prdSections');
+  ok(afterAll.indexOf('Risiko uji AI') > -1 && afterAll.indexOf('Asumsi uji AI') > -1,
+    'accept-all merges the remaining proposals');
+  ok(afterAll.indexOf('Pertanyaan uji AI?') > -1, 'accepted question lands in the open questions');
+  ok(afterAll.indexOf('/uji-ai') > -1, 'accepted endpoint lands in the API section');
+  // Tolak: minta ulang, tolak satu, tidak ada yang berubah
+  await page.click('#aiClose');
+  ok(await page.getAttribute('#aiReview', 'hidden') !== null, 'review panel closes');
+  await page.unroute('**/chat/completions');
   // hapus key (ada modal konfirmasi)
   await page.click('#llmKeyDel');
   ok((await page.getAttribute('#modalBack', 'class')).indexOf('open') > -1, 'delete key asks confirmation');
@@ -258,6 +360,25 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   ok(nHist >= 1, 'history entry saved', nHist);
   await page.click('.hist-item button:has-text("Bandingkan")');
   ok(await page.locator('#diffBox .diff-pre').count() === 1, 'diff renders');
+  // F6: muat riwayat tidak boleh menghapus field skema (dulu blank tulis-ulang
+  // di app.js membuang risks/assumptions/dependencies/aiNotes)
+  const nav3 = page.waitForNavigation({ waitUntil: 'load' });
+  await page.click('.hist-item button:has-text("Muat")');
+  await nav3;
+  await page.waitForSelector('#histList .hist-item');
+  const afterLoad = await page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('prd_studio_v3') || '{}');
+    const act = (s.projects || []).filter(p => p.id === s.activeId)[0];
+    const d = act && act.data;
+    return d ? {
+      hasRisks: 'risks' in d, hasAssumptions: 'assumptions' in d, hasDeps: 'dependencies' in d,
+      aiShape: !!(d.aiNotes && Array.isArray(d.aiNotes.assumptions) && typeof d.aiNotes.criteria === 'object'),
+      hasResult: !!(d.lastResult && d.lastResult.prd)
+    } : null;
+  });
+  ok(afterLoad && afterLoad.hasRisks && afterLoad.hasAssumptions && afterLoad.hasDeps && afterLoad.aiShape,
+    'history load keeps the full answer schema', JSON.stringify(afterLoad));
+  ok(afterLoad && afterLoad.hasResult, 'history load restores the stored PRD');
 
   // ---------- print css memuat ----------
   const printLinks = await page.evaluate(() => [...document.querySelectorAll('link[rel=stylesheet]')].map(l => l.getAttribute('href')));

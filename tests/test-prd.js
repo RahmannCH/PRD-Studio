@@ -37,16 +37,21 @@ localStorage.setItem('prd_studio_v2', JSON.stringify(legacy));
 localStorage.setItem('prd_studio_checks', JSON.stringify({ old: true }));
 
 load('shared.js');
+load('knowledge.js');
+load('questionnaire.js');
 load('state.js');
 load('templates.js');
 load('validator.js');
 load('scorer.js');
+load('spec.js');
+load('spec-render.js');
 load('generator-prd.js');
 load('generator-roadmap.js');
 load('generator-prompt.js');
 load('diagrams.js');
 load('exporter.js');
 load('llm-adapter.js');
+load('ai-advisor.js');
 
 const S = window.StudioState;
 
@@ -486,6 +491,332 @@ const diagrams = window.GenDiagrams(sample);
   ok(fenced.whyNow === '', 'missing text field defaults to empty string');
   ok(fenced.industry === '', 'missing enum field stays empty (default preserved)');
   ok(Array.isArray(fenced.audio) && fenced.audio.length === 0, 'missing array field defaults to []');
+}
+
+// 22. Manifest: sw.js CORE harus sinkron dengan <script> di studio.html
+// Kelas bug ini sudah nyata terjadi: shared.js sempat tidak masuk CORE, jadi
+// aplikasi jalan online tapi 500 saat offline. Tak ada tes yang menangkapnya.
+{
+  const appRoot = path.join(__dirname, '..');
+  const html = fs.readFileSync(path.join(appRoot, 'studio.html'), 'utf8');
+  const sw = fs.readFileSync(path.join(appRoot, 'sw.js'), 'utf8');
+
+  const scripts = (html.match(/<script src="([^"]+)"><\/script>/g) || [])
+    .map(s => s.match(/<script src="([^"]+)"><\/script>/)[1])
+    .filter(p => p.indexOf('js/') === 0);
+  ok(scripts.length > 0, 'studio.html declares module scripts (' + scripts.length + ')');
+
+  const coreBlock = /const CORE = \[([\s\S]*?)\];/.exec(sw);
+  ok(!!coreBlock, 'sw.js has a CORE list');
+  const core = (coreBlock ? coreBlock[1] : '')
+    .split(',')
+    .map(s => (s.match(/'([^']+)'/) || [])[1])
+    .filter(Boolean);
+
+  const missing = scripts.filter(p => core.indexOf(p) < 0);
+  ok(missing.length === 0, 'every studio.html module is precached in sw.js CORE',
+    missing.join(','));
+
+  const stale = core.filter(p => p.indexOf('js/') === 0 && scripts.indexOf(p) < 0);
+  ok(stale.length === 0, 'sw.js CORE has no modules studio.html dropped', stale.join(','));
+
+  // Urutan <script> harus menghormati dependensi: shared.js lebih dulu.
+  ok(scripts[0] === 'js/studio/theme.js' || scripts[0] === 'js/studio/shared.js',
+    'shared/theme load first (got ' + scripts[0] + ')');
+  const sharedIdx = scripts.indexOf('js/studio/shared.js');
+  const consumers = ['state.js', 'validator.js', 'scorer.js', 'generator-prd.js', 'diagrams.js'];
+  const bad = consumers.filter(f => scripts.indexOf('js/studio/' + f) < sharedIdx);
+  ok(bad.length === 0, 'shared.js loads before every consumer', bad.join(','));
+}
+
+// 23. Knowledge: satu sumber, ERD tidak boleh lepas dari model data §10
+{
+  const K = window.Knowledge;
+  const r = K.resolve(sample);
+  ok(r.entities.length >= 3, 'retail resolves entities');
+  ok(r.erd.indexOf('erDiagram') === 0, 'erd derived from knowledge');
+
+  const erdTables = (r.erd.match(/^ {2}([A-Z_]+) \|\|--/gm) || []).map(s => s.trim().split(' ')[0]);
+  const mdLabels = r.entities.filter(e => e.erd !== false).map(e => K.labelToErd(e.label));
+  const mdSet = new Set(mdLabels);
+  const orphans = erdTables.filter(t => !mdSet.has(t));
+  ok(orphans.length === 0, 'ERD has no table absent from PRD model text', orphans.join(','));
+  ok(r.erd.indexOf('TRANSAKSI_ITEM') > -1, 'N-M relation renders its junction table');
+
+  const model = window.IndustrySpec['Retail & F&B'].model;
+  ok(model.indexOf('Kasir (id, nama, pin_hash, aktif)') > -1, 'model text keeps field list');
+  ok(window.IndustrySpec['SaaS internal'].model.indexOf('peran: {roles}') > -1,
+    'bridge keeps {roles} placeholder for the generator to substitute');
+  const saas = (score => window.GenPRD(Object.assign({}, sample, { productType: 'Aplikasi web', industry: 'SaaS internal' }), score))(80);
+  ok(saas.indexOf('peran: Pemilik/Kasir/Pelanggan (terima struk via WhatsApp)') > -1,
+    'generator substitutes real roles into the model text');
+
+  // Anti-drift: risiko Marketplace harus berasal dari Knowledge, bukan literal
+  // kedua di generator. Kalau salah satu disunting sendiri, tes ini gagal.
+  const mkt = Object.assign({}, sample, { productType: 'Marketplace', industry: 'Marketplace & konten' });
+  const prdMkt = (score => window.GenPRD(mkt, score))(80);
+  const riskLine = K.riskToText(K.types['Marketplace'].risks);
+  ok(prdMkt.indexOf('- ' + riskLine) > -1, 'PRD risk bullet matches Knowledge for Marketplace');
+
+  // Risiko fitur ikut muncul karena Must menyebut offline/stok/cetak/rekap
+  const offlineRisk = K.riskToText(K.features.filter(f => f.id === 'offline')[0].risks);
+  ok(prdMkt.indexOf('- ' + offlineRisk) > -1, 'feature-matched risk surfaces in PRD');
+  ok(prdMkt.match(/^Risiko:$/m) !== null, 'risks render as a labeled group of bullets');
+
+  // registerIndustry: perluasan oleh user, dengan validasi bentuk
+  ok(K.registerIndustry('', {}) === false, 'registerIndustry rejects empty key');
+  ok(K.registerIndustry('Uji X', { entities: [] }) === false, 'registerIndustry rejects no entities');
+  ok(K.registerIndustry('Uji X', { entities: [{ label: 'Foo', fields: [{ n: 'id', t: 'string' }], rels: [] }] }) === true,
+    'registerIndustry accepts well-formed industry');
+  const r2 = K.resolve({ productType: 'Aplikasi web', industry: 'Uji X' });
+  ok(r2.known === true && r2.entities[0].label === 'Foo', 'resolve uses the registered industry');
+  ok(window.IndustrySpec['Uji X'].model.indexOf('Foo') > -1, 'compat bridge regenerated after register');
+}
+
+// 24. Spec + renderer: satu spec, banyak format, kontrak 12 bagian dijaga
+{
+  const SR = window.SpecRender;
+  const sp = window.Spec.build(sample, { score: 80, level: 'Siap' });
+  const mdOut = SR.markdown(sp);
+  const briefOut = SR.brief(sp);
+  const yamlOut = SR.yaml(sp);
+  const htmlOut = SR.html(sp);
+  const jsonOut = SR.json(sp);
+
+  ok(JSON.parse(jsonOut).meta.productName === sample.productName, 'json round-trips the spec');
+  ok((htmlOut.match(/<h2>/g) || []).length === 12, 'html renders exactly 12 sections');
+  ok(htmlOut.indexOf('<!DOCTYPE html>') === 0 && /<\/html>\s*$/.test(htmlOut), 'html is a standalone document');
+  ok(!/style="/.test(htmlOut), 'html has no inline style attributes');
+  ok(yamlOut.indexOf('meta:') === 0 || /^meta:/m.test(yamlOut), 'yaml starts with the meta block');
+  ok(yamlOut.indexOf('productName: ' + sample.productName) > -1, 'yaml carries plain scalars');
+
+  // YAML harus mengutip nilai yang memuat titik dua (kalau tidak, parser rusak)
+  const weird = window.Spec.build(Object.assign({}, sample, { problem: 'Target: 30 detik per transaksi' }));
+  const wy = SR.yaml(weird);
+  ok(/problem: "Target: 30 detik per transaksi"/.test(wy), 'yaml quotes scalars containing a colon');
+
+  // Semua metrik muncul di md dan brief (satu spec, banyak renderer)
+  ok(sp.metrics.every(x => mdOut.indexOf(x.text) > -1), 'every metric reaches the markdown PRD');
+  ok(sp.metrics.every(x => briefOut.indexOf(x.text) > -1), 'every metric reaches the brief');
+
+  // Modul baru: temuan fitur wajib terlihat di cerita
+  ok(sp.features.some(f => f.id === 'offline'), 'offline feature detected from Must line');
+  const us1 = sp.stories[0];
+  ok(us1.criteria.some(c => c.indexOf('daftar antre') > -1), 'story carries feature-specific binary criteria');
+
+  // Tidak ada ".." akibat jawaban yang sudah berakhir titik
+  ok(mdOut.indexOf('..') < 0, 'no double full stop in PRD');
+  ok(briefOut.indexOf('..') < 0, 'no double full stop in brief');
+
+  // Asumsi dan pertanyaan terbuka jujur saat fitur tidak dikenali
+  const vague = window.Spec.build(Object.assign({}, sample, { mustHave: 'Fitur ajaib khusus' }));
+  ok(vague.assumptions.length >= 1, 'unmatched Must produces an explicit assumption');
+  ok(vague.openQuestions.length >= 1, 'unmatched Must produces an open question');
+}
+
+// 25. AIAdvisor + aiNotes: parse ketat, merge idempotent, Spec menyerapnya
+{
+  const A = window.AIAdvisor;
+  const good = '```json\n' + JSON.stringify({
+    asumsi: [{ teks: '  Asumsi   A ', alasan: 'karena x' }],
+    risiko: [{ sebab: 'Sebab B', mitigasi: 'Mitigasi B', terkait: 'M1' }],
+    kriteria: [{ mustId: 'm1', tambah: ['Kriteria X', 'Kriteria X'] }],
+    endpoint: [{ metode: 'post', path: '/x', guard: 'auth', untuk: 'M1' }, { metode: 'FLY', path: 'x' }],
+    pertanyaan: [{ teks: 'Berapa lama?', untuk: 'M1' }]
+  }) + '\n```';
+  const d = A.parse(good);
+  ok(d.asumsi[0].teks === 'Asumsi A', 'advisor collapses whitespace in text');
+  ok(d.kriteria[0].mustId === 'M1', 'advisor uppercases mustId');
+  ok(d.endpoint.length === 1 && d.endpoint[0].m === 'POST', 'advisor drops invalid method');
+  ok(d.endpoint[0].p === '/x', 'advisor keeps valid path');
+  ok(A.describe(d).total === 5, 'advisor describe counts all buckets');
+  ok(A.allIds(d).length === 5, 'advisor exposes stable ids for accept-all');
+
+  let threw = null;
+  try { A.parse('halo, ini bukan json'); } catch (e) { threw = e; }
+  ok(threw && threw.code === 'BAD_JSON', 'advisor rejects non-JSON with BAD_JSON');
+  threw = null;
+  try { A.parse('[1,2]'); } catch (e) { threw = e; }
+  ok(threw && threw.code === 'BAD_SHAPE', 'advisor rejects array payloads');
+
+  const many = { asumsi: Array.from({ length: 10 }, (_, i) => ({ teks: 'A' + i })) };
+  ok(A.parse(JSON.stringify(many)).asumsi.length === 6, 'advisor caps items per bucket');
+
+  // merge: hanya id yang diterima; item sama tidak menumpuk saat diulang
+  const m1 = A.merge({}, d, ['a0', 'c0']);
+  ok(m1.assumptions.length === 1 && m1.criteria.M1.length === 1, 'merge writes only accepted items');
+  ok(m1.risks.length === 0 && m1.endpoints.length === 0, 'merge skips rejected items');
+  const m2 = A.merge({ aiNotes: m1 }, d, ['a0', 'c0', 'e0']);
+  ok(m2.assumptions.length === 1, 'merge is idempotent for the same text');
+  ok(m2.criteria.M1.length === 1, 'merge dedupes repeated criteria');
+  ok(m2.endpoints.length === 1, 'merge adds the newly accepted endpoint');
+
+  // Spec menyerap aiNotes tanpa AI aktif; semuanya dari data
+  const specAns = Object.assign({}, sample, { aiNotes: {
+    assumptions: [{ teks: 'Asumsi dari AI', alasan: '' }],
+    risks: [{ sebab: 'Risiko dari AI', mitigasi: 'Mitigasi AI', terkait: 'M1' }],
+    criteria: { M1: ['Kriteria dari AI'] },
+    endpoints: [{ m: 'GET', p: '/ai-endpoint', guard: 'auth', untuk: 'M1' }],
+    questions: [{ teks: 'Pertanyaan dari AI?', untuk: 'M1' }]
+  } });
+  const sp = window.Spec.build(specAns, { score: 80, level: 'Siap' });
+  ok(sp.assumptions.indexOf('Asumsi dari AI') > -1, 'spec absorbs accepted AI assumption');
+  ok(sp.risks.sebab.indexOf('Risiko dari AI') > -1, 'spec absorbs accepted AI risk');
+  ok(sp.stories[0].criteria.indexOf('Kriteria dari AI') > -1, 'spec absorbs accepted AI criteria');
+  ok(sp.endpoints.some(x => x.p === '/ai-endpoint'), 'spec absorbs accepted AI endpoint');
+  ok(sp.openQuestions.indexOf('Pertanyaan dari AI?') > -1, 'spec absorbs accepted AI question');
+  ok(sp.aiApplied.criteria === 1 && sp.aiApplied.endpoints === 1 && sp.aiApplied.risks === 1,
+    'spec counts accepted AI items honestly');
+
+  // uiAnswers klaim AI ganda tidak menghasilkan duplikat di PRD
+  const mdAi = window.SpecRender.markdown(sp);
+  ok((mdAi.match(/Risiko dari AI/g) || []).length === 1, 'AI risk appears exactly once in the PRD');
+  ok(mdAi.indexOf('Kriteria dari AI') > -1, 'AI criteria reaches the markdown');
+
+  // llm-adapter: preset, timeout clamp, key dibuang saat endpoint pindah
+  const L = window.LLM;
+  ok(L.presets.some(p => p.id === 'gemini' && /googleapis/.test(p.baseUrl)), 'gemini preset present');
+  ok(L.presetFor('https://api.openai.com/v1') && L.presetFor('https://api.openai.com/v1').id === 'openai',
+    'presetFor recognises OpenAI endpoint');
+  ok(L.isLocalUrl('http://localhost:11434/v1') === true, 'localhost counts as local');
+  ok(L.needsKey('http://localhost:11434/v1') === false, 'local endpoint needs no key');
+  ok(L.needsKey('https://api.openai.com/v1') === true, 'remote endpoint needs key');
+  L.setConfig({ baseUrl: 'https://a.example/v1', model: 'm', apiKey: 'sk-a', timeoutMs: 1000 });
+  ok(L.getConfig().timeoutMs === 5000, 'timeout clamped to the 5s floor');
+  L.setConfig({ baseUrl: 'https://a.example/v1', model: 'm', apiKey: 'sk-a', timeoutMs: 999999 });
+  ok(L.getConfig().timeoutMs === 180000, 'timeout clamped to the 180s ceiling');
+  L.setConfig({ baseUrl: 'https://b.example/v1', model: 'm' });
+  ok(L.getConfig().hasKey === false, 'changing endpoint drops the stale key');
+  L.clearKey();
+  L.setConfig({ baseUrl: '', model: '' });
+  let sync = false;
+  let p = null;
+  try { p = L.test(); } catch (e) { sync = true; }
+  ok(!sync, 'LLM.test never throws synchronously (async contract)');
+  ok(p && typeof p.then === 'function' && typeof p.catch === 'function',
+    'LLM.test returns a promise even when unconfigured');
+  if (p) p.catch(() => {});
+
+  // Struktur UI seam AI: panel review, preset, timeout, penemuan model
+  const html = fs.readFileSync(path.join(__dirname, '..', 'studio.html'), 'utf8');
+  ok(html.indexOf('id="aiReview"') > -1, 'studio.html has the AI review container');
+  ok(/data-act="ai-advise"/.test(html), 'studio.html has the AI advise button');
+  ok(html.indexOf('id="llmPreset"') > -1 && html.indexOf('id="llmTimeout"') > -1,
+    'studio.html has preset and timeout controls');
+  ok(html.indexOf('id="llmModelList"') > -1 && html.indexOf('id="llmModelsBtn"') > -1,
+    'studio.html has model discovery controls');
+  ok(html.indexOf('id="llmKeyUrl"') > -1, 'studio.html has the key help slot');
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  ok(app.indexOf('AIAdvisor.merge') > -1 && app.indexOf('function aiAdvise') > -1,
+    'app.js wires the advisor panel');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'css', 'studio.css'), 'utf8');
+  ok(css.indexOf('.ai-card') > -1 && css.indexOf('.ai-review') > -1, 'studio.css styles the review cards');
+}
+
+// 26. F6: blank kanonik + setter progres dengan rollback
+{
+  const S = window.StudioState;
+  const b1 = S.blank();
+  const b2 = S.blank();
+  ok(b1 !== b2 && b1.aiNotes !== b2.aiNotes, 'blank returns a fresh deep object each call');
+  ok('risks' in b1 && 'assumptions' in b1 && 'dependencies' in b1,
+    'blank carries the text fields the old hand-written copy dropped');
+  ok(Array.isArray(b1.aiNotes.assumptions) && typeof b1.aiNotes.criteria === 'object',
+    'blank carries the canonical aiNotes shape');
+  ok(b1.lastResult === null && Array.isArray(b1.history) && b1.step === 1, 'blank starts clean');
+
+  // setter progres: sukses, no-op aman, rollback saat simpan gagal
+  const keysBefore = Object.keys(S.data.checks).length;
+  ok(S.setCheck('i9.9', true) === true && S.data.checks['i9.9'] === true, 'setCheck saves');
+  const realSet = global.localStorage.setItem;
+  global.localStorage.setItem = () => { throw new Error('quota'); };
+  ok(S.setCheck('i9.9', false) === false && S.data.checks['i9.9'] === true,
+    'setCheck rolls back the value when the save fails');
+  ok(S.setCopied('P9') === false && !S.data.copied['P9'],
+    'setCopied rolls back on failure');
+  ok(S.setPromptEdit('P9', 'x') === false && !S.data.promptEdits['P9'],
+    'setPromptEdit rolls back on failure');
+  ok(S.setPromptEdit('P9', 'x', true) === true && S.data.promptEdits['P9'] === 'x',
+    'setPromptEdit skipSave writes without persisting');
+  global.localStorage.setItem = realSet;
+  delete S.data.promptEdits['P9'];
+  ok(S.migrateCheck('i9.9', 'i0.0') === true && S.data.checks['i0.0'] === true && !('i9.9' in S.data.checks),
+    'migrateCheck moves the value to the new key');
+  delete S.data.checks['i0.0'];
+  ok(S.setCheck('', true) === false && Object.keys(S.data.checks).length === keysBefore,
+    'setCheck rejects empty keys');
+  const src = fs.readFileSync(path.join(root, 'render.js'), 'utf8');
+  ok(src.indexOf('S.setCheck(') > -1 && src.indexOf('S.setCopied(') > -1 && src.indexOf('S.setPromptEdit(') > -1,
+    'render.js delegates progress writes to state setters');
+  ok(!/S\.data\.checks\[[^\]]+\] =/.test(src) && !/S\.data\.copied\[[^\]]+\] =/.test(src) && src.indexOf('S.data.promptEdits[') < 0,
+    'render.js no longer mutates progress state directly');
+}
+
+// 27. F3: questionnaire sebagai sumber field + kedalaman menggeser skala dengan jujur
+{
+  const Q = window.Questionnaire;
+  ok(Array.isArray(Q.LEVELS) && Q.LEVELS.join(',') === 'cepat,standar,lengkap', 'three depth levels defined');
+  ok(Q.normalize('aneh') === 'standar', 'unknown depth falls back to standar');
+
+  // Setiap field wizard yang penting harus terdaftar (id nyata di studio.html).
+  const htmlFields = [...fs.readFileSync(path.join(__dirname, '..', 'studio.html'), 'utf8')
+    .matchAll(/id="([a-zA-Z]+)"/g)].map(m => m[1]);
+  const known = Object.keys(Q.FIELDS);
+  ok(known.length >= 20, 'questionnaire lists the wizard fields (' + known.length + ')');
+  ok(known.every(id => htmlFields.indexOf(id) > -1 || id === 'platform' || id === 'audio'),
+    'every questionnaire field exists in studio.html (chips map to their container)');
+  ok(Q.FIELDS.platform && Q.FIELDS.audio && Q.FIELDS.platform.tier === 'inti',
+    'chips fields registered with a tier');
+
+  // Tier mempartisi semua field; tiap langkah 1-6 punya field, langkah 1-4 inti.
+  const tiers = {};
+  known.forEach(id => tiers[Q.FIELDS[id].tier] = (tiers[Q.FIELDS[id].tier] || 0) + 1);
+  ok(tiers.inti && tiers.standar && tiers.lanjutan, 'all three tiers are in use', JSON.stringify(tiers));
+  for (let s = 1; s <= 6; s++) {
+    ok(known.some(id => Q.FIELDS[id].step === s), 'step ' + s + ' has at least one field');
+  }
+  ok(['productName', 'problem', 'whyNow', 'primaryUser', 'roles', 'mustHave', 'mainFlow', 'failFlow', 'navStructure']
+    .every(id => Q.FIELDS[id].tier === 'inti'),
+    'hard rules and flow fields are core (never hide in cepat)');
+
+  // Komponen skor tidak boleh setengah terlihat: field satu komponen setier.
+  const comp = [['productName', 'problem', 'whyNow'], ['primaryUser', 'roles'], ['mustHave'],
+    ['mainFlow', 'failFlow', 'navStructure'], ['nfr'], ['wontHave', 'visualNeeds']];
+  comp.forEach(c => {
+    const ts = new Set(c.map(id => Q.FIELDS[id].tier));
+    ok(ts.size === 1, 'score component shares one tier: ' + c.join('+'), [...ts].join(','));
+  });
+
+  // filterGaps membuang gap field tersembunyi, gap tanpa field tetap lolos.
+  const gs = [
+    { code: 'NFR', step: 6, field: 'nfr' },
+    { code: 'NAMA', step: 1, field: 'productName' },
+    { code: 'TABRAK', step: 3, field: 'mustHave' },
+    { code: 'X', step: 3, field: '' }
+  ];
+  const cepatG = Q.filterGaps(gs, 'cepat');
+  ok(cepatG.length === 3 && !cepatG.some(g => g.code === 'NFR'), 'cepat hides gaps of hidden fields');
+  ok(Q.filterGaps(gs, 'standar').length === 4, 'standar keeps every gap');
+
+  // Mode standar (default) WAJIB identik dengan skor tanpa opsi: 0 regresi.
+  const plain = window.Scorer(sample, []);
+  const standar = window.Scorer(sample, [], { hidden: Q.hiddenFields('standar') });
+  ok(plain.score === standar.score, 'standar mode keeps the 0-100 scale identical (' + plain.score + ' vs ' + standar.score + ')');
+  const plainNoNfr = window.Scorer(Object.assign({}, sample, { nfr: '' }), []);
+  const cepatNoNfr = window.Scorer(Object.assign({}, sample, { nfr: '' }), [], { hidden: Q.hiddenFields('cepat') });
+  ok(cepatNoNfr.score >= plainNoNfr.score, 'cepat does not punish hidden NFR');
+  ok(cepatNoNfr.parts.some(p => p.name === 'Skala mode kedalaman'), 'depth scaling is disclosed in the rubric');
+  // Semua komponen inti masih terlihat di cepat; komponen NFR hilang dari rubrik.
+  ok(!cepatNoNfr.parts.some(p => p.name === 'NFR terukur'), 'cepat drops the NFR component from the rubric');
+  ok(cepatNoNfr.parts.some(p => p.name === 'Must biner'), 'cepat keeps core components');
+
+  // Nilai tersembunyi tetap terbaca generator: depth bukan penghapus data.
+  const hiddenAns = Object.assign({}, sample, { depth: 'cepat' });
+  ok(window.Spec.build(hiddenAns, 80).nfrs.length > 0, 'hidden fields still feed the spec (values preserved)');
+
+  // state.js menyimpan depth dan menormalkannya.
+  ok(window.StudioState.blank().depth === 'standar', 'blank carries the default depth');
+  ok(['cepat', 'standar', 'lengkap'].indexOf(window.StudioState.blank().depth) > -1, 'blank depth is canonical');
 }
 
 console.log('PASS ' + pass + ' / FAIL ' + fail);

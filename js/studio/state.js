@@ -23,7 +23,14 @@
     stackPref: 'HTML CSS JS vanilla', integrations: '', nfr: '',
     step: 1, lastResult: null, history: [], checks: {}, copied: {},
     nameEdited: false, varRole: '', varTone: '', varTarget: '', varFormat: '',
-    promptEdits: {}, successMetrics: '', risks: '', assumptions: '', dependencies: ''
+    promptEdits: {}, successMetrics: '', risks: '', assumptions: '', dependencies: '',
+    /* Catatan AI yang sudah diterima user (kartu Terima di panel usulan AI).
+       Terpisah dari field 'assumptions' milik user: ini data terstruktur
+       yang dibaca Spec.build, bukan teks bebas. */
+    aiNotes: { assumptions: [], risks: [], criteria: {}, endpoints: [], questions: [] },
+    /* Tingkat kedalaman wawancara: 'cepat' | 'standar' | 'lengkap'.
+       Mengatur field mana yang tampil, bukan menghapus nilai jawaban. */
+    depth: 'standar'
   };
 
   function strArr(v, dflt) {
@@ -84,6 +91,41 @@
     return r;
   }
 
+  /* aiNotes: bentuk kanonik tunggal. Item asing dibuang, teks dipotong
+     supaya payload impor yang dimanipulasi tidak bisa menahan payload raksasa
+     atau menyelipkan struktur aneh ke renderer. */
+  function normalizeAiNotes(v) {
+    var out = { assumptions: [], risks: [], criteria: {}, endpoints: [], questions: [] };
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return out;
+    function txt(x) { return String(x == null ? '' : x).replace(/\s+/g, ' ').trim().slice(0, 300); }
+    (Array.isArray(v.assumptions) ? v.assumptions : []).slice(0, 20).forEach(function (x) {
+      var t = txt(x && x.teks !== undefined ? x.teks : x);
+      if (t) out.assumptions.push({ teks: t, alasan: txt(x && x.alasan) });
+    });
+    (Array.isArray(v.risks) ? v.risks : []).slice(0, 20).forEach(function (x) {
+      var s = txt(x && x.sebab);
+      if (s) out.risks.push({ sebab: s, mitigasi: txt(x && x.mitigasi) || 'belum ditentukan', terkait: txt(x && x.terkait).slice(0, 8) });
+    });
+    if (v.criteria && typeof v.criteria === 'object' && !Array.isArray(v.criteria)) {
+      Object.keys(v.criteria).slice(0, 20).forEach(function (k) {
+        if (!/^M\d+$/.test(k)) return;
+        var list = (Array.isArray(v.criteria[k]) ? v.criteria[k] : []).slice(0, 6)
+          .map(txt).filter(Boolean);
+        if (list.length) out.criteria[k] = list;
+      });
+    }
+    (Array.isArray(v.endpoints) ? v.endpoints : []).slice(0, 20).forEach(function (x) {
+      var m = txt(x && x.m).toUpperCase(), p = txt(x && x.p);
+      if (!m || !p || p.charAt(0) !== '/') return;
+      out.endpoints.push({ m: m, p: p, guard: txt(x && x.guard), untuk: txt(x && x.untuk).slice(0, 8) });
+    });
+    (Array.isArray(v.questions) ? v.questions : []).slice(0, 20).forEach(function (x) {
+      var t = txt(x && x.teks !== undefined ? x.teks : x);
+      if (t) out.questions.push({ teks: t, untuk: txt(x && x.untuk).slice(0, 8) });
+    });
+    return out;
+  }
+
   function normalizeData(d) {
     if (!d || typeof d !== 'object' || Array.isArray(d)) d = {};
     /* B6: buang kunci berbahaya (__proto__ dkk) dari payload impor sebelum
@@ -113,6 +155,11 @@
     if (!out.checks || typeof out.checks !== 'object' || Array.isArray(out.checks)) out.checks = {};
     if (!out.copied || typeof out.copied !== 'object' || Array.isArray(out.copied)) out.copied = {};
     if (!out.promptEdits || typeof out.promptEdits !== 'object' || Array.isArray(out.promptEdits)) out.promptEdits = {};
+    /* aiNotes dari payload impor bisa berbentuk apa saja; paksa ke bentuk
+       kanonik supaya Spec.build tidak perlu mempertahankan asumsi bentuk. */
+    out.aiNotes = normalizeAiNotes(out.aiNotes);
+    out.depth = window.Questionnaire ? window.Questionnaire.normalize(out.depth)
+      : (['cepat', 'standar', 'lengkap'].indexOf(out.depth) > -1 ? out.depth : 'standar');
     out.nameEdited = !!out.nameEdited;
     out.lastResult = validResult(out.lastResult);
     out.step = Math.max(1, Math.min(7, Math.round(Number(out.step) || 1)));
@@ -268,6 +315,53 @@
     saveSoon: saveSoon,
     onExternal: null,
     lastSaveFailed: function () { return lastSaveFailed; },
+    /* Blank kanonik: satu-satunya cara membuat data jawaban kosong. Dipakai
+       muat riwayat dan proyek baru supaya tidak ada dua definisi skema yang
+       bisa saling menyimpang (dulu app.js menulis ulang blank sendiri dan
+       menghilangkan risks/assumptions/dependencies/aiNotes saat memuat). */
+    /* Progres user di atas konten (centang roadmap, prompt tersalin, edit
+       prompt) adalah transisi state, bukan urusan view. render.js hanya
+       memanggil setter ini; rollback saat simpan gagal ada di satu tempat
+       dan bisa diuji tanpa DOM. */
+    setCheck: function (key, on) {
+      if (!key) return false;
+      var had = Object.prototype.hasOwnProperty.call(data.checks, key);
+      var prev = data.checks[key];
+      data.checks[key] = !!on;
+      if (!save()) {
+        if (had) data.checks[key] = prev; else delete data.checks[key];
+        return false;
+      }
+      return true;
+    },
+    migrateCheck: function (fromKey, toKey) {
+      if (!fromKey || !toKey || fromKey === toKey) return false;
+      var v = !!data.checks[fromKey];
+      data.checks[toKey] = v;
+      delete data.checks[fromKey];
+      saveSoon(400);
+      return v;
+    },
+    setCopied: function (id) {
+      if (!id || data.copied[id]) return !!id;
+      data.copied[id] = true;
+      if (!save()) { delete data.copied[id]; return false; }
+      return true;
+    },
+    setPromptEdit: function (id, body, skipSave) {
+      if (!id) return false;
+      var had = Object.prototype.hasOwnProperty.call(data.promptEdits, id);
+      var prev = data.promptEdits[id];
+      data.promptEdits[id] = String(body == null ? '' : body);
+      /* skipSave: flush sebelum render ulang — pemanggil yang menyimpan. */
+      if (skipSave) return true;
+      if (!save()) {
+        if (had) data.promptEdits[id] = prev; else delete data.promptEdits[id];
+        return false;
+      }
+      return true;
+    },
+    blank: function () { return normalizeData({}); },
     projectList: function () {
       return store.projects.map(function (p) { return { id: p.id, name: p.name, updatedAt: p.updatedAt, count: (p.data.history || []).length }; });
     },

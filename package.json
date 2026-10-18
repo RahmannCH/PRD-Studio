@@ -1,0 +1,18 @@
+{
+  "name": "prd-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PRD Studio: wawancara 7 langkah sampai PRD, roadmap, diagram, dan 10 prompt, berjalan penuh offline tanpa AI.",
+  "scripts": {
+    "test": "node tests/test-prd.js",
+    "test:unit": "node tests/test-prd.js",
+    "test:smoke": "node tests/smoke-prd.js",
+    "test:responsive": "node tests/responsive-prd.js",
+    "test:sw": "node tests/sw-offline-prd.js",
+    "test:contrast": "python tests/contrast-check.py",
+    "test:all": "node tests/test-prd.js && node tests/smoke-prd.js && node tests/responsive-prd.js && node tests/sw-offline-prd.js"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

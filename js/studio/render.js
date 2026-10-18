@@ -232,8 +232,8 @@
       var orig = list && list.filter(function (q) { return q.id === id; })[0];
       if (orig && body !== orig.body) {
         orig.body = body;
-        S.data.promptEdits = S.data.promptEdits || {};
-        S.data.promptEdits[id] = body;
+        /* skipSave: pemanggil render ulang yang menyimpan setelah ini. */
+        S.setPromptEdit(id, body, true);
       }
       pre.removeAttribute('contenteditable');
       pre.classList.remove('editing');
@@ -326,11 +326,9 @@
         if (Object.prototype.hasOwnProperty.call(S.data.checks, key)) return S.data.checks[key];
         var legacy = legacyKeyOf(fi, ii, it);
         if (Object.prototype.hasOwnProperty.call(S.data.checks, legacy)) {
-          /* migrasi sekali: pindahkan nilai ke kunci indeks */
-          S.data.checks[key] = !!S.data.checks[legacy];
-          delete S.data.checks[legacy];
-          S.saveSoon(400);
-          return S.data.checks[key];
+          /* migrasi sekali: pindahkan nilai ke kunci indeks (state.js yang
+             menulis + menyimpan, render hanya meminta) */
+          return S.migrateCheck(legacy, key);
         }
         return false;
       }
@@ -349,11 +347,10 @@
           var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!lookup(fi, ii, it);
           cb.setAttribute('aria-label', it.text + ' (estimasi ' + it.est + ')');
           cb.addEventListener('change', function () {
-            S.data.checks[key] = cb.checked;
             /* B4: simpan gagal harus terlihat — jangan biarkan centang
-               berbohong di layar lalu hilang saat reload. */
-            if (!S.save()) {
-              S.data.checks[key] = !cb.checked;
+               berbohong di layar lalu hilang saat reload. Rollback state
+               dipegang setCheck; di sini rollback UI-nya. */
+            if (!S.setCheck(key, cb.checked)) {
               cb.checked = !cb.checked;
               lab.classList.toggle('done', cb.checked);
               paint();
@@ -457,8 +454,7 @@
             /* R6/R7: tandai copied + render ulang hanya setelah copy SUKSES. */
             copyText(text, b).then(function (okCopy) {
               if (!okCopy) return;
-              S.data.copied[p.id] = true;
-              S.save();
+              S.setCopied(p.id);
               var unlockedNow = list.some(function (q) {
                 return q.gate && q.gate === p.id;
               });
@@ -487,9 +483,7 @@
           var newBody = pre.textContent;
           if (newBody !== p.body) {
             p.body = newBody;
-            S.data.promptEdits = S.data.promptEdits || {};
-            S.data.promptEdits[p.id] = newBody;
-            S.save();
+            S.setPromptEdit(p.id, newBody);
             window.UX.toast('Prompt ' + p.id + ' diedit dan tersimpan.');
           }
         }

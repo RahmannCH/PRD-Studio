@@ -54,6 +54,13 @@
   <div class="studio-grid">
     <section class="card neu" id="wizard" aria-label="Wizard 7 langkah" tabindex="-1">
       <p class="step-meta" id="stepMeta" aria-live="polite">Langkah 1 dari 7</p>
+      <div class="depth-row" id="depthChips" role="radiogroup" aria-label="Kedalaman wawancara">
+        <span class="depth-label" id="depthLabel">Kedalaman</span>
+        <button type="button" class="chip" role="radio" aria-checked="false" data-depth="cepat" aria-describedby="depthHint">Cepat</button>
+        <button type="button" class="chip" role="radio" aria-checked="true" data-depth="standar" aria-describedby="depthHint">Standar</button>
+        <button type="button" class="chip" role="radio" aria-checked="false" data-depth="lengkap" aria-describedby="depthHint">Lengkap</button>
+        <small class="depth-hint" id="depthHint">Cepat menanyakan hal pokok saja. Standar menambah NFR, metrik, dan integrasi. Lengkap menampilkan semua termasuk pilihan gaya. Nilai yang sudah diisi tidak pernah hilang saat berganti mode.</small>
+      </div>
       <div class="progress" id="progress" aria-hidden="true"><i class="now"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <div class="readiness" aria-live="polite" aria-atomic="true">
         <div class="readiness-track"><div class="readiness-fill" id="readyFill"></div></div>
@@ -187,12 +194,26 @@
       <div class="output-actions">
         <button class="btn btn-primary btn-sm" data-act="copy-prd" type="button" disabled>Salin PRD</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-prd" type="button" disabled>Unduh .md</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-html" type="button" disabled>Unduh .html</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-brief" type="button" disabled>Unduh brief (.md)</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-spec-yaml" type="button" disabled>Unduh spec (.yaml)</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-bab" type="button" disabled>Unduh semua (.md)</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-json" type="button" disabled>Unduh .json</button>
         <button class="btn btn-ghost btn-sm" data-act="print" type="button" disabled>Cetak / PDF</button>
+        <button class="btn btn-ghost btn-sm" data-act="ai-advise" type="button" disabled>Minta usulan AI</button>
         <button class="btn btn-ghost btn-sm" data-act="ai-polish" type="button" disabled>Rapikan dengan AI</button>
       </div>
       <p class="action-hint" id="actionHint">Tombol di atas aktif setelah kamu menekan Susun.</p>
+      <section class="ai-review" id="aiReview" hidden aria-labelledby="aiReviewTitle" aria-live="polite">
+        <h3 class="h-sm" id="aiReviewTitle">Usulan AI untuk ditinjau</h3>
+        <p class="ai-review-note">AI hanya mengusulkan. Tidak ada yang masuk ke PRD sebelum kamu menekan Terima. Tanpa AI, bagian ini tidak muncul dan semua fitur tetap berjalan.</p>
+        <div id="aiReviewBody"></div>
+        <div class="ai-review-actions">
+          <button class="btn btn-primary btn-sm" id="aiAcceptAll" type="button">Terima semua</button>
+          <button class="btn btn-ghost btn-sm" id="aiClose" type="button">Tutup</button>
+          <span class="loading" id="aiStatus" role="status" aria-live="polite"></span>
+        </div>
+      </section>
     </div>
     <div class="output" id="out-roadmap" role="tabpanel" aria-labelledby="tab-roadmap" tabindex="0" hidden>
       <div id="roadmapDiv"><p class="empty">Roadmap akan muncul setelah kamu menekan Susun.</p></div>
@@ -228,9 +249,20 @@
     <h2 id="pengaturanTitle" class="h-sm">Pengaturan AI (opsional)</h2>
     <p class="settings-note">Generator utama jalan penuh tanpa AI. Isi bagian ini hanya jika kamu mau tombol "Rapikan dengan AI" memakai endpoint OpenAI-compatible milikmu. Key disimpan TIDAK terenkripsi di localStorage browser ini (kunci <code class="inline">prd_studio_llm</code>), jadi pakai key khusus, bukan key produksi utama. Key hanya dikirim ke endpoint yang kamu isi.</p>
     <div class="settings-grid">
+      <div class="field"><label for="llmPreset">Penyedia (preset)</label>
+        <select id="llmPreset" aria-describedby="llmPresetHint">
+          <option value="">Pilih penyedia untuk mengisi otomatis</option>
+        </select>
+        <small id="llmPresetHint">Pilih penyedia, lalu isi API key. Semua kolom tetap bisa kamu ubah manual.</small>
+      </div>
       <div class="row2">
         <div class="field"><label for="llmBaseUrl">Endpoint base URL</label><input type="text" id="llmBaseUrl" placeholder="https://api.openai.com/v1" autocomplete="off"></div>
-        <div class="field"><label for="llmModel">Model</label><input type="text" id="llmModel" placeholder="gpt-4.1-mini" autocomplete="off"></div>
+        <div class="field"><label for="llmModel">Model</label><input type="text" id="llmModel" list="llmModelList" placeholder="gpt-4.1-mini" autocomplete="off">
+          <div class="pw-wrap" id="llmModelRow">
+            <button class="btn btn-ghost btn-sm" id="llmModelsBtn" type="button">Muat daftar model</button>
+          </div>
+          <datalist id="llmModelList"></datalist>
+        </div>
       </div>
         <div class="field"><label for="llmKey">API key</label>
         <div class="pw-wrap">
@@ -238,7 +270,11 @@
           <button class="btn btn-ghost btn-sm" id="llmKeyToggle" type="button" aria-pressed="false">Tampil</button>
           <button class="btn btn-ghost btn-sm" id="llmKeyDel" type="button">Hapus key</button>
         </div>
-        <small id="llmKeyHint">Isi key baru lalu Simpan untuk mengganti. Kosongkan lalu Simpan untuk mempertahankan key lama.</small>
+        <small id="llmKeyHint">Isi key baru lalu Simpan untuk mengganti. Kosongkan lalu Simpan untuk mempertahankan key lama. Endpoint lokal (localhost) tidak perlu key.</small>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="llmTimeout">Batas waktu (detik)</label><input type="number" id="llmTimeout" min="5" max="180" step="5" placeholder="30" inputmode="numeric"></div>
+        <div class="field"><label for="llmKeyUrl">Cara mendapat API key</label><span class="hint" id="llmKeyUrl">Pilih penyedia di atas untuk melihat tautan dan petunjuknya.</span></div>
       </div>
       <div class="gen-row">
         <button class="btn btn-primary btn-sm" id="llmSave" type="button">Simpan pengaturan</button>
@@ -302,10 +338,14 @@
 
 <script src="js/studio/theme.js"></script>
 <script src="js/studio/shared.js"></script>
+<script src="js/studio/knowledge.js"></script>
+<script src="js/studio/questionnaire.js"></script>
 <script src="js/studio/state.js"></script>
 <script src="js/studio/templates.js"></script>
 <script src="js/studio/validator.js"></script>
 <script src="js/studio/scorer.js"></script>
+<script src="js/studio/spec.js"></script>
+<script src="js/studio/spec-render.js"></script>
 <script src="js/studio/generator-prd.js"></script>
 <script src="js/studio/generator-roadmap.js"></script>
 <script src="js/studio/generator-prompt.js"></script>
@@ -313,6 +353,7 @@
 <script src="js/studio/exporter.js"></script>
 <script src="js/studio/render.js"></script>
 <script src="js/studio/llm-adapter.js"></script>
+<script src="js/studio/ai-advisor.js"></script>
 <script src="js/studio/reverse.js"></script>
 <script src="js/studio/wizard.js"></script>
 <script src="js/studio/app.js"></script>

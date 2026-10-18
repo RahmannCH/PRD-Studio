@@ -128,8 +128,15 @@
     });
   }
   function analyze() {
+    var Q = window.Questionnaire;
     var gaps = window.Validator(S.data);
-    var sc = window.Scorer(S.data, gaps);
+    var sc;
+    if (Q) {
+      gaps = Q.filterGaps(gaps, S.data.depth);
+      sc = window.Scorer(S.data, gaps, { hidden: Q.hiddenFields(S.data.depth) });
+    } else {
+      sc = window.Scorer(S.data, gaps);
+    }
     return { gaps: gaps, sc: sc };
   }
   function refresh(immediate) {
