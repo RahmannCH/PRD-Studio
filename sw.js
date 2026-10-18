@@ -4,23 +4,25 @@
    bisa dimuat saat offline.
    Strategi:
    - install   : prefetch aset inti satu per satu (satu aset gagal tidak mematikan
-                 seluruh install) + font + renderer Mermaid sekali muat.
+                 seluruh install), termasuk font self-host, plus renderer Mermaid
+                 sekali muat.
    - activate  : buang cache versi lama.
    - navigasi  : network-first hanya untuk origin sendiri dan hanya respons ok
                  yang masuk cache (500/404 tidak pernah disimpan).
-   - aset same-origin (js/css): network-first agar deploy baru langsung terpakai
-                 (stale-while-revalidate menyebabkan satu tampilan rusak campur versi).
-   - CDN lintas origin (font, Mermaid) : cache-first (sekali muat, selamanya offline).
+   - aset same-origin (js/css/font): network-first agar deploy baru langsung
+                 terpakai (stale-while-revalidate menyebabkan satu tampilan rusak
+                 campur versi).
+   - CDN lintas origin (Mermaid) : cache-first (sekali muat, selamanya offline).
    Tidak pakai skipWaiting: update berlaku di muat halaman berikutnya agar
    tidak ada campur aset versi lama dan baru di tengah sesi. */
-const CACHE = 'prd-studio-v3.2';
-/* D1: cache CDN TERPISAH. Font .woff2 dari Google diambil browser dengan
-   mode no-cors → respons opaque (status 0, ok=false) sehingga selama ini
-   tidak pernah tersimpan dan offline selalu kehilangan font. Opaque aman
-   di sini: isinya sudah dikunci nama URL-nya, bukan konten yang divalidasi. */
-const CDN_CACHE = 'prd-cdn-v1';
+const CACHE = 'prd-studio-v3.3';
+/* D1: cache CDN TERPISAH untuk respons lintas origin. Mermaid diambil dengan
+   mode no-cors → respons opaque (status 0, ok=false); tanpa cache terpisah
+   respons itu tidak pernah tersimpan dan offline kehilangan renderer diagram.
+   Opaque aman di sini: isinya sudah dikunci nama URL-nya, bukan konten yang
+   divalidasi. Font kini self-host (CORE), tidak lewat jalur ini lagi. */
+const CDN_CACHE = 'prd-cdn-v2';
 const CDN_URLS = [
-  'https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap',
   'https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js'
 ];
 const CORE = [
@@ -28,6 +30,7 @@ const CORE = [
   'studio.html',
   'manifest.webmanifest',
   'css/style.css',
+  'css/fonts.css',
   'css/studio.css',
   'css/print.css',
   'js/studio/theme.js',
@@ -47,7 +50,9 @@ const CORE = [
   'js/studio/exporter.js',
   'js/studio/criteria.js',
   'js/studio/spec-pack.js',
+  'js/studio/coach.js',
   'js/studio/render.js',
+  'js/studio/palette.js',
   'js/studio/llm-adapter.js',
   'js/studio/ai-advisor.js',
   'js/studio/reverse.js',
@@ -55,7 +60,11 @@ const CORE = [
   'js/studio/app.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
-  'icons/icon-maskable-512.png'
+  'icons/icon-maskable-512.png',
+  'fonts/inter-var.woff2',
+  'fonts/poppins-500.woff2',
+  'fonts/poppins-600.woff2',
+  'fonts/poppins-700.woff2'
 ];
 
 self.addEventListener('install', function (e) {

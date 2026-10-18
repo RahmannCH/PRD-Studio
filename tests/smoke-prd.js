@@ -6,7 +6,7 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 const ROOT = path.join(__dirname, '..');
-const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml' };
+const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
 
 const server = http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);
@@ -157,6 +157,56 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   await page.click('[data-act="dl-spec-pack"]');
   const spDl = await spPromise;
   ok(/^REQUIREMENTS-.*\.md$/.test(spDl.suggestedFilename()), 'spec pack download starts with REQUIREMENTS', spDl.suggestedFilename());
+
+  // ---------- Paket 2: palet perintah + bantuan + coach + scrollspy ----------
+  await page.keyboard.press('Control+k');
+  await page.waitForSelector('#paletteWrap:not([hidden])', { timeout: 2000 });
+  ok(true, 'palette opens with Ctrl+K');
+  await page.fill('#paletteInput', 'roadmap');
+  await page.waitForTimeout(150);
+  const firstOpt = await page.textContent('#paletteList li[aria-selected="true"]');
+  ok(/roadmap/i.test(firstOpt), 'palette filters to matching commands', firstOpt);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(200);
+  ok(await page.evaluate(() => document.getElementById('paletteWrap').hidden), 'palette closes after Enter');
+  ok(await page.getAttribute('#tab-roadmap', 'aria-selected') === 'true', 'palette Enter executes the command (tab switch)');
+  await page.click('[data-tab="prd"]');
+
+  await page.keyboard.press('Shift+Slash');
+  await page.waitForTimeout(150);
+  ok(await page.evaluate(() => !document.getElementById('helpWrap').hidden), 'help overlay opens with ?');
+  await page.click('#helpClose');
+  ok(await page.evaluate(() => document.getElementById('helpWrap').hidden), 'help overlay closes');
+
+  await page.evaluate(() => window.Wizard.showStep(7, true));
+  await page.waitForTimeout(200);
+  ok(await page.evaluate(() => !document.getElementById('coachBox').hidden), 'coach panel visible on step 7');
+  const coachBtns = await page.locator('#coachBox button').count();
+  ok(coachBtns >= 1, 'coach lists at least one scenario gap for the sample', coachBtns);
+  await page.evaluate(() => window.Wizard.showStep(1, true));
+
+  // Scrollspy: halaman memakai scroll-behavior smooth, jadi tunggu posisi
+  // seksi benar-benar berhenti di ambang 96px sebelum memeriksa TOC.
+  await page.evaluate(() => document.getElementById('prd-sect-5').scrollIntoView());
+  await page.waitForFunction(() => document.getElementById('prd-sect-5').getBoundingClientRect().top <= 96, null, { timeout: 5000 });
+  await page.waitForTimeout(250);
+  const active5 = await page.evaluate(() => {
+    const links = document.querySelectorAll('#prdToc a');
+    for (let i = 0; i < links.length; i++) if (links[i].classList.contains('active')) return links[i].getAttribute('href');
+    return null;
+  });
+  ok(active5 === '#prd-sect-5', 'TOC scrollspy marks the section in view', active5);
+
+  await page.evaluate(() => document.getElementById('prd-sect-9').scrollIntoView());
+  await page.waitForFunction(() => document.getElementById('prd-sect-9').getBoundingClientRect().top <= 96, null, { timeout: 5000 });
+  await page.waitForTimeout(250);
+  const active9 = await page.evaluate(() => {
+    const links = document.querySelectorAll('#prdToc a');
+    for (let i = 0; i < links.length; i++) if (links[i].classList.contains('active')) return links[i].getAttribute('href');
+    return null;
+  });
+  ok(active9 === '#prd-sect-9', 'TOC scrollspy follows further scrolling', active9);
+  await page.evaluate(() => window.scrollTo(0, 0));
 
   // keyboard tab navigation (ArrowLeft)
   await page.focus('#tab-prompt');

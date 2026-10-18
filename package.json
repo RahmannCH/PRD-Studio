@@ -9,10 +9,12 @@
     "test:smoke": "node tests/smoke-prd.js",
     "test:responsive": "node tests/responsive-prd.js",
     "test:sw": "node tests/sw-offline-prd.js",
+    "test:a11y": "node tests/a11y-prd.js",
     "test:contrast": "python tests/contrast-check.py",
-    "test:all": "node tests/test-prd.js && node tests/smoke-prd.js && node tests/responsive-prd.js && node tests/sw-offline-prd.js"
+    "test:all": "node tests/test-prd.js && node tests/smoke-prd.js && node tests/responsive-prd.js && node tests/sw-offline-prd.js && node tests/a11y-prd.js"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "playwright": "1.63.0"
   }
 }

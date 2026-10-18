@@ -147,6 +147,48 @@ pesan yang bisa dibaca user.
 
 ---
 
+## Istilah pengalaman & mutu
+
+### Palet perintah
+Overlay Ctrl+K untuk menjalankan aksi tanpa mencari tombol: pindah tab,
+lompat seksi, ekspor, kedalaman, tema. Daftar perintah dibangun saat dibuka
+dari DOM yang ada, jadi tidak pernah basi. Skor fuzzy deterministik: urutan
+huruf harus muncul, bonus untuk kecocokan berurutan, substring, dan awalan.
+
+### Bantuan pintasan
+Overlay "?" yang mendaftar pintasan keyboard aplikasi. Dibuka dan ditutup
+dengan "?" atau Escape; fokus selalu kembali ke elemen sebelumnya.
+
+### Saran coach
+Temuan kualitas jawaban yang dipakai sebagai saran, bukan gerbang kelulusan.
+Berjalan deterministik tanpa AI dan hanya menandai field yang menjadi
+kriteria atau alur. Gap resmi tetap milik validator; saran coach tidak pernah
+menambah atau menahan gap.
+
+### Celah skenario
+Pertanyaan skenario yang belum dibahas jawaban: keadaan kosong, offline,
+peran dan hak akses, konflik data (duplikat ganda), dan strategi data lokal.
+Tiap celah menunjuk langkah dan field sumbernya agar bisa diterima atau
+diabaikan dengan sadar.
+
+### Scrollspy TOC
+Penanda seksi PRD yang sedang dibaca di daftar isi, dihitung terhadap ambang
+96px saat halaman bergulir. Berbasis listener scroll ber-rAF, bukan
+IntersectionObserver, karena ambang kustom bukan boundary yang dilaporkan
+observer.
+
+### Suite a11y
+Gate otomatis axe-core atas index, langkah 7, palet, bantuan, dan tab hasil.
+Ambangnya: nol violation ber-impact serious atau critical. Pelengkap gate
+kontras token statis, bukan pengganti.
+
+### Font self-host
+Semua font disajikan dari repo: satu berkas variabel Inter untuk tiga bobot
+dan tiga Poppins statis, semua subset latin. Tidak ada permintaan ke Google
+Fonts saat runtime; CDN hanya untuk mermaid.
+
+---
+
 ## Aturan yang tidak boleh dilanggar
 
 - Tanpa AI, semua fitur tetap berfungsi penuh dan offline.

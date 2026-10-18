@@ -9,7 +9,7 @@ const ROOT = path.join(__dirname, '..');
 // D4: baca nama cache dari sw.js — hardcode pernah membuat versi cache berubah
 // tanpa test sadar (test lolos padahal cek cache lama).
 const CACHE = /const\s+CACHE\s*=\s*'([^']+)'/.exec(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8'))[1];
-const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.webmanifest': 'application/manifest+json', '.png': 'image/png' };
+const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.woff2': 'font/woff2' };
 const server = http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);
   if (p === '/') p = '/index.html';

@@ -52,6 +52,8 @@ load('diagrams.js');
 load('exporter.js');
 load('criteria.js');
 load('spec-pack.js');
+load('coach.js');
+load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
 
@@ -913,6 +915,58 @@ const diagrams = window.GenDiagrams(sample);
   ok(/data-act="dl-spec-pack"/.test(html2), 'studio.html has the spec pack button');
   const app2 = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   ok(app2.indexOf("'dl-spec-pack'") > -1, 'app.js maps the spec pack act');
+}
+
+// 29. Paket 2: Coach deterministik + skor fuzzy palet
+{
+  const Coach = window.Coach;
+
+  // Sampel sudah rapi: tanpa temuan kualitas.
+  ok(Coach.review(sample).length === 0, 'clean sample has no quality findings');
+
+  // Temuan muncul saat jawaban kabur.
+  const messy = Object.assign({}, sample, {
+    nfr: 'harus cepat dan nyaman',
+    primaryUser: 'pengguna',
+    successMetrics: 'lebih banyak penjualan',
+    mustHave: 'Cari produk dengan cepat dan mudah'
+  });
+  const f = Coach.review(messy);
+  ok(f.some(x => x.field === 'nfr'), 'NFR without numbers is flagged');
+  ok(f.some(x => x.field === 'primaryUser'), 'generic user is flagged');
+  ok(f.some(x => x.field === 'successMetrics'), 'metric without numbers is flagged');
+  ok(f.some(x => x.field === 'mustHave'), 'vague Must line is flagged per line');
+  ok(f.every(x => x.step >= 1 && x.step <= 7 && x.pesan), 'findings carry step and message');
+
+  // Celah skenario: sampel menutup offline/peran/konflik/data, membiarkan empty state.
+  const e = Coach.edge(sample);
+  ok(e.some(x => x.kode === 'EMPTY'), 'sample still raises the empty-state question');
+  ok(!e.some(x => x.kode === 'OFFLINE'), 'offline covered by failFlow is not re-asked');
+  ok(!e.some(x => x.kode === 'PERAN'), 'PIN/hak mention silences the permission question');
+  ok(!e.some(x => x.kode === 'KONFLIK'), 'duplicate handling in failFlow silences the conflict question');
+
+  // Data kosong: hanya pertanyaan offline yang tersisa.
+  const eEmpty = Coach.edge({});
+  ok(eEmpty.length === 1 && eEmpty[0].kode === 'OFFLINE', 'empty data raises only the offline question');
+
+  // Fuzzy palette: substring menang, awalan dapat bonus, tidak cocok = -1.
+  const P = window.Palette;
+  ok(P.score('Unduh Spec Pack (AI agent)', 'unduh spec') > P.score('Unduh brief (.md)', 'unduh spec'),
+    'substring match outranks scattered match');
+  ok(P.score('abc def', 'ab') > P.score('xx abc', 'ab'), 'prefix match gets a bonus');
+  ok(P.score('abc', 'zz') === -1, 'no match returns -1');
+  ok(P.score('abc', '') === 0, 'empty query scores 0');
+
+  // Wiring UI: palet, bantuan, dan panel coach ada di studio.html.
+  const html3 = fs.readFileSync(path.join(__dirname, '..', 'studio.html'), 'utf8');
+  ok(html3.indexOf('id="paletteWrap"') > -1 && html3.indexOf('id="paletteInput"') > -1 &&
+    html3.indexOf('id="paletteList"') > -1, 'palette markup present');
+  ok(html3.indexOf('id="helpWrap"') > -1 && html3.indexOf('id="helpClose"') > -1, 'help overlay markup present');
+  ok(html3.indexOf('id="coachBox"') > -1, 'coach panel present on step 7');
+  const app3 = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  ok(app3.indexOf('Palette.init()') > -1, 'app.js initialises the palette');
+  const wiz = fs.readFileSync(path.join(root, 'wizard.js'), 'utf8');
+  ok(wiz.indexOf('paintCoach') > -1 && wiz.indexOf('window.Coach') > -1, 'wizard paints coach findings on review');
 }
 
 console.log('PASS ' + pass + ' / FAIL ' + fail);

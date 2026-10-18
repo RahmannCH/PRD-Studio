@@ -1249,6 +1249,9 @@
       }
     })();
 
+    /* ---------- Palet perintah (Ctrl+K) + bantuan pintasan (?) ---------- */
+    if (window.Palette) window.Palette.init();
+
     window.App = { clearResult: clearResult, paintHist: paintHist, paintProjects: paintProjects };
   });
 })();

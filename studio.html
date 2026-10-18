@@ -9,8 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B132B'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='16' font-weight='bold' fill='%2348CAE4' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/fonts.css">
 <script>try{var t=localStorage.getItem('prd_studio_theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/studio.css">
@@ -21,7 +20,7 @@
 <div class="pwa-banner" id="offlineBanner" role="status" hidden>Kamu sedang offline. Semua fitur lokal tetap jalan; font dan diagram mungkin tampil dari cache.</div>
 <header class="topbar">
   <div class="wrap topbar-inner">
-    <a class="brandmark" href="index.html" aria-label="PRD Studio beranda"><span class="brandmark-mark" aria-hidden="true">P</span><span>PRD Studio<small>Wawancara ide, PRD, roadmap, prompt</small></span></a>
+    <a class="brandmark" href="index.html"><span class="brandmark-mark" aria-hidden="true">P</span><span>PRD Studio<small>Wawancara ide, PRD, roadmap, prompt</small></span></a>
     <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav">Menu</button>
     <nav class="nav" id="nav" aria-label="Navigasi utama">
       <a href="index.html">Beranda</a>
@@ -147,8 +146,9 @@
         <h2>Periksa skor lalu susun</h2>
         <p class="hint">Di bawah 60, tombol Susun di hasil akan menahan dan memberi perbaikan.</p>
         <div class="live-box" id="reviewBox" tabindex="0" aria-label="Ringkasan jawaban untuk review">Ringkasan akan muncul di sini.</div>
-        <ul class="gap-list" id="reviewGaps" role="status"></ul>
+        <ul class="gap-list" id="reviewGaps" aria-live="polite"></ul>
         <p class="gap-clear" id="reviewClear">Semua gap tertutup. Skor siap.</p>
+        <div class="coach-box" id="coachBox" hidden aria-live="polite"></div>
       </div>
 
       <div class="wizard-nav">
@@ -161,7 +161,7 @@
     <aside class="card live" aria-label="Ringkasan live">
       <h3>Arah PRD yang terbentuk</h3>
       <div class="live-box" id="liveBox" tabindex="0">Isi langkah 1 untuk melihat arah.</div>
-      <ul class="gap-list" id="liveGaps" role="status" aria-live="polite"></ul>
+      <ul class="gap-list" id="liveGaps" aria-live="polite"></ul>
       <p class="gap-clear" id="liveClear">Belum ada gap. Jawabanmu rapi.</p>
       <div class="row2 aside-actions">
         <button class="btn btn-ghost btn-sm" id="resetBtn" type="button">Hapus jawaban</button>
@@ -189,7 +189,7 @@
       <button class="tab" type="button" role="tab" data-tab="prompt" aria-selected="false" id="tab-prompt" aria-controls="out-prompt" tabindex="-1">Prompt P0-P9</button>
     </div>
     <div class="output" id="out-prd" role="tabpanel" aria-labelledby="tab-prd" tabindex="0">
-      <div class="toc" id="prdToc" aria-label="Daftar isi PRD"></div>
+      <nav class="toc" id="prdToc" aria-label="Daftar isi PRD"></nav>
       <div id="prdSections"><p class="empty">Belum ada hasil. Selesaikan 7 langkah lalu tekan Susun.</p></div>
       <div class="output-actions">
         <button class="btn btn-primary btn-sm" data-act="copy-prd" type="button" disabled>Salin PRD</button>
@@ -336,6 +336,27 @@
   <span>Versi baru tersedia. Muat ulang untuk memakainya.</span>
   <button type="button" id="pwaReload">Muat ulang</button>
 </div>
+<div class="palette-back" id="paletteWrap" hidden>
+<div class="palette" role="dialog" aria-modal="true" aria-label="Palet perintah">
+<label class="sr-only" for="paletteInput">Cari perintah</label>
+<input type="text" id="paletteInput" autocomplete="off" spellcheck="false" placeholder="Ketik perintah atau nama seksi">
+<ul id="paletteList" role="listbox" aria-label="Daftar perintah"></ul>
+<p class="palette-hint">Panah atas atau bawah pilih, Enter jalankan, Esc tutup.</p>
+</div>
+</div>
+<div class="palette-back" id="helpWrap" hidden>
+<div class="palette palette-help" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+<h2 id="helpTitle">Pintasan</h2>
+<ul class="help-list">
+<li><kbd>Ctrl</kbd> + <kbd>K</kbd> Buka palet perintah</li>
+<li><kbd>?</kbd> Buka bantuan ini</li>
+<li><kbd>Esc</kbd> Tutup dialog</li>
+<li><kbd>Enter</kbd> Jalankan perintah terpilih</li>
+<li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> Pindah tab hasil saat fokus di tab</li>
+</ul>
+<button class="btn btn-ghost btn-sm" id="helpClose" type="button">Tutup</button>
+</div>
+</div>
 
 <script src="js/studio/theme.js"></script>
 <script src="js/studio/shared.js"></script>
@@ -354,7 +375,9 @@
 <script src="js/studio/exporter.js"></script>
 <script src="js/studio/criteria.js"></script>
 <script src="js/studio/spec-pack.js"></script>
+<script src="js/studio/coach.js"></script>
 <script src="js/studio/render.js"></script>
+<script src="js/studio/palette.js"></script>
 <script src="js/studio/llm-adapter.js"></script>
 <script src="js/studio/ai-advisor.js"></script>
 <script src="js/studio/reverse.js"></script>

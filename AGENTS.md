@@ -9,6 +9,7 @@ node tests/test-prd.js
 node tests/smoke-prd.js
 node tests/responsive-prd.js
 node tests/sw-offline-prd.js
+node tests/a11y-prd.js
 python tests/contrast-check.py
 ```
 

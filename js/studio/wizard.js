@@ -250,6 +250,59 @@
       '\nMust:\n' + (d.mustHave || '-') + '\nWon\'t:\n' + (d.wontHave || '-') +
       '\nAlur: ' + (d.mainFlow || '-') + '\nGagal: ' + (d.failFlow || '-') +
       '\nGaya: ' + d.styleDirection + ' | Layout: ' + d.layoutPref + ' | Stack: ' + d.stackPref;
+    paintCoach();
+  }
+  /* Langkah 7: saran kualitas + celah skenario, deterministik tanpa AI.
+     Tiap temuan bisa diklik untuk lompat ke langkah dan field sumbernya. */
+  function paintCoach() {
+    var box = $('coachBox');
+    if (!box) return;
+    box.innerHTML = '';
+    if (!window.Coach) { box.hidden = true; return; }
+    var findings = window.Coach.review(S.data);
+    var cells = window.Coach.edge(S.data);
+    box.hidden = !(findings.length || cells.length);
+    if (box.hidden) return;
+    function section(title) {
+      var h = document.createElement('h3');
+      h.textContent = title;
+      box.appendChild(h);
+      var ul = document.createElement('ul');
+      ul.className = 'gap-list';
+      box.appendChild(ul);
+      return ul;
+    }
+    function jump(ul, step, field, text) {
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'gap-jump';
+      b.textContent = 'Langkah ' + step + ': ' + text;
+      b.addEventListener('click', function () {
+        showStep(step, true);
+        var target = field && $(field);
+        if (target) {
+          target.focus({ preventScroll: true });
+          window.UX.scrollTo(target.closest('.field') || target);
+        } else {
+          window.UX.scrollTo(document.getElementById('wizard'));
+        }
+      });
+      li.appendChild(b);
+      ul.appendChild(li);
+    }
+    if (findings.length) {
+      var u1 = section('Saran kualitas jawaban');
+      findings.forEach(function (f) { jump(u1, f.step, f.field, f.pesan); });
+    }
+    if (cells.length) {
+      var u2 = section('Celah skenario yang belum dibahas');
+      cells.forEach(function (c) { jump(u2, c.step, c.field, c.q); });
+    }
+    var note = document.createElement('p');
+    note.className = 'coach-note';
+    note.textContent = 'Saran tidak memblokir. Gap resmi tetap dari validator di atas.';
+    box.appendChild(note);
   }
 
   document.addEventListener('DOMContentLoaded', function () {

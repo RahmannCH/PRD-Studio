@@ -7,6 +7,44 @@
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
   function reduced() { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  /* Scrollspy TOC: listener scroll/resize ber-rAF menghitung ulang seksi
+     teratas di ambang 96px. IntersectionObserver tidak dipakai karena ambang
+     kustom (96px) bukan boundary yang dilaporkan observer, sehingga penanda
+     bisa tertinggal satu seksi saat animasi smooth berhenti. Cleanup dipanggil
+     saat render ulang supaya listener tidak menumpuk. */
+  var tocCleanup = null;
+  function spyToc(box, toc) {
+    if (tocCleanup) { tocCleanup(); tocCleanup = null; }
+    var links = toc.querySelectorAll('a');
+    var sects = box.querySelectorAll('.sect');
+    if (!links.length || !sects.length) return;
+    var ticking = false;
+    function mark() {
+      ticking = false;
+      var best = -1;
+      for (var i = 0; i < sects.length; i++) {
+        var r = sects[i].getBoundingClientRect();
+        if (!r.width && !r.height) continue; /* panel sedang tersembunyi */
+        if (r.top <= 96) best = i;
+      }
+      if (best < 0) best = 0;
+      links.forEach(function (a, j) {
+        a.classList.toggle('active', j === best);
+        if (j === best) a.setAttribute('aria-current', 'true');
+        else a.removeAttribute('aria-current');
+      });
+    }
+    function onScroll() {
+      if (!ticking) { ticking = true; requestAnimationFrame(mark); }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    tocCleanup = function () {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+    mark();
+  }
   function scrollTo(el) {
     if (!el) return;
     try { el.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' }); }
@@ -300,6 +338,7 @@
       });
       var hidden = document.createElement('pre'); hidden.id = 'prdPre'; hidden.style.display = 'none';
       hidden.textContent = md; box.appendChild(hidden);
+      spyToc(box, toc);
     },
     roadmap: function (phases) {
       var S = window.StudioState;

@@ -1,0 +1,12 @@
+/* Font self-host: Poppins 500/600/700 + Inter 400/500/600, subset latin.
+   Menggantikan Google Fonts CDN: offline sejak kunjungan pertama, tanpa
+   koneksi pihak ketiga, dan bebas dari cache partitioning. Sumber:
+   fonts.googleapis.com (lisensi SIL OFL). Inter disajikan Google sebagai
+   satu berkas variabel untuk semua bobot, jadi tiga deklarasi menunjuk
+   berkas yang sama persis seperti CSS aslinya. */
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/inter-var.woff2) format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/inter-var.woff2) format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url(../fonts/inter-var.woff2) format('woff2');}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/poppins-500.woff2) format('woff2');}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:600;font-display:swap;src:url(../fonts/poppins-600.woff2) format('woff2');}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:700;font-display:swap;src:url(../fonts/poppins-700.woff2) format('woff2');}
