@@ -37,6 +37,7 @@ localStorage.setItem('prd_studio_v2', JSON.stringify(legacy));
 localStorage.setItem('prd_studio_checks', JSON.stringify({ old: true }));
 
 load('shared.js');
+load('share.js');
 load('knowledge.js');
 load('questionnaire.js');
 load('state.js');
@@ -53,6 +54,7 @@ load('exporter.js');
 load('criteria.js');
 load('spec-pack.js');
 load('coach.js');
+load('undo.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -857,9 +859,9 @@ const diagrams = window.GenDiagrams(sample);
   const res = { score: sc, roadmap: roadmap };
   const slug = window.Exporter.slug(sample.productName);
   const files = window.SpecPack.files(sample, res);
-  ok(files.length === 5, 'spec pack has five files');
-  ok(files[0].name === 'REQUIREMENTS-' + slug + '.md' && files[4].name === 'AGENTS-' + slug + '.md',
-    'spec pack filenames follow the export naming');
+  ok(files.length === 6, 'spec pack has six files');
+  ok(files[0].name === 'REQUIREMENTS-' + slug + '.md' && files[4].name === 'FEATURES-' + slug + '.feature' &&
+    files[5].name === 'AGENTS-' + slug + '.md', 'spec pack filenames follow the export naming');
   const req = files[0].text;
   ok(req.indexOf('### Requirement 1:') > -1, 'requirements are numbered like Kiro');
   ok(req.indexOf('**User Story:** Sebagai') > -1, 'user story line present');
@@ -892,7 +894,7 @@ const diagrams = window.GenDiagrams(sample);
   ok(tr.indexOf('§5') > -1 && tr.indexOf('| T1.1, T1.2 |') > -1, 'traceability links task ids and PRD sections');
 
   // AGENTS.md: pointer, non-goals, dan larangan jujur.
-  const ag = files[4].text;
+  const ag = files[5].text;
   ok(ag.indexOf('## Sumber kebenaran') > -1 && ag.indexOf('specs/' + slug + '/tasks.md') > -1,
     'agents file points at the spec pack');
   ok(ag.indexOf('## Di luar lingkup') > -1, 'agents file lists non-goals');
@@ -901,10 +903,28 @@ const diagrams = window.GenDiagrams(sample);
   // Deterministik: dua panggilan identik.
   ok(window.SpecPack.tasks(sample, res) === tasks, 'task generation is deterministic');
 
-  // Data kosong tetap menghasilkan lima berkas yang jujur.
+  // Data kosong tetap menghasilkan enam berkas yang jujur.
   const emptyFiles = window.SpecPack.files({}, null);
-  ok(emptyFiles.length === 5 && emptyFiles.every(f => f.text.length > 0), 'empty data still yields five non-empty files');
+  ok(emptyFiles.length === 6 && emptyFiles.every(f => f.text.length > 0), 'empty data still yields six non-empty files');
   ok(emptyFiles[0].text.indexOf('Belum ada Must') > -1, 'empty requirements says what to do next');
+
+  // Gherkin: berkas .feature punya struktur Feature/Scenario/When/Then yang jujur.
+  const feat = files[4].text;
+  ok(/^# Berkas Spec Pack PRD Studio. Letakkan sebagai `specs\//m.test(feat), 'feature file states its path');
+  ok(/^Feature: /m.test(feat), 'feature has a Feature line');
+  ok(/^  Scenario: R1 /m.test(feat), 'feature has one scenario per requirement');
+  ok(/^    When /m.test(feat) && /^    Then /m.test(feat), 'scenario has When and Then steps');
+  const featN = (feat.match(/^\s+Scenario:/gm) || []).length;
+  const storiesN = (sample.mustHave || '').split('\n').filter(Boolean).length;
+  ok(featN === storiesN, 'one scenario per Must line', featN + ' vs ' + storiesN);
+  // Data kosong: tanpa Must, tanpa kebohongan Then.
+  const featEmpty = window.SpecPack.features({}, null);
+  ok(featEmpty.indexOf('Feature: ') > -1 && featEmpty.indexOf('Then ') < 0 && featEmpty.indexOf('TODO') > -1,
+    'empty features file has a TODO comment instead of fake Then');
+  // Escaping: karakter markdown tidak di-escape di .feature, tapi newline dirapikan.
+  const featEvil = window.SpecPack.features(evil, res);
+  ok(featEvil.indexOf('\n    ') > -1 && featEvil.indexOf('<img') > -1, 'feature keeps literal text but step is single-line');
+  ok(!/^\s{4}Then .*\n\s{4}(?!And\b)/m.test(featEvil.split('Scenario: R1 ')[1] || ''), 'Then step is single-line');
 
   // Jalur lolos: setiap fungsi boleh dipanggil tanpa roadmap.
   ok(window.SpecPack.traceability(sample, { score: sc }).indexOf('| R1 ') > -1,
@@ -969,5 +989,139 @@ const diagrams = window.GenDiagrams(sample);
   ok(wiz.indexOf('paintCoach') > -1 && wiz.indexOf('window.Coach') > -1, 'wizard paints coach findings on review');
 }
 
-console.log('PASS ' + pass + ' / FAIL ' + fail);
-process.exit(fail ? 1 : 0);
+// 30. Paket 3: Undo/redo jawaban
+{
+  const U = window.Undo;
+  ok(typeof U.mark === 'function' && typeof U.undo === 'function' && typeof U.redo === 'function',
+    'Undo exposes mark/undo/redo');
+  ok(U.canUndo() === false && U.canRedo() === false, 'stacks start empty');
+
+  // Simulasi: mark sebelum mutasi → undo mengembalikan nilai lama.
+  const S = window.StudioState;
+  const d = S.data;
+  U.clear();
+  d.productName = 'Sebelum';
+  U.mark();
+  d.productName = 'Sesudah';
+  // flushMark dipanggil di dalam undo(): pending → stack → pop.
+  const didUndo = U.undo();
+  ok(didUndo === true, 'undo returns true when a snapshot exists');
+  ok(d.productName === 'Sebelum', 'undo restores the pre-mutation value');
+  ok(U.canRedo() === true, 'redo becomes available after undo');
+  const didRedo = U.redo();
+  ok(didRedo === true, 'redo returns true');
+  ok(d.productName === 'Sesudah', 'redo restores the post-mutation value');
+
+  // Stack kosong: undo/redo jujur false.
+  U.clear();
+  ok(U.undo() === false && U.redo() === false, 'empty stacks return false');
+
+  // Kapasitas: 31 mark melebihi MAX 30.
+  U.clear();
+  for (let i = 0; i < 31; i++) {
+    d.productName = 'v' + i;
+    U.mark();
+    d.productName = 'v' + (i + 1);
+    U.undo(); // commit mark + pop, siapkan iterasi berikutnya dengan stack bersih-ish
+  }
+  ok(U._stacks().undo <= 30, 'undo stack is capped at 30');
+
+  // history/lastResult tidak ikut snapshot.
+  U.clear();
+  d.productName = 'Aman';
+  d.history = [{ id: 'h1', name: 'x' }];
+  U.mark();
+  d.productName = 'Baru';
+  d.history = [];
+  U.undo();
+  ok(d.productName === 'Aman', 'undo restores productName even with history churn');
+  ok(Array.isArray(d.history) && d.history.length === 0, 'history is NOT restored by undo (out of scope)');
+
+  // Wiring: Ctrl+Z keybinding + mark di input handler.
+  const wiz2 = fs.readFileSync(path.join(root, 'wizard.js'), 'utf8');
+  ok(wiz2.indexOf("e.key.toLowerCase() === 'z'") > -1, 'wizard binds Ctrl+Z for undo');
+  ok(wiz2.indexOf('window.Undo.mark()') > -1, 'wizard calls Undo.mark before mutation');
+  const html5 = fs.readFileSync(path.join(__dirname, '..', 'studio.html'), 'utf8');
+  ok(html5.indexOf('js/studio/undo.js') > -1, 'studio.html loads undo.js');
+  U.clear();
+}
+
+// 31. Paket 3: og/twitter meta + reduced-motion + og-image
+{
+  const idx = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  ok(idx.indexOf('property="og:image"') > -1 && idx.indexOf('og-image.png') > -1, 'index.html has og:image');
+  ok(idx.indexOf('name="twitter:card"') > -1 && idx.indexOf('summary_large_image') > -1, 'index.html has twitter:card');
+  ok(idx.indexOf('property="og:title"') > -1 && idx.indexOf('property="og:description"') > -1, 'index.html has og:title and og:description');
+  ok(idx.indexOf('og:image:width') > -1 && idx.indexOf('og:image:height') > -1, 'og image dimensions declared');
+  const st = fs.readFileSync(path.join(__dirname, '..', 'studio.html'), 'utf8');
+  ok(st.indexOf('property="og:image"') > -1, 'studio.html has og:image');
+  // og-image.png ada dan bukan placeholder kosong.
+  const ogPath = path.join(__dirname, '..', 'og-image.png');
+  ok(fs.existsSync(ogPath), 'og-image.png exists');
+  const ogSize = fs.statSync(ogPath).size;
+  ok(ogSize > 10000, 'og-image.png is a real image (>10KB)', ogSize);
+  // reduced-motion: rule global di style.css berlaku untuk studio (star selector).
+  const cssAll = fs.readFileSync(path.join(__dirname, '..', 'css', 'style.css'), 'utf8');
+  ok(cssAll.indexOf('prefers-reduced-motion: reduce') > -1 &&
+    cssAll.indexOf('* { transition:none !important; animation:none !important; }') > -1,
+    'style.css disables all transitions under prefers-reduced-motion');
+}
+
+/* 32. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
+   Blok async terakhir — laporan PASS/FAIL dicetak setelah promise selesai. */
+(function shareLinkTests() {
+  var SL = window.ShareLink;
+  var done = function () {
+    console.log('PASS ' + pass + ' / FAIL ' + fail);
+    process.exit(fail ? 1 : 0);
+  };
+  if (!SL) {
+    console.error('FAIL: ShareLink module missing');
+    console.log('PASS ' + pass + ' / FAIL ' + (fail + 1));
+    process.exit(1);
+  }
+  ok(typeof SL.encode === 'function' && typeof SL.decode === 'function' &&
+    typeof SL.toUrl === 'function' && typeof SL.fromHash === 'function',
+    'ShareLink exposes encode/decode/toUrl/fromHash');
+
+  var answers = { productName: 'Warung Pintar', problem: 'Kasir manual', mustHave: 'catat jual', depth: 'lengkap', history: [{ secret: true }], lastResult: { prd: 'RAHASIA' } };
+  SL.encode(answers).then(function (token) {
+    ok(typeof token === 'string' && token.length > 0, 'encode returns a non-empty token');
+    ok(/^[12][A-Za-z0-9_-]*$/.test(token), 'token is base64url with version flag');
+    return SL.decode(token);
+  }).then(function (decoded) {
+    ok(decoded && decoded.productName === 'Warung Pintar', 'round-trip preserves productName');
+    ok(decoded.mustHave === 'catat jual', 'round-trip preserves mustHave');
+    ok(decoded.history === undefined && decoded.lastResult === undefined,
+      'history and lastResult are excluded from share payload');
+    return SL.toUrl(answers, 'https://example.test/studio.html');
+  }).then(function (url) {
+    ok(/^https:\/\/example\.test\/studio\.html#s=[12][A-Za-z0-9_-]*$/.test(url), 'toUrl produces a full URL with hash');
+    var m = /#s=([A-Za-z0-9_-]+)/.exec(url);
+    ok(!!m, 'URL contains an s= token');
+    return SL.fromHash(url.replace(/^https:\/\/example\.test\/studio\.html/, ''));
+  }).then(function (fromHash) {
+    ok(fromHash && fromHash.productName === 'Warung Pintar', 'fromHash decodes the token from a hash string');
+    return SL.fromHash('#other=1');
+  }).then(function (noHash) {
+    ok(noHash === null, 'fromHash returns null when no s= token is present');
+    return SL.decode('xINVALID!');
+  }).then(function (bad) {
+    ok(bad === null, 'decode returns null for garbage input');
+    return SL.encode({});
+  }).then(function (emptyTok) {
+    return SL.decode(emptyTok);
+  }).then(function (emptyDec) {
+    ok(emptyDec && typeof emptyDec === 'object' && !Object.keys(emptyDec).length,
+      'empty answers round-trip to an empty object');
+    var html4 = fs.readFileSync(path.join(__dirname, '..', 'studio.html'), 'utf8');
+    ok(html4.indexOf('data-act="share-link"') > -1, 'studio.html has the share-link button');
+    var app4 = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+    ok(app4.indexOf("'share-link'") > -1 && app4.indexOf('ShareLink.fromHash') > -1,
+      'app.js maps the share act and handles hash import on load');
+    var pal = fs.readFileSync(path.join(root, 'palette.js'), 'utf8');
+    ok(pal.indexOf('share-link') > -1, 'palette lists the share command');
+  }).catch(function (e) {
+    ok(false, 'share link async test threw: ' + (e && e.message ? e.message : e));
+  }).then(done);
+})();

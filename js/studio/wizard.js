@@ -313,9 +313,10 @@
       /* L51: <select> memicu input DAN change. Hanya bind salah satu agar
          collect+refresh tidak berjalan dua kali tiap ganti pilihan. */
       if (el.tagName === 'SELECT') {
-        el.addEventListener('change', function () { collect(); refresh(true); });
+        el.addEventListener('change', function () { if (window.Undo) window.Undo.mark(); collect(); refresh(true); });
       } else {
         el.addEventListener('input', function () {
+          if (window.Undo) window.Undo.mark();
           collectData();
           refresh();
           S.saveSoon(400, function (ok) { stamp(ok); });
@@ -332,10 +333,28 @@
           return;
         }
         c.setAttribute('aria-pressed', on ? 'false' : 'true');
+        if (window.Undo) window.Undo.mark();
         collect(); refresh(true);
       });
     });
     document.addEventListener('keydown', function (e) {
+      /* Undo/redo jawaban: Ctrl+Z / Ctrl+Shift+Z. Lewati saat fokus di
+         editor prompt (promptDiv punya undo sendiri via browser) atau
+         modal — di sana Ctrl+Z adalah perilaku native yang diharapkan. */
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && window.Undo) {
+        var aeU = document.activeElement;
+        if (aeU && (aeU.isContentEditable || (aeU.closest && aeU.closest('#promptDiv')))) return;
+        var mbU = document.getElementById('modalBack');
+        if (mbU && mbU.classList.contains('open')) return;
+        e.preventDefault();
+        var okU = e.shiftKey ? window.Undo.redo() : window.Undo.undo();
+        if (!okU) window.UX.toast(e.shiftKey ? 'Tidak ada yang bisa diulang.' : 'Tidak ada yang bisa dibatalkan.');
+        else {
+          if (window.Wizard && window.Wizard.hydrate) window.Wizard.hydrate();
+          window.UX.toast(e.shiftKey ? 'Diulang.' : 'Dibatalkan.');
+        }
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         /* B8/R55: jangan majukan wizard saat sedang di konteks lain —
            modal (confirm/prompt), editor prompt, pencarian riwayat,

@@ -1,13 +1,15 @@
 /* SpecPack: ekspor Spec menjadi paket berkas yang siap dipakai AI coding
    agent, mengikuti struktur Kiro (requirements/design/tasks per fitur) dan
-   spec-kit (spec/plan/tasks), plus AGENTS.md untuk repo target.
+   spec-kit (spec/plan/tasks), plus AGENTS.md dan berkas Gherkin .feature
+   untuk repo target.
    Semua isi diturunkan deterministik dari Spec: tidak ada AI, tidak ada
    jaringan. Referensi kebutuhan ke task ditandai otomatis dari kemiripan
    kata Must dengan teks task, jadi selalu ditandai "periksa manual".
 
    Interface:
-     SpecPack.files(data, res) -> [{name, text, type}] lima berkas
-     SpecPack.requirements(data, res) / design / tasks / traceability / agents
+     SpecPack.files(data, res) -> [{name, text, type}] enam berkas
+     SpecPack.requirements(data, res) / design / tasks / traceability /
+     agents / features
 */
 window.SpecPack = (function () {
   var E = window.Exporter;
@@ -294,6 +296,49 @@ window.SpecPack = (function () {
     return out.join('\n');
   }
 
+  /* Gherkin bukan markdown: tidak ada escape escMd, baris tunggal per step,
+     dan komentar memakai #. Feature tanpa kriteria sengaja dibiarkan tanpa
+     Then berisi kepalsuan, hanya komentar TODO, supaya tidak lulus uji. */
+  function gk(s) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); }
+
+  function features(data, res) {
+    var spec = specOf(data, res);
+    var slug = slugOf(data);
+    var out = [];
+    out.push('# Feature: ' + gk(name(data)));
+    out.push('# Berkas Spec Pack PRD Studio. Letakkan sebagai `specs/' + slug + '/features.feature`.');
+    out.push('# Kriteria diturunkan dari requirements.md (EARS-lite). Selaraskan saat requirements berubah.');
+    out.push('');
+    out.push('Feature: ' + gk(name(data)));
+    if (spec.summary.oneLiner) out.push('  ' + gk(spec.summary.oneLiner));
+    out.push('');
+    if (spec.summary.primaryUser) {
+      out.push('  Background:');
+      out.push('    Given pengguna utama: ' + gk(spec.summary.primaryUser));
+      out.push('');
+    }
+    if (!spec.stories.length) {
+      out.push('  # TODO belum ada Must di langkah 3, skenario belum bisa disusun.');
+      return out.join('\n');
+    }
+    spec.stories.forEach(function (s, i) {
+      var n = i + 1;
+      var mustText = (spec.scope.must[i] && spec.scope.must[i].text) || s.action;
+      out.push('  Scenario: R' + n + ' ' + gk(mustText));
+      out.push('    When ' + gk(s.role) + ' ' + gk(s.action));
+      if (s.criteria.length) {
+        s.criteria.forEach(function (c, j) {
+          var ears = C.toEars(c, { role: s.role, action: s.action });
+          out.push('    ' + (j === 0 ? 'Then ' : 'And ') + gk(ears));
+        });
+      } else {
+        out.push('    # TODO kriteria untuk R' + n + ' belum ditentukan di requirements.md.');
+      }
+      out.push('');
+    });
+    return out.join('\n');
+  }
+
   function files(data, res) {
     var slug = slugOf(data);
     return [
@@ -301,9 +346,10 @@ window.SpecPack = (function () {
       { name: 'DESIGN-' + slug + '.md', text: design(data, res), type: 'text/markdown' },
       { name: 'TASKS-' + slug + '.md', text: tasks(data, res), type: 'text/markdown' },
       { name: 'TRACEABILITY-' + slug + '.md', text: traceability(data, res), type: 'text/markdown' },
+      { name: 'FEATURES-' + slug + '.feature', text: features(data, res), type: 'text/plain' },
       { name: 'AGENTS-' + slug + '.md', text: agents(data, res), type: 'text/markdown' }
     ];
   }
 
-  return { files: files, requirements: requirements, design: design, tasks: tasks, traceability: traceability, agents: agents };
+  return { files: files, requirements: requirements, design: design, tasks: tasks, traceability: traceability, agents: agents, features: features };
 })();

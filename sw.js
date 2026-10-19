@@ -15,7 +15,7 @@
    - CDN lintas origin (Mermaid) : cache-first (sekali muat, selamanya offline).
    Tidak pakai skipWaiting: update berlaku di muat halaman berikutnya agar
    tidak ada campur aset versi lama dan baru di tengah sesi. */
-const CACHE = 'prd-studio-v3.3';
+const CACHE = 'prd-studio-v3.4';
 /* D1: cache CDN TERPISAH untuk respons lintas origin. Mermaid diambil dengan
    mode no-cors → respons opaque (status 0, ok=false); tanpa cache terpisah
    respons itu tidak pernah tersimpan dan offline kehilangan renderer diagram.
@@ -35,6 +35,7 @@ const CORE = [
   'css/print.css',
   'js/studio/theme.js',
   'js/studio/shared.js',
+  'js/studio/share.js',
   'js/studio/knowledge.js',
   'js/studio/questionnaire.js',
   'js/studio/state.js',
@@ -51,6 +52,7 @@ const CORE = [
   'js/studio/criteria.js',
   'js/studio/spec-pack.js',
   'js/studio/coach.js',
+  'js/studio/undo.js',
   'js/studio/render.js',
   'js/studio/palette.js',
   'js/studio/llm-adapter.js',

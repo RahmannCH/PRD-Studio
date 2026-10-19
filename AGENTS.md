@@ -6,6 +6,7 @@ Panduan untuk AI coding agent yang bekerja di repo ini. Produk: aplikasi web sta
 
 ```
 node tests/test-prd.js
+node tests/hygiene.js
 node tests/smoke-prd.js
 node tests/responsive-prd.js
 node tests/sw-offline-prd.js
@@ -13,7 +14,7 @@ node tests/a11y-prd.js
 python tests/contrast-check.py
 ```
 
-Semua harus hijau. Smoke memakai Playwright; bila gagal pada `page.goto` pertama (flake cold start Chromium), ulangi sekali sebelum curiga ke kode. Plus scan higienis: 0 id ganda di `studio.html`/`index.html`, 0 atribut `style="` inline, em-dash hanya di komentar dan `<title>`.
+Semua harus hijau. Smoke memakai Playwright; bila gagal pada `page.goto` pertama (flake cold start Chromium), ulangi sekali sebelum curiga ke kode. Scan higienis (`tests/hygiene.js`) otomatis: 0 id ganda, 0 atribut `style="` inline, 0 mojibake (`Ã`), em-dash hanya di komentar dan `<title>`.
 
 ## Arsitektur
 

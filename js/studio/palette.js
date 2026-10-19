@@ -55,6 +55,7 @@ window.Palette = (function () {
       ['dl-bab', 'Unduh paket lengkap (.md)', 'unduh semua bundle'],
       ['dl-spec-pack', 'Unduh Spec Pack (AI agent)', 'unduh spec pack kiro agen'],
       ['dl-json', 'Unduh arsip (.json)', 'unduh json'],
+      ['share-link', 'Salin tautan berbagi', 'tautan share link bagikan'],
       ['dl-roadmap-csv', 'Unduh CSV roadmap', 'unduh csv'],
       ['dl-prompts', 'Unduh PROMPTS.md', 'unduh prompt'],
       ['print', 'Cetak atau PDF', 'print pdf'],

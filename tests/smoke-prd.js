@@ -140,7 +140,7 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   // export buttons aktif
   const exportEnabled = await page.evaluate(() => !document.querySelector('[data-act="copy-prd"]').disabled);
   ok(exportEnabled, 'copy-prd enabled after generate');
-  const allExportActs = ['dl-html', 'dl-brief', 'dl-spec-yaml', 'dl-spec-pack', 'ai-advise', 'dl-json', 'dl-roadmap-csv', 'ai-polish'];
+  const allExportActs = ['dl-html', 'dl-brief', 'dl-spec-yaml', 'dl-spec-pack', 'ai-advise', 'dl-json', 'share-link', 'dl-roadmap-csv', 'ai-polish'];
   for (const act of allExportActs) {
     const dis = await page.evaluate(a => document.querySelector('[data-act="' + a + '"]').disabled, act);
     ok(!dis, 'export act enabled after generate: ' + act);
@@ -157,6 +157,12 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   await page.click('[data-act="dl-spec-pack"]');
   const spDl = await spPromise;
   ok(/^REQUIREMENTS-.*\.md$/.test(spDl.suggestedFilename()), 'spec pack download starts with REQUIREMENTS', spDl.suggestedFilename());
+
+  // Share link: klik menyalin URL ber-hash #s= ke clipboard.
+  await page.click('[data-act="share-link"]');
+  await page.waitForTimeout(400);
+  const shareClip = await page.evaluate(() => navigator.clipboard.readText());
+  ok(/^https?:\/\/.*#s=[12][A-Za-z0-9_-]+$/.test(shareClip), 'share-link copies a URL with s= hash', shareClip.slice(0, 60));
 
   // ---------- Paket 2: palet perintah + bantuan + coach + scrollspy ----------
   await page.keyboard.press('Control+k');

@@ -20,6 +20,12 @@ Landing page: `index.html`. Aplikasi utama: `studio.html`.
   roadmap fase berurutan, diagram Mermaid (arsitektur, alur, ERD), dan prompt
   P0 sampai P9 dengan gerbang salin berurutan.
 - Ekspor markdown, HTML, brief satu halaman, dan Spec dalam format YAML.
+- Spec Pack untuk AI coding agent: enam berkas (REQUIREMENTS, DESIGN, TASKS,
+  TRACEABILITY, FEATURES berformat Gherkin, AGENTS) yang siap ditaruh di
+  `specs/<slug>/` dan root repo.
+- Share link: salin tautan `#s=<token>` berisi jawaban terkompresi — siapa
+  pun yang membuka tautan bisa mengimpor proyek yang sama.
+- Undo/redo jawaban (`Ctrl+Z` / `Ctrl+Shift+Z`).
 - Reverse wizard: tempel ide mentah, dapatkan PRD yang bisa digarap (butuh
   endpoint AI).
 - AI opsional lewat endpoint OpenAI-compatible: preset Google AI Studio,
@@ -27,7 +33,7 @@ Landing page: `index.html`. Aplikasi utama: `studio.html`.
   keputusan Terima atau Tolak, tidak pernah langsung diterapkan.
 - Riwayat versi, beberapa proyek, impor dan ekspor data JSON.
 - PWA offline, tema gelap dan terang, target sentuh 44px, kontras WCAG AA
-  di kedua tema.
+  di kedua tema, dukungan `prefers-reduced-motion`.
 
 ## Menjalankan
 
@@ -48,6 +54,8 @@ npm run test             unit dan kontrak data (tests/test-prd.js)
 npm run test:smoke       alur end-to-end di browser (Playwright)
 npm run test:responsive  layout 360px sampai desktop
 npm run test:sw          PWA offline
+npm run test:a11y        aksesibilitas (axe-core)
+npm run test:hygiene     id ganda, inline style, em-dash, mojibake
 npm run test:contrast    kontras WCAG AA dua tema
 npm run test:all         semua di atas
 ```
@@ -63,7 +71,11 @@ npm install
 ```
 studio.html          aplikasi utama
 index.html           landing page
+og-image.png         gambar Open Graph 1200x630
 sw.js                service worker, precache shell
+LICENSE              MIT
+CHANGELOG.md         riwayat perubahan
+CONTRIBUTING.md      panduan kontribusi
 css/                 style.css (design system), studio.css (aplikasi)
 js/studio/           modul aplikasi, urut sesuai dependensi
   knowledge.js       entitas, endpoint, dan derivasi per tipe produk
@@ -80,9 +92,14 @@ js/studio/           modul aplikasi, urut sesuai dependensi
   llm-adapter.js     seam AI, OpenAI-compatible
   ai-advisor.js      usulan AI terstruktur
   reverse.js         reverse wizard
+  share.js           share link terkompresi
+  undo.js            undo/redo jawaban
+  coach.js           saran deterministik
+  palette.js         palet perintah Ctrl+K
   wizard.js          langkah, meter skor, daftar gap
   app.js             pengontrol utama
-tests/               empat suite Node.js plus cek kontras
+tests/               unit, smoke, responsive, sw, a11y, hygiene, kontras
+.github/workflows/   CI (semua suite dijalankan di GitHub Actions)
 CONTEXT.md           glosarium dan model domain
 docs/                master blueprint UI/UX
 ```

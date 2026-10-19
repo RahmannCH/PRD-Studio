@@ -81,7 +81,7 @@
       var el = $(id);
       if (el) el.addEventListener('input', function () {
         S.data[id] = el.value;
-        /* B4/autosave jujur: variabel prompt ikut melaporkan bila save gagal ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â
+        /* B4/autosave jujur: variabel prompt ikut melaporkan bila save gagal —
            indikator "Tersimpan" palsu membuat user menutup tab yakin data aman. */
         S.saveSoon(400, function (ok) { if (window.Wizard && window.Wizard.stamp) window.Wizard.stamp(ok); });
         if (!S.data.lastResult) return;
@@ -101,7 +101,7 @@
     });
 
     /* ---------- Tombol export: aktif hanya kalau ada hasil ---------- */
-    var exportActs = ['copy-prd', 'dl-prd', 'dl-bab', 'dl-spec-pack', 'dl-json', 'dl-roadmap-csv', 'print', 'ai-polish', 'ai-advise',
+    var exportActs = ['copy-prd', 'dl-prd', 'dl-bab', 'dl-spec-pack', 'dl-json', 'share-link', 'dl-roadmap-csv', 'print', 'ai-polish', 'ai-advise',
       'dl-html', 'dl-brief', 'dl-spec-yaml', 'copy-mermaid', 'copy-all-prompt', 'dl-prompts'];
     function setExportEnabled(on) {
       exportActs.forEach(function (a) {
@@ -167,8 +167,8 @@
         updateAiBtn();
       } catch (eRender) {
         /* R12/R13: kegagalan render parsial jangan meninggalkan export aktif
-           (fullPrd bisa kosong ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ unduhan .md kosong). Nonaktifkan export.
-           B9: badge & daftar gap juga di-reset ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â panel jangan menampilkan
+           (fullPrd bisa kosong → unduhan .md kosong). Nonaktifkan export.
+           B9: badge & daftar gap juga di-reset — panel jangan menampilkan
            skor/gap hasil run lama yang sudah tidak ada di layar. */
         window.UX.toast('Sebagian hasil tidak bisa ditampilkan: ' + (eRender && eRender.message ? eRender.message : 'payload rusak'), { level: 'error' });
         badge(null);
@@ -226,7 +226,7 @@
       var hard = window.Wizard.validate(1) || window.Wizard.validate(2) || window.Wizard.validate(3);
       if (hard) {
         /* B9: lompat ke langkah gap PERTAMA, bukan langkah terakhir yang
-           dikunjungi ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â validate() sudah menandai field error di sana. */
+           dikunjungi — validate() sudah menandai field error di sana. */
         var firstGap = gaps.filter(function (g) { return g.code === 'NAMA' || g.code === 'MASALAH' || g.code === 'WHYNOW' || g.code === 'PERSONA' || g.code === 'PERAN' || g.code === 'MUST3'; })[0];
         window.Wizard.showStep(firstGap ? firstGap.step : S.data.step);
         scrollTo($('wizard'));
@@ -259,7 +259,7 @@
         var el = $(id); if (!el) return;
         el.setAttribute('aria-busy', 'true');
         /* C4: inert menahan fokus & klik selama isi panel masih hasil lama
-           (browser lama mengabaikan atribut ini ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â aria-busy tetap jalan). */
+           (browser lama mengabaikan atribut ini — aria-busy tetap jalan). */
         el.setAttribute('inert', '');
       });
       var prevPrompts = d.lastResult ? JSON.stringify(d.lastResult.prompts.map(function (p) { return p.body; })) : null;
@@ -336,7 +336,7 @@
     function fullPrd() {
       /* A3: sumber kebenaran = state, bukan DOM. #prdPre bisa berisi PRD
          lama bila renderAll gagal parsial / tab lain sudah mengganti
-         lastResult ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â salin & unduh harus konsisten dengan .json. */
+         lastResult — salin & unduh harus konsisten dengan .json. */
       return (S.data.lastResult && typeof S.data.lastResult.prd === 'string') ? S.data.lastResult.prd : '';
     }
     function hasResult() { return !!S.data.lastResult; }
@@ -388,28 +388,36 @@
       },
       'dl-spec-pack': function () {
         if (!guard()) return;
-        /* Lima berkas diunduh berurutan; beri jeda kecil supaya browser
+        /* Enam berkas diunduh berurutan; beri jeda kecil supaya browser
            tidak menganggap unduhan bertubi-tubi sebagai popup beruntun. */
         var files = window.SpecPack.files(S.data, S.data.lastResult);
         files.forEach(function (f, i) {
           setTimeout(function () { window.Exporter.download(f.name, f.text, f.type); }, i * 250);
         });
-        window.UX.toast('Spec Pack: ' + files.length + ' berkas diunduh. Letakkan requirements/design/tasks di specs/, AGENTS.md di root repo.');
+        window.UX.toast('Spec Pack: ' + files.length + ' berkas diunduh. Letakkan berkas di specs/<slug>/, AGENTS.md di root repo.');
       },
       'dl-json': function () {
         if (!guard()) return;
-        /* B7: sertakan checks/copied/promptEdits + nama proyek ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â round-trip
-           eksporÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢impor harus mempertahankan centang roadmap, status gerbang
+        /* B7: sertakan checks/copied/promptEdits + nama proyek — round-trip
+           ekspor→impor harus mempertahankan centang roadmap, status gerbang
            prompt, edit prompt, dan nama proyek kustom. lastResult tetap
            dikeluarkan dari answers (sudah ada di payload.result). */
         var act = S.store.projects.filter(function (p) { return p.id === S.activeId(); })[0];
         var payload = { name: act ? act.name : '', answers: {}, result: S.data.lastResult, exportedAt: new Date().toISOString() };
         Object.keys(S.data).forEach(function (k) {
-          /* history sengaja tidak ikut: 10 entri ÃƒÆ’Ã¢â‚¬â€ PRD utuh membuat file
+          /* history sengaja tidak ikut: 10 entri × PRD utuh membuat file
              berkali-kali lipat tanpa menambah nilai round-trip. */
           if (['history', 'lastResult'].indexOf(k) < 0) payload.answers[k] = S.data[k];
         });
         window.Exporter.download('PRD-' + window.Exporter.slug(S.data.productName) + '.json', JSON.stringify(payload, null, 2), 'application/json');
+      },
+      'share-link': function (b) {
+        if (!guard()) return;
+        window.ShareLink.toUrl(S.data).then(function (url) {
+          window.RenderOut.copyText(url, b);
+        }).catch(function () {
+          window.UX.toast('Gagal membuat tautan. Coba lagi.');
+        });
       },
       'dl-roadmap-csv': function () {
         if (!guard()) return;
@@ -418,7 +426,7 @@
       },
       'print': function () {
         if (!guard()) return;
-        /* C7: window.print() memblokir sampai dialog ditutup ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â toast harus
+        /* C7: window.print() memblokir sampai dialog ditutup — toast harus
            muncul SEBELUM, supaya pengguna tahu dialog sedang dibuka. */
         window.UX.toast('Dialog cetak dibuka.');
         window.print();
@@ -484,7 +492,7 @@
           if (S.data.lastResult !== polishTarget) throw new Error('Hasil diganti saat permintaan AI berjalan. Ulangi polesan.');
           if (!/##\s*\d+\./.test(out)) throw new Error('Balasan AI bukan PRD utuh. Periksa prompt dan model.');
           var res = S.data.lastResult;
-          /* A4: clone versi PRA-POLES SEBELUM res.prd diganti ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â inilah yang
+          /* A4: clone versi PRA-POLES SEBELUM res.prd diganti — inilah yang
              harus masuk riwayat sebagai "versi lama", bukan hasil poles. */
           var resBefore = JSON.parse(JSON.stringify(res));
           var prevBodies = JSON.stringify((res.prompts || []).map(function (q) { return q.body; }));
@@ -500,7 +508,7 @@
             window.UX.toast('Polesan tampil tapi gagal tersimpan (mode privat?). Salin atau unduh sebelum menutup tab.', { level: 'error' });
           }
           /* A4: entri riwayat = snapshot pra-poles. Cek return pushHistory
-             (false saat kuota penuh) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â toast tidak boleh menyesatkan. */
+             (false saat kuota penuh) — toast tidak boleh menyesatkan. */
           var snap = JSON.parse(JSON.stringify(S.data));
           delete snap.history; delete snap.lastResult;
           var pushed = S.pushHistory({ name: S.data.productName, at: res.polishedAt, score: resBefore.score ? resBefore.score.score : null, snapshot: snap, result: resBefore });
@@ -526,10 +534,10 @@
       if (adv) adv.title = ready ? 'Minta usulan terstruktur, lalu tinjau satu per satu' : 'Butuh pengaturan AI di bawah';
       updateIdeBtn();
     }
-    /* B3: status polesan berjalan ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â membedakan klik "Batalkan" dari klik mulai. */
+    /* B3: status polesan berjalan — membedakan klik "Batalkan" dari klik mulai. */
     var aiPolishing = false;
 
-    /* ---------- F4: panel usulan AI ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â kartu Terima / Tolak ----------
+    /* ---------- F4: panel usulan AI — kartu Terima / Tolak ----------
        AIAdvisor hanya mengembalikan usulan terstruktur; tidak ada yang masuk
        ke jawaban sebelum user menekan Terima. Setelah diterima, PRD disusun
        ulang lewat jalur Susun yang sama, sehingga spec, roadmap, dan prompt
@@ -683,7 +691,7 @@
       if (close) close.addEventListener('click', aiClose);
     })();
 
-    /* ---------- E: reverse-wizard ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ide bebas ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ draft 7 langkah ---------- */
+    /* ---------- E: reverse-wizard — ide bebas → draft 7 langkah ---------- */
     var ideRunning = false;
     function updateIdeBtn() {
       var b = $('ideBtn');
@@ -775,7 +783,7 @@
     /* ---------- Pengaturan LLM ---------- */
     (function llmSettings() {
       /* B3: adapter gagal load (404 cache lama / offline) tidak boleh
-         mematikan inisialisasi selebihnya ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â paintHist, PWA, tombol export
+         mematikan inisialisasi selebihnya — paintHist, PWA, tombol export
          berjalan setelah blok ini. Kartu AI disembunyikan dengan catatan. */
       if (!window.LLM || typeof window.LLM.getConfig !== 'function') {
         var card = document.getElementById('pengaturan');
@@ -891,7 +899,7 @@
       });
       $('llmSave').addEventListener('click', function () {
         /* B3: blokir simpan URL tidak valid sebelum key tersimpan terhadap
-           host salah ketik ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â pesan muncul di status panel, bukan toast singkat. */
+           host salah ketik — pesan muncul di status panel, bukan toast singkat. */
         var raw = $('llmBaseUrl').value;
         if (raw.trim()) {
           var v = window.LLM.validateUrl(raw);
@@ -952,7 +960,7 @@
         var row = document.createElement('div'); row.className = 'hist-item';
         var label = document.createElement('span');
         label.className = 'hist-label';
-        label.textContent = item.name + ' Ãƒâ€šÃ‚Â· ' + fmtDate(item.at) + ' Ãƒâ€šÃ‚Â· skor ' + (item.score != null ? item.score : '-');
+        label.textContent = item.name + ' · ' + fmtDate(item.at) + ' · skor ' + (item.score != null ? item.score : '-');
         var wrap = document.createElement('span'); wrap.className = 'hist-actions';
         var load = document.createElement('button'); load.type = 'button'; load.textContent = 'Muat';
         load.addEventListener('click', function () {
@@ -972,7 +980,7 @@
           rebuilt.lastResult = item.result ? JSON.parse(JSON.stringify(item.result)) : null;
           /* B10: checks/copied/promptEdits adalah PROGRES user di atas konten,
              bukan bagian dari jawaban. Snapshot entri lama menyimpannya dalam
-             keadaan waktu itu ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â memakannya diam-diam membatalkan centang
+             keadaan waktu itu — memakannya diam-diam membatalkan centang
              roadmap & edit prompt yang baru saja dikerjakan. */
           rebuilt.checks = JSON.parse(JSON.stringify(S.data.checks || {}));
           rebuilt.copied = JSON.parse(JSON.stringify(S.data.copied || {}));
@@ -996,13 +1004,13 @@
           if (basePrd === S.data.lastResult.prd && item.prevResult && item.prevResult.prd) {
             basePrd = item.prevResult.prd;
           }
-          /* R33: PRD identik + tidak ada prevResult ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ tetap render diff box
+          /* R33: PRD identik + tidak ada prevResult → tetap render diff box
              (agar smoke test "diff renders" dan UI konsisten), tapi beri
              catatan di header bahwa tidak ada perbedaan. */
           window.RenderOut.diff(basePrd, S.data.lastResult.prd);
           if (basePrd === S.data.lastResult.prd) {
             var head = document.querySelector('#diffBox .diff-head');
-            if (head) head.textContent = 'Perbandingan versi ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tidak ada perbedaan (versi sebelumnya tidak tersimpan)';
+            if (head) head.textContent = 'Perbandingan versi — tidak ada perbedaan (versi sebelumnya tidak tersimpan)';
             window.UX.toast('Versi ini identik dengan hasil sekarang. Versi sebelumnya tidak tersimpan untuk entri lama.');
           }
           scrollTo($('diffBox'), 'nearest');
@@ -1086,7 +1094,7 @@
     $('projRen').addEventListener('click', function () {
       var list = S.projectList();
       var act = list.filter(function (p) { return p.id === S.activeId(); })[0];
-      /* C2: modal input kustom ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â window.prompt tidak bisa distyle dan
+      /* C2: modal input kustom — window.prompt tidak bisa distyle dan
          diblokir di beberapa WebView. */
       window.UX.prompt('Ganti nama proyek', 'Nama baru untuk proyek ini. Riwayat tidak ikut diubah.', act ? act.name : '', 'Simpan', function (name) {
         if (name == null) return;
@@ -1139,6 +1147,24 @@
       reader.readAsText(f);
     });
 
+    /* Tautan berbagi: bila URL membawa #s=<token>, tawarkan impor sebagai
+       proyek baru. Hash dibersihkan setelah diproses supaya refresh tidak
+       mengulang dialog. Token yang rusak diabaikan diam-diam. */
+    if (window.ShareLink && location.hash && /[#&]s=/.test(location.hash)) {
+      window.ShareLink.fromHash().then(function (answers) {
+        history.replaceState(null, '', location.pathname + location.search);
+        if (!answers || typeof answers !== 'object' || !Object.keys(answers).length) return;
+        window.UX.confirm('Impor tautan berbagi?',
+          'Tautan ini membawa jawaban proyek "' + (answers.productName || 'tanpa nama') + '". Impor sebagai proyek baru?',
+          'Impor', function () {
+            var p = S.importProject({ name: answers.productName || 'Impor tautan', answers: answers });
+            if (!p) { window.UX.toast('Tautan tidak valid atau gagal disimpan.'); return; }
+            try { sessionStorage.setItem('prd_reload_toast', 'Proyek "' + p.name + '" diimpor dari tautan.'); } catch (eS) {}
+            location.reload();
+          });
+      });
+    }
+
     paintHist();
     paintProjects();
     updateAiBtn();
@@ -1190,14 +1216,14 @@
     /* ---------- Sinkronisasi antar tab (CRITICAL fix) ----------
        state.js memanggil S.onExternal setelah mengimpor store dari tab lain.
        Tanpa assignment ini, DOM wizard/history/project tidak pernah di-repaint
-       ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ tab kedua menulis field basi ke project yang sudah berubah. */
+       → tab kedua menulis field basi ke project yang sudah berubah. */
     S.onExternal = function () {
       paintHist();
       paintProjects();
       updateAiBtn();
       if (window.Questionnaire) window.Questionnaire.applyDepth(S.data.depth, document);
       if (window.Wizard && typeof window.Wizard.hydrate === 'function') window.Wizard.hydrate();
-      /* A2: panel hasil juga harus mengikuti store eksternal ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tanpa ini
+      /* A2: panel hasil juga harus mengikuti store eksternal — tanpa ini
          DOM PRD lama tetap tampil saat tab lain ganti proyek, dan tombol
          salin/AI polish bekerja di atas konten yang sudah tidak sah. */
       try {
@@ -1222,7 +1248,7 @@
       var banner = $('offlineBanner');
       var upd = $('pwaUpdate');
       function setOffline(off) { if (banner) banner.hidden = !off; }
-      /* D1: koneksi kembali ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ minta SW mengulang precache CDN (font/mermaid)
+      /* D1: koneksi kembali → minta SW mengulang precache CDN (font/mermaid)
          yang mungkin gagal saat install tadi. */
       function retryCdn() {
         if (!('serviceWorker' in navigator) || !navigator.serviceWorker) return;

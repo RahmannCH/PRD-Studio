@@ -6,6 +6,11 @@
 <title>Studio — Wawancara 7 Langkah sampai Prompt, PRD Studio</title>
 <meta name="description" content="Jawab 7 langkah wawancara produk, terima PRD markdown, roadmap 4 fase, diagram Mermaid, dan 10 prompt eksekusi berantai. Tersimpan lokal di browser.">
 <meta name="theme-color" content="#0B132B">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Studio — Wawancara 7 Langkah sampai Prompt, PRD Studio">
+<meta property="og:description" content="Jawab 7 langkah wawancara produk, terima PRD markdown, roadmap 4 fase, diagram Mermaid, dan 10 prompt eksekusi berantai. Tersimpan lokal di browser.">
+<meta property="og:image" content="og-image.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B132B'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='16' font-weight='bold' fill='%2348CAE4' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
@@ -200,6 +205,7 @@
         <button class="btn btn-ghost btn-sm" data-act="dl-bab" type="button" disabled>Unduh semua (.md)</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-spec-pack" type="button" disabled title="Berkas requirements, design, tasks, traceability, dan AGENTS untuk AI coding agent">Unduh Spec Pack</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-json" type="button" disabled>Unduh .json</button>
+        <button class="btn btn-ghost btn-sm" data-act="share-link" type="button" disabled title="Salin tautan berisi jawabanmu (terkompresi) — siapa pun yang membuka tautan akan melihat proyek yang sama">Salin tautan</button>
         <button class="btn btn-ghost btn-sm" data-act="print" type="button" disabled>Cetak / PDF</button>
         <button class="btn btn-ghost btn-sm" data-act="ai-advise" type="button" disabled>Minta usulan AI</button>
         <button class="btn btn-ghost btn-sm" data-act="ai-polish" type="button" disabled>Rapikan dengan AI</button>
@@ -360,6 +366,7 @@
 
 <script src="js/studio/theme.js"></script>
 <script src="js/studio/shared.js"></script>
+<script src="js/studio/share.js"></script>
 <script src="js/studio/knowledge.js"></script>
 <script src="js/studio/questionnaire.js"></script>
 <script src="js/studio/state.js"></script>
@@ -376,6 +383,7 @@
 <script src="js/studio/criteria.js"></script>
 <script src="js/studio/spec-pack.js"></script>
 <script src="js/studio/coach.js"></script>
+<script src="js/studio/undo.js"></script>
 <script src="js/studio/render.js"></script>
 <script src="js/studio/palette.js"></script>
 <script src="js/studio/llm-adapter.js"></script>

@@ -95,10 +95,27 @@ menampilkan daftar perbaikan.
 ## Istilah ekspor
 
 ### Spec Pack
-Paket lima berkas yang diturunkan deterministik dari Spec untuk serah terima ke
+Paket enam berkas yang diturunkan deterministik dari Spec untuk serah terima ke
 AI coding agent, mengikuti struktur Kiro dan spec-kit: requirements, design,
-tasks, traceability, dan AGENTS. Interface: `SpecPack.files(data, res)`.
-Letaknya: empat berkas di `specs/<slug>/`, AGENTS di root repo target.
+tasks, traceability, features (Gherkin), dan AGENTS. Interface:
+`SpecPack.files(data, res)`. Letaknya: lima berkas di `specs/<slug>/`, AGENTS
+di root repo target.
+
+### Berkas fitur (Gherkin)
+`FEATURES-<slug>.feature`: satu `Scenario: R<n>` per baris Must, `When` dari
+cerita, `Then`/`And` dari kriteria EARS-lite. Bila kriteria kosong, baris
+`# TODO` ditulis — tanpa `Then` palsu. Fungsi: `SpecPack.features(data, res)`.
+
+### Share link
+Tautan `#s=<token>` berisi jawaban terkompresi (CompressionStream deflate-raw
+atau base64url mentah) yang bisa dibuka siapa pun untuk mengimpor proyek yang
+sama. Interface: `window.ShareLink` (`encode`, `decode`, `toUrl`, `fromHash`).
+Riwayat dan `lastResult` tidak ikut — tautan hanya membawa jawaban.
+
+### Undo/redo jawaban
+`Ctrl+Z` membatalkan, `Ctrl+Shift+Z` mengulang, untuk field wizard. Stack
+maksimum 30 snapshot JSON (tanpa history/lastResult). Interface:
+`window.Undo` (`mark`, `undo`, `redo`). `mark()` dipanggil sebelum mutasi.
 
 ### Kriteria EARS-lite
 Kalimat syarat uji berpola KETIKA/JIKA/SELAMA/DI MANA + SISTEM HARUS. Lima tipe
