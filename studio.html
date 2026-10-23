@@ -192,6 +192,7 @@
       <button class="tab" type="button" role="tab" data-tab="roadmap" aria-selected="false" id="tab-roadmap" aria-controls="out-roadmap" tabindex="-1">Roadmap</button>
       <button class="tab" type="button" role="tab" data-tab="diagram" aria-selected="false" id="tab-diagram" aria-controls="out-diagram" tabindex="-1">Diagram</button>
       <button class="tab" type="button" role="tab" data-tab="prompt" aria-selected="false" id="tab-prompt" aria-controls="out-prompt" tabindex="-1">Prompt P0-P9</button>
+      <button class="tab" type="button" role="tab" data-tab="video" aria-selected="false" id="tab-video" aria-controls="out-video" tabindex="-1">Video / Storyboard</button>
     </div>
     <div class="output" id="out-prd" role="tabpanel" aria-labelledby="tab-prd" tabindex="0">
       <nav class="toc" id="prdToc" aria-label="Daftar isi PRD"></nav>
@@ -248,6 +249,14 @@
       <div class="output-actions">
         <button class="btn btn-ghost btn-sm" data-act="copy-all-prompt" type="button" disabled>Salin semua prompt terbuka</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-prompts" type="button" disabled>Unduh PROMPTS.md</button>
+      </div>
+    </div>
+    <div class="output" id="out-video" role="tabpanel" aria-labelledby="tab-video" tabindex="0" hidden>
+      <div id="storyboardTimeline"><p class="empty">Storyboard 60 detik akan muncul setelah kamu menekan Susun.</p></div>
+      <div class="output-actions">
+        <button class="btn btn-primary btn-sm" data-act="copy-video-prompt" type="button" disabled title="Salin satu Master Prompt mandiri untuk AI Agent guna membangun video HyperFrames">Salin Master Prompt AI Agent</button>
+        <button class="btn btn-ghost btn-sm" data-act="copy-storyboard" type="button" disabled>Salin tabel storyboard (.md)</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-storyboard" type="button" disabled>Unduh STORYBOARD.md</button>
       </div>
     </div>
   </section>
@@ -378,6 +387,7 @@
 <script src="js/studio/generator-prd.js"></script>
 <script src="js/studio/generator-roadmap.js"></script>
 <script src="js/studio/generator-prompt.js"></script>
+<script src="js/studio/generator-storyboard.js"></script>
 <script src="js/studio/diagrams.js"></script>
 <script src="js/studio/exporter.js"></script>
 <script src="js/studio/criteria.js"></script>

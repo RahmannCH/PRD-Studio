@@ -102,7 +102,8 @@
 
     /* ---------- Tombol export: aktif hanya kalau ada hasil ---------- */
     var exportActs = ['copy-prd', 'dl-prd', 'dl-bab', 'dl-spec-pack', 'dl-json', 'share-link', 'dl-roadmap-csv', 'print', 'ai-polish', 'ai-advise',
-      'dl-html', 'dl-brief', 'dl-spec-yaml', 'copy-mermaid', 'copy-all-prompt', 'dl-prompts'];
+      'dl-html', 'dl-brief', 'dl-spec-yaml', 'copy-mermaid', 'copy-all-prompt', 'dl-prompts',
+      'copy-video-prompt', 'copy-storyboard', 'dl-storyboard'];
     function setExportEnabled(on) {
       exportActs.forEach(function (a) {
         var b = document.querySelector('[data-act="' + a + '"]');
@@ -161,6 +162,12 @@
         window.RenderOut.roadmap(r.roadmap);
         window.RenderOut.diagrams(r.diagrams);
         window.RenderOut.prompts(applyPromptEdits(r.prompts));
+        if (!r.storyboard && window.GenStoryboard) {
+          r.storyboard = window.GenStoryboard(S.data, r.spec);
+        }
+        if (window.RenderOut.storyboard) {
+          window.RenderOut.storyboard(r.storyboard);
+        }
         badge(r.score);
         paintResultGaps(r.gaps);
         setExportEnabled(true);
@@ -191,6 +198,8 @@
       $('roadmapDiv').innerHTML = '<p class="empty">Roadmap akan muncul setelah kamu menekan Susun.</p>';
       $('diagramDiv').innerHTML = '<p class="empty">Diagram akan muncul setelah kamu menekan Susun.</p>';
       $('promptDiv').innerHTML = '<p class="empty">10 prompt akan muncul setelah kamu menekan Susun.</p>';
+      var sbDiv = $('storyboardTimeline');
+      if (sbDiv) sbDiv.innerHTML = '<p class="empty">Storyboard 60 detik akan muncul setelah kamu menekan Susun.</p>';
       badge(null);
       paintResultGaps([]);
       var clr = $('resultGapsClear');
@@ -276,6 +285,7 @@
           var roadmap = window.GenRoadmap(d);
           var diagrams = window.GenDiagrams(d);
           var prompts = window.GenPrompts(d, prd, varsFromDom());
+          var storyboard = (window.GenStoryboard) ? window.GenStoryboard(d, spec) : null;
           applyPromptEdits(prompts);
           var same = prevPrompts === JSON.stringify(prompts.map(function (p) { return p.body; }));
 
@@ -289,7 +299,7 @@
           delete inputsSnap.checks; delete inputsSnap.copied; delete inputsSnap.promptEdits;
 
           /* res = objek baru; lastResult TIDAK merujuk langsung ke entry history. */
-          var res = { prd: prd, spec: spec, roadmap: roadmap, diagrams: diagrams, prompts: prompts, at: new Date().toISOString(), score: sc, gaps: gaps, inputs: inputsSnap };
+          var res = { prd: prd, spec: spec, roadmap: roadmap, diagrams: diagrams, prompts: prompts, storyboard: storyboard, at: new Date().toISOString(), score: sc, gaps: gaps, inputs: inputsSnap };
           d.lastResult = res;
           var mainSaved = S.save();
           if (!mainSaved) {
@@ -452,6 +462,27 @@
         if (!guard()) return;
         var all = S.data.lastResult.prompts.map(function (p) { return '## ' + p.id + ' ' + p.title + (p.gate ? ' (gerbang: ' + p.gate + ')' : '') + '\n\n' + p.body; }).join('\n\n---\n\n');
         window.Exporter.download('PROMPTS-' + window.Exporter.slug(S.data.productName) + '.md', all);
+      },
+      'copy-video-prompt': function (b) {
+        if (!guard()) return;
+        var sb = S.data.lastResult && S.data.lastResult.storyboard;
+        if (!sb && window.GenStoryboard) sb = window.GenStoryboard(S.data, S.data.lastResult && S.data.lastResult.spec);
+        if (!sb) { window.UX.toast('Storyboard belum tersedia.'); return; }
+        window.RenderOut.copyText(sb.masterPrompt, b);
+      },
+      'copy-storyboard': function (b) {
+        if (!guard()) return;
+        var sb = S.data.lastResult && S.data.lastResult.storyboard;
+        if (!sb && window.GenStoryboard) sb = window.GenStoryboard(S.data, S.data.lastResult && S.data.lastResult.spec);
+        if (!sb) { window.UX.toast('Storyboard belum tersedia.'); return; }
+        window.RenderOut.copyText(sb.markdown, b);
+      },
+      'dl-storyboard': function () {
+        if (!guard()) return;
+        var sb = S.data.lastResult && S.data.lastResult.storyboard;
+        if (!sb && window.GenStoryboard) sb = window.GenStoryboard(S.data, S.data.lastResult && S.data.lastResult.spec);
+        if (!sb) { window.UX.toast('Storyboard belum tersedia.'); return; }
+        window.Exporter.download('STORYBOARD-' + window.Exporter.slug(S.data.productName) + '.md', sb.markdown, 'text/markdown');
       },
       'ai-polish': function () {
         /* B3: klik kedua SELAMA permintaan berjalan = tombol Batal. */

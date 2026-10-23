@@ -38,7 +38,7 @@ window.Palette = (function () {
   function build() {
     var out = [];
     function add(label, kw, run) { out.push({ label: label, kw: kw, run: run }); }
-    [['prd', 'PRD'], ['roadmap', 'Roadmap'], ['diagram', 'Diagram'], ['prompt', 'Prompt']].forEach(function (t) {
+    [['prd', 'PRD'], ['roadmap', 'Roadmap'], ['diagram', 'Diagram'], ['prompt', 'Prompt'], ['video', 'Video / Storyboard']].forEach(function (t) {
       var btn = document.querySelector('[data-tab="' + t[0] + '"]');
       if (btn) add('Buka tab ' + t[1], 'tab ' + t[1], function () { btn.click(); });
     });
@@ -56,6 +56,9 @@ window.Palette = (function () {
       ['dl-spec-pack', 'Unduh Spec Pack (AI agent)', 'unduh spec pack kiro agen'],
       ['dl-json', 'Unduh arsip (.json)', 'unduh json'],
       ['share-link', 'Salin tautan berbagi', 'tautan share link bagikan'],
+      ['copy-video-prompt', 'Salin Master Prompt HyperFrames', 'video hyperframes prompt agent motion'],
+      ['copy-storyboard', 'Salin tabel storyboard (.md)', 'storyboard salin video copy'],
+      ['dl-storyboard', 'Unduh STORYBOARD.md', 'unduh download storyboard video'],
       ['dl-roadmap-csv', 'Unduh CSV roadmap', 'unduh csv'],
       ['dl-prompts', 'Unduh PROMPTS.md', 'unduh prompt'],
       ['print', 'Cetak atau PDF', 'print pdf'],

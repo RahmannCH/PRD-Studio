@@ -16,9 +16,11 @@ Landing page: `index.html`. Aplikasi utama: `studio.html`.
   ditelusuri, hard rule (nama, masalah, tiga Must-have) membatasi skor 59.
 - Validator gap dengan kode yang bisa ditindaklanjuti, dari SAMAR sampai
   KLINIK, lengkap dengan daftar perbaikan per langkah.
-- Empat output yang saling nyambung dari satu Spec: PRD markdown 12 bagian,
-  roadmap fase berurutan, diagram Mermaid (arsitektur, alur, ERD), dan prompt
-  P0 sampai P9 dengan gerbang salin berurutan.
+- Lima output yang saling nyambung dari satu Spec: PRD markdown 12 bagian,
+  roadmap fase berurutan, diagram Mermaid (arsitektur, alur, ERD), prompt
+  P0 sampai P9, dan Storyboard Video Motion HyperFrames 60 detik (1920x1080 @ 30fps).
+- Storyboard kinetik dengan pola Reverse Iceberg (5 babak), cue sheet SFX detik-demi-detik,
+  instruksi aset mandiri, dan Master Prompt satu klik untuk AI Agent HyperFrames.
 - Ekspor markdown, HTML, brief satu halaman, dan Spec dalam format YAML.
 - Spec Pack untuk AI coding agent: enam berkas (REQUIREMENTS, DESIGN, TASKS,
   TRACEABILITY, FEATURES berformat Gherkin, AGENTS) yang siap ditaruh di
@@ -85,7 +87,7 @@ js/studio/           modul aplikasi, urut sesuai dependensi
   scorer.js          skor rubrik terbuka
   spec.js            Spec.build: satu sumber kebenaran output
   spec-render.js     renderer brief, json, yaml, html
-  generator-*.js     PRD, roadmap, prompt
+  generator-*.js     PRD, roadmap, prompt, storyboard
   diagrams.js        Mermaid
   exporter.js        unduhan dan cetak
   render.js          perakitan tampilan hasil

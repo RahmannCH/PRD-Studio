@@ -204,6 +204,23 @@ Semua font disajikan dari repo: satu berkas variabel Inter untuk tiga bobot
 dan tiga Poppins statis, semua subset latin. Tidak ada permintaan ke Google
 Fonts saat runtime; CDN hanya untuk mermaid.
 
+### Storyboard kinetik 60 detik
+Rancangan video frame-by-frame 5 babak (Hook, Value, Mechanism, Evidence, CTA)
+sepanjang tepat 60.0 detik pada 30 fps (1.800 frame), diturunkan deterministik
+dari Spec dengan pola Reverse Iceberg (nilai dulu, bukti kemudian).
+Interface: `window.GenStoryboard(data, spec)`.
+
+### Hukum anti-PPT
+Larangan keras terhadap pola presentasi slide: dilarang section fade-in/out
+(wajib semesta kamera berkelanjutan / continuous camera drift), dilarang judul
+> 3 baris, dilarang transisi tanpa SFX audio, dan wajib latar 3 lapis.
+
+### Master Prompt HyperFrames
+Satu prompt mandiri siap tempel untuk AI Coding Agent (Claude Code / Cursor)
+yang menyatukan storyboard timecode, token desain `frame.md`, resep kueri aset
+mandiri, dan perintah CLI (`init`, `check`, `render`) hingga menghasilkan file
+`.mp4`.
+
 ---
 
 ## Aturan yang tidak boleh dilanggar

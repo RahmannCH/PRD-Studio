@@ -49,6 +49,7 @@ load('spec-render.js');
 load('generator-prd.js');
 load('generator-roadmap.js');
 load('generator-prompt.js');
+load('generator-storyboard.js');
 load('diagrams.js');
 load('exporter.js');
 load('criteria.js');
@@ -1067,7 +1068,64 @@ const diagrams = window.GenDiagrams(sample);
     'style.css disables all transitions under prefers-reduced-motion');
 }
 
-/* 32. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
+// 32. Storyboard & HyperFrames Motion Engine (60 Detik Standar)
+{
+  const G = window.GenStoryboard;
+  ok(typeof G === 'function', 'GenStoryboard is exported as a function');
+
+  const sb = G(sample);
+  ok(sb && sb.totalDuration === 60.0 && sb.fps === 30, 'storyboard runs for exactly 60.0 seconds at 30 fps');
+  ok(Array.isArray(sb.beats) && sb.beats.length === 5, 'storyboard has five distinct beats (Reverse Iceberg)');
+
+  const durSum = sb.beats.reduce((acc, b) => acc + b.durationSec, 0);
+  ok(Math.abs(durSum - 60.0) < 0.001, 'sum of beat durations matches 60.0 seconds exactly');
+
+  // Per-beat contract
+  ok(sb.beats[0].role === 'HOOK_PAIN' && sb.beats[0].durationSec === 6.0, 'beat 1 is hook pain (6s)');
+  ok(sb.beats[1].role === 'VALUE_CLAIM' && sb.beats[1].durationSec === 8.0, 'beat 2 is value claim (8s)');
+  ok(sb.beats[2].role === 'CORE_MECHANICS' && sb.beats[2].durationSec === 24.0, 'beat 3 is core mechanics (24s)');
+  ok(sb.beats[3].role === 'HARD_EVIDENCE' && sb.beats[3].durationSec === 12.0, 'beat 4 is hard evidence (12s)');
+  ok(sb.beats[4].role === 'OUTRO_CTA' && sb.beats[4].durationSec === 10.0, 'beat 5 is outro CTA (10s)');
+
+  // All beats have camera, layout, sfx cues, and autonomous asset queries
+  ok(sb.beats.every(b => b.sfx && b.sfx.length >= 2), 'every beat has at least two timestamped SFX cues');
+  ok(sb.beats.every(b => b.assets && b.assets.length >= 1), 'every beat provides autonomous search queries for AI agents');
+  ok(sb.beats.every(b => b.camera && b.layout && b.headline), 'every beat defines camera motion, layout archetype, and kinetic headline');
+
+  // Master Prompt
+  ok(sb.masterPrompt.indexOf('npx hyperframes init') > -1, 'master prompt includes hyperframes init');
+  ok(sb.masterPrompt.indexOf('npx hyperframes check') > -1, 'master prompt includes hyperframes check');
+  ok(sb.masterPrompt.indexOf('npx hyperframes render') > -1, 'master prompt includes hyperframes render');
+  ok(sb.masterPrompt.indexOf('Dilarang Slide Deck') > -1, 'master prompt enforces anti-PPT continuous camera law');
+
+  // SpecPack integration
+  const SP = window.SpecPack;
+  ok(typeof SP.storyboard === 'function' && typeof SP.agentHyperframes === 'function', 'SpecPack exports storyboard and agentHyperframes');
+  const sbMd = SP.storyboard(sample);
+  ok(sbMd.indexOf('00:00 - 00:06') > -1 && sbMd.indexOf('HOOK_PAIN') > -1, 'SpecPack.storyboard returns markdown table with timecodes');
+  const vFiles = SP.videoFiles(sample);
+  ok(vFiles.length === 3 && vFiles[0].name.indexOf('STORYBOARD-') === 0 && vFiles[2].name.indexOf('AGENT-HYPERFRAMES-') === 0, 'SpecPack.videoFiles returns three dedicated video spec files');
+  const fullFiles = SP.files(sample, null, { includeVideo: true });
+  ok(fullFiles.length === 9, 'SpecPack.files with includeVideo returns nine files (6 software + 3 video)');
+
+  // Markup & palette verification
+  const htmlSt = fs.readFileSync(path.join(__dirname, '..', 'studio.html'), 'utf8');
+  ok(htmlSt.indexOf('data-tab="video"') > -1 && htmlSt.indexOf('id="out-video"') > -1, 'studio.html has video tab and panel');
+  ok(htmlSt.indexOf('id="storyboardTimeline"') > -1, 'studio.html contains storyboard timeline container');
+  ok(htmlSt.indexOf('data-act="copy-video-prompt"') > -1, 'studio.html has copy-video-prompt button');
+
+  const appSt = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  ok(appSt.indexOf("'copy-video-prompt'") > -1 && appSt.indexOf('RenderOut.storyboard') > -1, 'app.js wires video prompt and storyboard rendering');
+
+  const palSt = fs.readFileSync(path.join(root, 'palette.js'), 'utf8');
+  ok(palSt.indexOf('copy-video-prompt') > -1 && palSt.indexOf("['video', 'Video / Storyboard']") > -1, 'palette.js lists video commands in Ctrl+K');
+
+  // Empty data fallback
+  const sbEmpty = G({});
+  ok(sbEmpty && sbEmpty.totalDuration === 60.0 && sbEmpty.beats.length === 5, 'empty data produces honest 60s fallback storyboard');
+}
+
+/* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
    Blok async terakhir — laporan PASS/FAIL dicetak setelah promise selesai. */
 (function shareLinkTests() {
   var SL = window.ShareLink;

@@ -550,6 +550,92 @@
         box.appendChild(d);
       });
     },
+    storyboard: function (sb) {
+      var box = document.getElementById('storyboardTimeline');
+      if (!box) return;
+      box.innerHTML = '';
+      if (!sb || !sb.beats || !sb.beats.length) {
+        box.innerHTML = '<p class="empty">Storyboard akan muncul setelah kamu menekan Susun.</p>';
+        return;
+      }
+      var metaWrap = document.createElement('div');
+      metaWrap.className = 'sb-meta-bar';
+      metaWrap.innerHTML = '<div class="sb-meta-item"><span class="sb-meta-k">Total Durasi</span><span class="sb-meta-v">60.0 Detik (1.800 Frame)</span></div>' +
+        '<div class="sb-meta-item"><span class="sb-meta-k">Format & FPS</span><span class="sb-meta-v">1920x1080 @ 30 FPS</span></div>' +
+        '<div class="sb-meta-item"><span class="sb-meta-k">Audio Bed & Tempo</span><span class="sb-meta-v">118-124 BPM · Ducking -14dB</span></div>' +
+        '<div class="sb-meta-item"><span class="sb-meta-k">Struktur Narasi</span><span class="sb-meta-v">Reverse Iceberg (5 Babak)</span></div>';
+      box.appendChild(metaWrap);
+
+      sb.beats.forEach(function (b, idx) {
+        var card = document.createElement('article');
+        card.className = 'sb-card neu';
+        card.id = 'sb-beat-' + (idx + 1);
+
+        var head = document.createElement('div');
+        head.className = 'sb-card-head';
+        head.innerHTML = '<div class="sb-card-tags">' +
+          '<span class="sb-time-chip">' + escHtml(b.timecode) + ' (' + b.durationSec + 's)</span>' +
+          '<span class="sb-role-chip role-' + escHtml(b.role.toLowerCase()) + '">' + escHtml(b.role) + '</span>' +
+          '</div>' +
+          '<h3 class="sb-beat-title">' + escHtml(b.title) + '</h3>';
+        card.appendChild(head);
+
+        var body = document.createElement('div');
+        body.className = 'sb-card-grid';
+
+        // Kolom 1: Narasi & Teks Kinetik
+        var col1 = document.createElement('div');
+        col1.className = 'sb-col';
+        col1.innerHTML = '<div class="sb-field">' +
+          '<span class="sb-label">Naskah Narasi VO (Pacing ~135 WPM)</span>' +
+          '<p class="sb-vo-box">' + escHtml(b.vo) + '</p>' +
+          '</div>' +
+          '<div class="sb-field">' +
+          '<span class="sb-label">Tipografi Kinetik di Layar</span>' +
+          '<div class="sb-headline-box">' +
+          '<strong class="sb-hl">' + escHtml(b.headline) + '</strong>' +
+          '<span class="sb-sub">' + escHtml(b.subtext) + '</span>' +
+          '</div>' +
+          '</div>';
+        body.appendChild(col1);
+
+        // Kolom 2: Layout & Kamera
+        var col2 = document.createElement('div');
+        col2.className = 'sb-col';
+        col2.innerHTML = '<div class="sb-field">' +
+          '<span class="sb-label">Arsitektur Komposisi & Layout</span>' +
+          '<p class="sb-desc-box">' + escHtml(b.layout) + '</p>' +
+          '</div>' +
+          '<div class="sb-field">' +
+          '<span class="sb-label">Koreografi Kamera & VFX</span>' +
+          '<p class="sb-desc-box">' + escHtml(b.camera) + '</p>' +
+          '</div>';
+        body.appendChild(col2);
+
+        // Kolom 3: Sound Design & Aset
+        var col3 = document.createElement('div');
+        col3.className = 'sb-col';
+        var sfxHtml = b.sfx.map(function (s) {
+          return '<li class="sb-sfx-item"><span class="sb-sfx-time">' + escHtml(s.at) + '</span> ' + escHtml(s.desc) + '</li>';
+        }).join('');
+        var assetHtml = b.assets.map(function (a) {
+          return '<li class="sb-asset-item"><code class="sb-query">' + escHtml(a) + '</code></li>';
+        }).join('');
+
+        col3.innerHTML = '<div class="sb-field">' +
+          '<span class="sb-label">Sound Effects (SFX Cue Sheet)</span>' +
+          '<ul class="sb-sfx-list">' + sfxHtml + '</ul>' +
+          '</div>' +
+          '<div class="sb-field">' +
+          '<span class="sb-label">Kueri Aset Mandiri (AI Agent)</span>' +
+          '<ul class="sb-asset-list">' + assetHtml + '</ul>' +
+          '</div>';
+        body.appendChild(col3);
+
+        card.appendChild(body);
+        box.appendChild(card);
+      });
+    },
     diff: function (oldMd, newMd) {
       var box = document.getElementById('diffBox');
       if (!box) return;

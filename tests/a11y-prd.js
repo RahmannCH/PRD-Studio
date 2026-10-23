@@ -70,6 +70,8 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   await scan('results: roadmap tab');
   await page.click('[data-tab="prompt"]');
   await scan('results: prompt tab');
+  await page.click('[data-tab="video"]');
+  await scan('results: video storyboard tab');
 
   await browser.close();
   server.close();

@@ -339,9 +339,33 @@ window.SpecPack = (function () {
     return out.join('\n');
   }
 
-  function files(data, res) {
+  function storyboard(data, res) {
+    var spec = specOf(data, res);
+    var sb = (window.GenStoryboard) ? window.GenStoryboard(data, spec) : null;
+    return sb ? sb.markdown : '';
+  }
+
+  function agentHyperframes(data, res) {
+    var spec = specOf(data, res);
+    var sb = (window.GenStoryboard) ? window.GenStoryboard(data, spec) : null;
+    return sb ? sb.masterPrompt : '';
+  }
+
+  function videoFiles(data, res) {
     var slug = slugOf(data);
+    var spec = specOf(data, res);
+    var sb = (window.GenStoryboard) ? window.GenStoryboard(data, spec) : null;
+    if (!sb) return [];
     return [
+      { name: 'STORYBOARD-' + slug + '.md', text: sb.markdown, type: 'text/markdown' },
+      { name: 'FRAME-' + slug + '.md', text: sb.frameSpec, type: 'text/markdown' },
+      { name: 'AGENT-HYPERFRAMES-' + slug + '.md', text: sb.masterPrompt, type: 'text/markdown' }
+    ];
+  }
+
+  function files(data, res, opts) {
+    var slug = slugOf(data);
+    var base = [
       { name: 'REQUIREMENTS-' + slug + '.md', text: requirements(data, res), type: 'text/markdown' },
       { name: 'DESIGN-' + slug + '.md', text: design(data, res), type: 'text/markdown' },
       { name: 'TASKS-' + slug + '.md', text: tasks(data, res), type: 'text/markdown' },
@@ -349,7 +373,22 @@ window.SpecPack = (function () {
       { name: 'FEATURES-' + slug + '.feature', text: features(data, res), type: 'text/plain' },
       { name: 'AGENTS-' + slug + '.md', text: agents(data, res), type: 'text/markdown' }
     ];
+    if (opts && opts.includeVideo) {
+      return base.concat(videoFiles(data, res));
+    }
+    return base;
   }
 
-  return { files: files, requirements: requirements, design: design, tasks: tasks, traceability: traceability, agents: agents, features: features };
+  return {
+    files: files,
+    requirements: requirements,
+    design: design,
+    tasks: tasks,
+    traceability: traceability,
+    agents: agents,
+    features: features,
+    storyboard: storyboard,
+    agentHyperframes: agentHyperframes,
+    videoFiles: videoFiles
+  };
 })();
