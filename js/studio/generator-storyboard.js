@@ -52,6 +52,22 @@
       cameraStyle: 'Kamera mengunci objek pahlawan yang melayang di tengah sambil semesta di belakangnya berganti',
       bgStyle: 'Clean Contrast Canvas dengan gradien radial 2-warna berputar lambat',
       cardStyle: 'Floating 3D container dengan depth of field dan pantulan cahaya rim-light'
+    },
+    'swiss-minimal': {
+      id: 'swiss-minimal',
+      name: 'Tipografi Swiss & Grid Asimetris',
+      tagline: 'Tipografi masif bleed 80% layar, grid 12 kolom tegas, kontras signal red',
+      cameraStyle: 'Kamera ortografis tanpa distorsi, potongan jump-cut di ketukan drum, slide horizontal teratur',
+      bgStyle: 'Pure Stark Paper (#F9F9FB) atau Stark Dark (#0A0A0C) dengan grid 12 kolom garis 1px',
+      cardStyle: 'Borderless typographic block dengan garis pemisah tebal 3px dan label mono numerik'
+    },
+    'brutalist-blue': {
+      id: 'brutalist-blue',
+      name: 'Industrial Brutalist & Declassified Blueprint',
+      tagline: 'Garis bidik koordinat, cap stensil classified, skema arsitektur teknik tinggi',
+      cameraStyle: 'Low-angle technical pan, zoom stepped 1x -> 2x tanpa interpolasi lembut (stepped mechanical)',
+      bgStyle: 'Deep Blueprint Blue (#001833) atau Military Slate (#0B0E14) dengan grid koordinat teknis',
+      cardStyle: 'Chiseled metal panel dengan sekrup sudut SVG, stempel classified merah, dan monospaced metadata'
     }
   };
 
@@ -113,6 +129,8 @@
         role: 'HOOK_PAIN',
         blueprint: 'overwhelm-surround',
         rules: ['depth-of-field-blur', 'motion-blur-streak', 'reactive-displacement'],
+        motionVerb: 'SLAMS',
+        gsapEasing: 'power4.out',
         vo: 'Setiap hari, ' + problem.slice(0, 85) + ' [jeda 0.5s]. Waktu terbuang sia-sia hanya untuk pekerjaan berulang.',
         headline: 'MASALAH LAMA, BIAYA BESAR',
         subtext: problem.slice(0, 65),
@@ -167,6 +185,8 @@
         role: 'VALUE_CLAIM',
         blueprint: 'device-surface-showcase',
         rules: ['spring-pop-entrance', 'split-tilt-cards', 'svg-path-draw'],
+        motionVerb: 'SPRINGS',
+        gsapEasing: 'back.out(1.8)',
         vo: 'Kenalkan ' + name + ' [jeda 0.4s]. ' + firstSentence(oneLiner, 'Solusi yang mengubah cara kerja selamanya') + '.',
         headline: name.toUpperCase(),
         subtext: oneLiner.slice(0, 75),
@@ -220,6 +240,8 @@
         role: 'CORE_MECHANICS',
         blueprint: 'cursor-ui-demo',
         rules: ['multi-phase-camera', 'cursor-click-ripple', 'press-release-spring', 'waterfall-entry'],
+        motionVerb: 'STEPS',
+        gsapEasing: 'power2.inOut',
         vo: 'Tiga langkah selesai [jeda 0.3s]. Pertama, ' + must1.slice(0, 60) + ' [jeda 0.4s]. Kedua, ' + must2.slice(0, 60) + ' [jeda 0.4s]. Dan ketiga, ' + must3.slice(0, 60) + '.',
         headline: 'TIGA LANGKAH INSTAN',
         subtext: '1. ' + must1.slice(0, 30) + ' | 2. ' + must2.slice(0, 30) + ' | 3. ' + must3.slice(0, 30),
@@ -274,6 +296,8 @@
         role: 'HARD_EVIDENCE',
         blueprint: 'dataviz-countup',
         rules: ['counting-dynamic-scale', 'stat-bars-and-fills', 'vertical-spring-ticker'],
+        motionVerb: 'COUNTS UP',
+        gsapEasing: 'power3.out',
         vo: 'Teruji dan terbukti [jeda 0.4s]. ' + nfrMetric + ' [jeda 0.4s]. Fondasi ' + stack + ' memastikan keandalan tanpa kompromi.',
         headline: 'BUKTI PERFORMA TANGGUH',
         subtext: nfrMetric + ' · Efisiensi maksimal teruji',
@@ -326,6 +350,8 @@
         role: 'OUTRO_CTA',
         blueprint: 'logo-assemble-lockup',
         rules: ['scale-swap-transition', 'depth-scatter-assemble', 'magnetic-button-hover'],
+        motionVerb: 'LOCKS IN',
+        gsapEasing: 'elastic.out(1, 0.4)',
         vo: 'Tinggalkan cara lama [jeda 0.3s]. Beralih ke ' + name + ' hari ini dan buktikan sendiri.',
         headline: name.toUpperCase(),
         subtext: 'Buka sekarang · Tanpa akun · Langsung pakai',
@@ -382,7 +408,7 @@
         if (b.assets.uiMockup) assetItems.push('💻 **UI:** ' + b.assets.uiMockup);
         var assetStr = assetItems.join('<br>');
 
-        lines.push('| **' + b.timecode + '** | **' + b.role + '**<br>_Blueprint: ' + b.blueprint + '_ | ' + esc(b.vo) + ' | **' + esc(b.headline) + '**<br>' + esc(b.subtext) + '<br>_' + esc(b.layout) + '_ | ' + esc(b.camera) + ' | ' + sfxStr + ' | ' + assetStr + ' |');
+        lines.push('| **' + b.timecode + '** | **' + b.role + '**<br>_Blueprint: ' + b.blueprint + '_<br>_Motion: ' + b.motionVerb + ' (' + b.gsapEasing + ')_ | ' + esc(b.vo) + ' | **' + esc(b.headline) + '**<br>' + esc(b.subtext) + '<br>_' + esc(b.layout) + '_ | ' + esc(b.camera) + ' | ' + sfxStr + ' | ' + assetStr + ' |');
       });
       return lines.join('\n');
     }
@@ -426,7 +452,7 @@
 
     function buildProceduralAudioScript() {
       return [
-        '/* sfx-synth.js — Sintesis Audio Prosedural 12-Instrumen Web Audio API (Offline Fallback)',
+        '/* sfx-synth.js — Sintesis Audio Prosedural 15-Instrumen Web Audio API (Offline Fallback)',
         '   Dipakai HyperFrames saat merender bila file audio eksternal tidak tersedia. */',
         '(function () {',
         '  var ctx = null;',
@@ -586,6 +612,42 @@
         '      g.gain.exponentialRampToValueAtTime(0.001, (t || c.currentTime) + 0.45);',
         '      o.connect(g); g.connect(c.destination);',
         '      o.start(t || c.currentTime); o.stop((t || c.currentTime) + 0.46);',
+        '    },',
+        '    cash: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      [1200, 1800, 2400].forEach(function (f, i) {',
+        '        var o = c.createOscillator(), g = c.createGain();',
+        '        o.type = "triangle"; o.frequency.setValueAtTime(f, now + i * 0.04);',
+        '        g.gain.setValueAtTime(0.3, now + i * 0.04);',
+        '        g.gain.exponentialRampToValueAtTime(0.001, now + 0.35 + i * 0.04);',
+        '        o.connect(g); g.connect(c.destination);',
+        '        o.start(now + i * 0.04); o.stop(now + 0.4 + i * 0.04);',
+        '      });',
+        '    },',
+        '    keytype: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      [0, 0.06, 0.12].forEach(function (dt) {',
+        '        var o = c.createOscillator(), g = c.createGain();',
+        '        o.type = "sine"; o.frequency.setValueAtTime(1600 + Math.random() * 400, now + dt);',
+        '        o.frequency.exponentialRampToValueAtTime(100, now + dt + 0.015);',
+        '        g.gain.setValueAtTime(0.4, now + dt);',
+        '        g.gain.exponentialRampToValueAtTime(0.001, now + dt + 0.015);',
+        '        o.connect(g); g.connect(c.destination);',
+        '        o.start(now + dt); o.stop(now + dt + 0.02);',
+        '      });',
+        '    },',
+        '    scan: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      var o = c.createOscillator(), g = c.createGain();',
+        '      o.type = "sine"; o.frequency.setValueAtTime(900, now);',
+        '      o.frequency.linearRampToValueAtTime(2600, now + 0.22);',
+        '      g.gain.setValueAtTime(0.3, now);',
+        '      g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);',
+        '      o.connect(g); g.connect(c.destination);',
+        '      o.start(now); o.stop(now + 0.26);',
         '    }',
         '  };',
         '})();'

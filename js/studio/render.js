@@ -636,6 +636,26 @@
           os.type = 'sine'; os.frequency.setValueAtTime(70, t); os.frequency.exponentialRampToValueAtTime(28, t + 0.45);
           gos.gain.setValueAtTime(1.0, t); gos.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
           os.connect(gos); gos.connect(c.destination); os.start(t); os.stop(t + 0.46);
+        } else if (type === 'cash') {
+          [1200, 1800, 2400].forEach(function (f, i) {
+            var ocs = c.createOscillator(), gcs = c.createGain();
+            ocs.type = 'triangle'; ocs.frequency.setValueAtTime(f, t + i * 0.04);
+            gcs.gain.setValueAtTime(0.3, t + i * 0.04); gcs.gain.exponentialRampToValueAtTime(0.001, t + 0.35 + i * 0.04);
+            ocs.connect(gcs); gcs.connect(c.destination); ocs.start(t + i * 0.04); ocs.stop(t + 0.4 + i * 0.04);
+          });
+        } else if (type === 'keytype') {
+          [0, 0.06, 0.12].forEach(function (dt) {
+            var okt = c.createOscillator(), gkt = c.createGain();
+            okt.type = 'sine'; okt.frequency.setValueAtTime(1600 + Math.random() * 400, t + dt);
+            okt.frequency.exponentialRampToValueAtTime(100, t + dt + 0.015);
+            gkt.gain.setValueAtTime(0.4, t + dt); gkt.gain.exponentialRampToValueAtTime(0.001, t + dt + 0.015);
+            okt.connect(gkt); gkt.connect(c.destination); okt.start(t + dt); okt.stop(t + dt + 0.02);
+          });
+        } else if (type === 'scan') {
+          var oscan = c.createOscillator(), gscan = c.createGain();
+          oscan.type = 'sine'; oscan.frequency.setValueAtTime(900, t); oscan.frequency.linearRampToValueAtTime(2600, t + 0.22);
+          gscan.gain.setValueAtTime(0.3, t); gscan.exponentialRampToValueAtTime(0.001, t + 0.25);
+          oscan.connect(gscan); gscan.connect(c.destination); oscan.start(t); oscan.stop(t + 0.26);
         } else {
           var o = c.createOscillator(), g = c.createGain();
           o.type = 'sine'; o.frequency.setValueAtTime(1800, t);
@@ -747,6 +767,7 @@
             '<span class="sb-time-chip">' + escHtml(b.timecode) + ' (' + b.durationSec + 's)</span>' +
             '<span class="sb-bar-chip">' + escHtml(b.bars || '') + '</span>' +
             '<span class="sb-role-chip role-' + escHtml(b.role.toLowerCase()) + '">' + escHtml(b.role) + '</span>' +
+            (b.motionVerb ? '<span class="sb-verb-badge">' + escHtml(b.motionVerb) + '</span>' : '') +
             bpTag +
             '</div>' +
             '<h3 class="sb-beat-title">' + escHtml(b.title) + '</h3>';
