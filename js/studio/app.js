@@ -106,8 +106,9 @@
       'copy-video-prompt', 'copy-storyboard', 'dl-storyboard', 'dl-video-pack'];
     function setExportEnabled(on) {
       exportActs.forEach(function (a) {
-        var b = document.querySelector('[data-act="' + a + '"]');
-        if (b) b.disabled = !on;
+        document.querySelectorAll('[data-act="' + a + '"]').forEach(function (b) {
+          b.disabled = !on;
+        });
       });
       var hint = $('actionHint');
       if (hint) hint.hidden = on;
@@ -464,28 +465,21 @@
         window.Exporter.download('PROMPTS-' + window.Exporter.slug(S.data.productName) + '.md', all);
       },
       'copy-video-prompt': function (b) {
-        if (!guard()) return;
-        var sb = S.data.lastResult && S.data.lastResult.storyboard;
-        if (!sb && window.GenStoryboard) sb = window.GenStoryboard(S.data, S.data.lastResult && S.data.lastResult.spec);
+        var sb = (S.data.lastResult && S.data.lastResult.storyboard) || (window.GenStoryboard && window.GenStoryboard(S.data));
         if (!sb) { window.UX.toast('Storyboard belum tersedia.'); return; }
         window.RenderOut.copyText(sb.masterPrompt, b);
       },
       'copy-storyboard': function (b) {
-        if (!guard()) return;
-        var sb = S.data.lastResult && S.data.lastResult.storyboard;
-        if (!sb && window.GenStoryboard) sb = window.GenStoryboard(S.data, S.data.lastResult && S.data.lastResult.spec);
+        var sb = (S.data.lastResult && S.data.lastResult.storyboard) || (window.GenStoryboard && window.GenStoryboard(S.data));
         if (!sb) { window.UX.toast('Storyboard belum tersedia.'); return; }
         window.RenderOut.copyText(sb.markdown, b);
       },
       'dl-storyboard': function () {
-        if (!guard()) return;
-        var sb = S.data.lastResult && S.data.lastResult.storyboard;
-        if (!sb && window.GenStoryboard) sb = window.GenStoryboard(S.data, S.data.lastResult && S.data.lastResult.spec);
+        var sb = (S.data.lastResult && S.data.lastResult.storyboard) || (window.GenStoryboard && window.GenStoryboard(S.data));
         if (!sb) { window.UX.toast('Storyboard belum tersedia.'); return; }
         window.Exporter.download('STORYBOARD-' + window.Exporter.slug(S.data.productName) + '.md', sb.markdown, 'text/markdown');
       },
       'dl-video-pack': function () {
-        if (!guard()) return;
         var files = window.SpecPack.videoFiles(S.data, S.data.lastResult);
         if (!files || !files.length) { window.UX.toast('Paket video belum tersedia.'); return; }
         files.forEach(function (f, i) {
@@ -563,8 +557,19 @@
       }
     };
     Object.keys(clickMap).forEach(function (a) {
-      var b = document.querySelector('[data-act="' + a + '"]');
-      if (b) b.addEventListener('click', function () { clickMap[a](b); });
+      document.querySelectorAll('[data-act="' + a + '"]').forEach(function (b) {
+        b._clickBound = true;
+        b.addEventListener('click', function () { clickMap[a](b); });
+      });
+    });
+
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-act]');
+      if (!b || b.disabled) return;
+      var a = b.getAttribute('data-act');
+      if (clickMap[a] && !b._clickBound) {
+        clickMap[a](b);
+      }
     });
 
     /* Interaksi dinamis kontrol konsep & rasio video */
@@ -633,8 +638,19 @@
       try { localStorage.setItem('prd_studio_mode', mode); } catch (eM) {}
       if (isStory) {
         if (location.hash !== '#storyboard') history.replaceState(null, '', '#storyboard');
-        if (S.data.lastResult && S.data.lastResult.storyboard && window.RenderOut) {
-          window.RenderOut.storyboard(S.data.lastResult.storyboard);
+        var curSb = (S.data.lastResult && S.data.lastResult.storyboard);
+        if (!curSb && window.GenStoryboard && S.data.productName) {
+          curSb = window.GenStoryboard(S.data, null, {
+            concept: S.data.videoConcept,
+            ratio: S.data.videoRatio,
+            tempo: S.data.videoTempo
+          });
+          S.data.lastResult = S.data.lastResult || {};
+          S.data.lastResult.storyboard = curSb;
+        }
+        if (curSb && window.RenderOut) {
+          window.RenderOut.storyboard(curSb);
+          setExportEnabled(true);
         }
       } else {
         if (location.hash === '#storyboard') history.replaceState(null, '', location.pathname + location.search);
