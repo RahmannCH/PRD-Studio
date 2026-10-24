@@ -611,6 +611,184 @@
         }
       });
     }
+
+    /* ---------- Mode Switcher (Software vs Storyboard) ---------- */
+    var modeBtnSoft = document.getElementById('modeBtnSoftware');
+    var modeBtnStory = document.getElementById('modeBtnStoryboard');
+    var wsSoft = document.getElementById('softwareWorkspace');
+    var wsStory = document.getElementById('storyboardWorkspace');
+
+    function setStudioMode(mode) {
+      var isStory = mode === 'storyboard';
+      if (modeBtnSoft) {
+        modeBtnSoft.classList.toggle('active', !isStory);
+        modeBtnSoft.setAttribute('aria-selected', !isStory ? 'true' : 'false');
+      }
+      if (modeBtnStory) {
+        modeBtnStory.classList.toggle('active', isStory);
+        modeBtnStory.setAttribute('aria-selected', isStory ? 'true' : 'false');
+      }
+      if (wsSoft) wsSoft.hidden = isStory;
+      if (wsStory) wsStory.hidden = !isStory;
+      try { localStorage.setItem('prd_studio_mode', mode); } catch (eM) {}
+      if (isStory) {
+        if (location.hash !== '#storyboard') history.replaceState(null, '', '#storyboard');
+        if (S.data.lastResult && S.data.lastResult.storyboard && window.RenderOut) {
+          window.RenderOut.storyboard(S.data.lastResult.storyboard);
+        }
+      } else {
+        if (location.hash === '#storyboard') history.replaceState(null, '', location.pathname + location.search);
+      }
+    }
+
+    if (modeBtnSoft) modeBtnSoft.addEventListener('click', function () { setStudioMode('software'); });
+    if (modeBtnStory) modeBtnStory.addEventListener('click', function () { setStudioMode('storyboard'); });
+
+    // Cek hash saat halaman dimuat
+    if (location.hash === '#storyboard' || (function () { try { return localStorage.getItem('prd_studio_mode') === 'storyboard'; } catch (e) { return false; } })()) {
+      setStudioMode('storyboard');
+    }
+
+    /* ---------- Form Sutradara Storyboard HyperFrames ---------- */
+    function getSelectedVConcept() {
+      var active = document.querySelector('#vConceptChips [aria-checked="true"]');
+      return (active && active.getAttribute('data-vconcept')) || S.data.videoConcept || 'ui-journey';
+    }
+    function getSelectedVRatio() {
+      var active = document.querySelector('#vRatioChips [aria-checked="true"]');
+      return (active && active.getAttribute('data-vratio')) || S.data.videoRatio || '16:9';
+    }
+    function getSelectedVTempo() {
+      var active = document.querySelector('#vTempoChips [aria-checked="true"]');
+      return (active && active.getAttribute('data-vtempo')) || S.data.videoTempo || 'standard';
+    }
+
+    var vChipsWrap = document.getElementById('videoDirector');
+    if (vChipsWrap) {
+      vChipsWrap.addEventListener('click', function (e) {
+        var c = e.target.closest('[data-vconcept]');
+        if (c) {
+          document.querySelectorAll('#vConceptChips [data-vconcept]').forEach(function (x) {
+            x.setAttribute('aria-checked', x === c ? 'true' : 'false');
+          });
+          return;
+        }
+        var r = e.target.closest('[data-vratio]');
+        if (r) {
+          document.querySelectorAll('#vRatioChips [data-vratio]').forEach(function (x) {
+            x.setAttribute('aria-checked', x === r ? 'true' : 'false');
+          });
+          return;
+        }
+        var t = e.target.closest('[data-vtempo]');
+        if (t) {
+          document.querySelectorAll('#vTempoChips [data-vtempo]').forEach(function (x) {
+            x.setAttribute('aria-checked', x === t ? 'true' : 'false');
+          });
+        }
+      });
+    }
+
+    function buildFromDirectorForm() {
+      var vSubject = $('vSubject') ? $('vSubject').value.trim() : '';
+      var vType = $('vVideoType') ? $('vVideoType').value : 'Product Launch Promo (60s)';
+      var vAudience = $('vAudience') ? $('vAudience').value.trim() : '';
+      var vHookPain = $('vHookPain') ? $('vHookPain').value.trim() : '';
+      var vValueClaim = $('vValueClaim') ? $('vValueClaim').value.trim() : '';
+      var vMust1 = $('vMust1') ? $('vMust1').value.trim() : '';
+      var vMust2 = $('vMust2') ? $('vMust2').value.trim() : '';
+      var vMust3 = $('vMust3') ? $('vMust3').value.trim() : '';
+      var vMetric = $('vMetric') ? $('vMetric').value.trim() : '';
+      var vCta = $('vCta') ? $('vCta').value.trim() : '';
+
+      var vData = {
+        productName: vSubject || S.data.productName || 'Produk Baru',
+        productType: vType,
+        primaryUser: vAudience || S.data.primaryUser || 'pengguna',
+        problem: vHookPain || S.data.problem || 'masalah manual lambat',
+        whyNow: S.data.whyNow || '',
+        videoConcept: getSelectedVConcept(),
+        videoRatio: getSelectedVRatio(),
+        videoTempo: getSelectedVTempo()
+      };
+
+      var vSpec = {
+        summary: {
+          productName: vData.productName,
+          productType: vData.productType,
+          primaryUser: vData.primaryUser,
+          problem: vData.problem,
+          oneLiner: vValueClaim || (vData.productName + ' adalah solusi modern untuk ' + vData.primaryUser)
+        },
+        scope: {
+          must: [
+            { text: vMust1 || 'Input transaksi kasir instan' },
+            { text: vMust2 || 'Cetak struk thermal 58mm dalam 3 detik' },
+            { text: vMust3 || 'Sinkronisasi offline-first otomatis' }
+          ]
+        },
+        nfr: [{ text: vMetric || 'Respons di bawah 2 detik' }]
+      };
+
+      if (window.GenStoryboard) {
+        var sb = window.GenStoryboard(vData, vSpec, {
+          concept: vData.videoConcept,
+          ratio: vData.videoRatio,
+          tempo: vData.videoTempo
+        });
+        S.data.lastResult = S.data.lastResult || {};
+        S.data.lastResult.storyboard = sb;
+        S.save();
+        if (window.RenderOut && window.RenderOut.storyboard) {
+          window.RenderOut.storyboard(sb);
+        }
+        setExportEnabled(true);
+        window.UX.toast('Storyboard 60 detik & paket video HyperFrames siap di kanvas!');
+      }
+    }
+
+    var btnBuildSb = document.getElementById('btnBuildStoryboard');
+    if (btnBuildSb) {
+      btnBuildSb.addEventListener('click', buildFromDirectorForm);
+    }
+
+    var btnPullSoft = document.getElementById('btnPullSoftware');
+    if (btnPullSoft) {
+      btnPullSoft.addEventListener('click', function () {
+        var d = S.data;
+        var spec = (window.Spec && typeof window.Spec.build === 'function') ? window.Spec.build(d) : null;
+        var musts = (spec && spec.scope && spec.scope.must) || [];
+        if ($('vSubject')) $('vSubject').value = d.productName || '';
+        if ($('vAudience')) $('vAudience').value = d.primaryUser || '';
+        if ($('vHookPain')) $('vHookPain').value = d.problem || '';
+        if ($('vValueClaim')) $('vValueClaim').value = (spec && spec.summary && spec.summary.oneLiner) || '';
+        if ($('vMust1')) $('vMust1').value = musts[0] ? musts[0].text : '';
+        if ($('vMust2')) $('vMust2').value = musts[1] ? musts[1].text : '';
+        if ($('vMust3')) $('vMust3').value = musts[2] ? musts[2].text : '';
+        if ($('vMetric')) $('vMetric').value = (spec && spec.nfr && spec.nfr[0] && (spec.nfr[0].text || spec.nfr[0])) || (d.nfr || '');
+        if ($('vCta')) $('vCta').value = 'Buka prd-studio.com, tanpa akun';
+        window.UX.toast('Data disalin dari PRD Software!');
+        buildFromDirectorForm();
+      });
+    }
+
+    var btnFillVSample = document.getElementById('btnFillVideoSample');
+    if (btnFillVSample) {
+      btnFillVSample.addEventListener('click', function () {
+        if ($('vSubject')) $('vSubject').value = 'Kasir Warung Pintar';
+        if ($('vVideoType')) $('vVideoType').value = 'Product Launch Promo (60s)';
+        if ($('vAudience')) $('vAudience').value = 'Ibu pemilik warung kelontong 35-50 tahun';
+        if ($('vHookPain')) $('vHookPain').value = 'Tiap sore warung tutup, dua jam habis hanya untuk hitung nota robek dan selisih kas';
+        if ($('vValueClaim')) $('vValueClaim').value = 'Catat transaksi instan seketika, cetak struk thermal, 100% jalan offline';
+        if ($('vMust1')) $('vMust1').value = 'Catat transaksi offline dan sinkron saat online';
+        if ($('vMust2')) $('vMust2').value = 'Cetak struk thermal 58mm dalam 3 detik';
+        if ($('vMust3')) $('vMust3').value = 'Rekap harian otomatis hemat dua jam kerja';
+        if ($('vMetric')) $('vMetric').value = 'Teruji 1.000 transaksi di HP RAM 2GB';
+        if ($('vCta')) $('vCta').value = 'Mulai sekarang di prd-studio.com, tanpa akun';
+        window.UX.toast('Contoh video terisi!');
+        buildFromDirectorForm();
+      });
+    }
     function updateAiBtn() {
       var ready = window.LLM && window.LLM.configured();
       var btn = document.querySelector('[data-act="ai-polish"]');

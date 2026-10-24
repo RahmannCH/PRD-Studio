@@ -613,5 +613,50 @@
 }
 .sb-ui-desc { color:var(--text); font-size:12px; }
 
+/* --- Topbar Mode Switcher --- */
+.mode-switcher {
+  display:inline-flex; align-items:center; background:var(--inset);
+  border:1px solid var(--line); border-radius:999px; padding:3px;
+  gap:4px; margin:0 8px; box-sizing:border-box;
+}
+.mode-btn {
+  background:none; border:none; color:var(--muted); font-size:12.5px;
+  font-weight:600; padding:10px 16px; border-radius:999px; cursor:pointer;
+  min-height:44px; display:inline-flex; align-items:center; justify-content:center;
+  box-sizing:border-box;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.mode-btn:hover { color:var(--text); }
+.mode-btn.active, .mode-btn[aria-selected="true"] {
+  background:var(--brand); color:var(--brand-ink); font-weight:700;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 960px) {
+  .topbar-inner { flex-wrap:wrap; padding:8px 0; }
+  .mode-switcher { order:3; width:100%; margin:8px 0 4px; justify-content:center; }
+  .mode-btn { flex:1; text-align:center; padding:10px 6px; font-size:11px; }
+}
+
+/* --- Director Form & Dedicated Video Workspace --- */
+.studio-video-grid {
+  display:grid; grid-template-columns: 460px 1fr; gap:18px; align-items:start;
+}
+@media (max-width: 1080px) {
+  .studio-video-grid { grid-template-columns: 1fr; }
+}
+
+.director-head h2 { font-size:19px; margin-bottom:4px; }
+.director-form { margin-top:16px; }
+.v-step-input { margin-bottom:8px; }
+.director-settings-card {
+  padding:14px; background:var(--inset); border:1px solid var(--line);
+  border-radius:var(--radius-s); margin:16px 0;
+}
+.v-cfg-row { margin-top:12px; }
+.director-submit-row { margin-top:18px; }
+.director-submit-row .btn { width:100%; justify-content:center; min-height:46px; font-size:15px; }
+
+
 
 

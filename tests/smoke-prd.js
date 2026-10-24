@@ -169,9 +169,9 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   await page.waitForTimeout(200);
   const videoTabSelected = await page.getAttribute('#tab-video', 'aria-selected');
   ok(videoTabSelected === 'true', 'video tab becomes active on click');
-  const sbCardsCount = await page.locator('.sb-card').count();
+  const sbCardsCount = await page.locator('#storyboardTimeline .sb-card').count();
   ok(sbCardsCount === 5, 'storyboard renders five distinct beat cards', sbCardsCount);
-  ok(await page.locator('.sb-rhythm-track').count() === 1, 'visual rhythm bar rendered');
+  ok(await page.locator('#storyboardTimeline .sb-rhythm-track').count() === 1, 'visual rhythm bar rendered');
 
   // Ganti konsep dan rasio dinamis di UI
   await page.click('[data-concept="kinetic-term"]');
@@ -197,7 +197,7 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   await page.waitForTimeout(100);
 
   // Simulasi audio 60s real-time
-  const simBtn = await page.locator('#sbSimBtn');
+  const simBtn = await page.locator('.sb-sim-btn').first();
   ok(await simBtn.count() === 1, 'real-time audio simulation button present');
   await simBtn.click();
   await page.waitForTimeout(200);
@@ -220,6 +220,26 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   await page.click('[data-act="dl-storyboard"]');
   const sbDl = await sbDlPromise;
   ok(/^STORYBOARD-.*\.md$/.test(sbDl.suggestedFilename()), 'storyboard download has proper filename', sbDl.suggestedFilename());
+
+  // Mode Switcher: beralih ke Dedicated Storyboard Workspace
+  await page.click('#modeBtnStoryboard');
+  await page.waitForTimeout(200);
+  ok(await page.evaluate(() => document.getElementById('storyboardWorkspace').hidden === false), 'storyboard workspace is visible');
+  ok(await page.evaluate(() => document.getElementById('softwareWorkspace').hidden === true), 'software workspace is hidden');
+
+  // Tarik data dari PRD Software aktif
+  await page.click('#btnPullSoftware');
+  await page.waitForTimeout(200);
+  const vSubVal = await page.inputValue('#vSubject');
+  ok(vSubVal === 'Kasir Warung Pintar', 'pull software data populates vSubject', vSubVal);
+  const dedicatedCards = await page.locator('#storyboardTimelineDedicated .sb-card').count();
+  ok(dedicatedCards === 5, 'dedicated canvas renders five storyboard beat cards', dedicatedCards);
+
+  // Kembali ke mode Software
+  await page.click('#modeBtnSoftware');
+  await page.waitForTimeout(200);
+  ok(await page.evaluate(() => document.getElementById('softwareWorkspace').hidden === false), 'software workspace is back visible');
+  ok(await page.evaluate(() => document.getElementById('storyboardWorkspace').hidden === true), 'storyboard workspace is back hidden');
 
   await page.click('[data-tab="prd"]');
 

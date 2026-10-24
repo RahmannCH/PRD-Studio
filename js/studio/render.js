@@ -646,219 +646,228 @@
       } catch (e) {}
     },
     storyboard: function (sb) {
-      var box = document.getElementById('storyboardTimeline');
-      if (!box) return;
-      box.innerHTML = '';
-      if (!sb || !sb.beats || !sb.beats.length) {
-        box.innerHTML = '<p class="empty">Storyboard 60 detik akan muncul setelah kamu menekan Susun.</p>';
-        return;
-      }
+      var targets = [
+        document.getElementById('storyboardTimeline'),
+        document.getElementById('storyboardTimelineDedicated')
+      ].filter(Boolean);
+      if (!targets.length) return;
 
-      // Selaraskan state radio chips konsep & rasio di UI
-      var conceptVal = (sb.concept && sb.concept.id) || 'ui-journey';
-      document.querySelectorAll('#videoConceptChips [data-concept]').forEach(function (c) {
-        var on = c.getAttribute('data-concept') === conceptVal;
+      // Selaraskan state radio chips konsep, rasio & tempo di UI
+      var conceptVal = (sb && sb.concept && sb.concept.id) || 'ui-journey';
+      document.querySelectorAll('#videoConceptChips [data-concept], #vConceptChips [data-vconcept]').forEach(function (c) {
+        var val = c.getAttribute('data-concept') || c.getAttribute('data-vconcept');
+        var on = val === conceptVal;
         c.setAttribute('aria-checked', on ? 'true' : 'false');
       });
-      var ratioVal = sb.ratio || '16:9';
-      document.querySelectorAll('#videoRatioChips [data-ratio]').forEach(function (r) {
-        var on = r.getAttribute('data-ratio') === ratioVal;
+      var ratioVal = (sb && sb.ratio) || '16:9';
+      document.querySelectorAll('#videoRatioChips [data-ratio], #vRatioChips [data-vratio]').forEach(function (r) {
+        var val = r.getAttribute('data-ratio') || r.getAttribute('data-vratio');
+        var on = val === ratioVal;
         r.setAttribute('aria-checked', on ? 'true' : 'false');
       });
-      var tempoVal = (sb.tempo && sb.tempo.id) || 'standard';
-      document.querySelectorAll('#videoTempoChips [data-tempo]').forEach(function (t) {
-        var on = t.getAttribute('data-tempo') === tempoVal;
+      var tempoVal = (sb && sb.tempo && sb.tempo.id) || 'standard';
+      document.querySelectorAll('#videoTempoChips [data-tempo], #vTempoChips [data-vtempo]').forEach(function (t) {
+        var val = t.getAttribute('data-tempo') || t.getAttribute('data-vtempo');
+        var on = val === tempoVal;
         t.setAttribute('aria-checked', on ? 'true' : 'false');
       });
 
-      // 1. Meta Summary Bar
-      var metaWrap = document.createElement('div');
-      metaWrap.className = 'sb-meta-bar';
-      var bpmText = (sb.tempo ? sb.tempo.bpm : 120) + ' BPM (1 Bar = ' + (sb.tempo ? sb.tempo.barSec : 2.0) + 's) · Ducking -14dB';
-      metaWrap.innerHTML = '<div class="sb-meta-item"><span class="sb-meta-k">Konsep Gerak</span><span class="sb-meta-v">' + escHtml(sb.concept ? sb.concept.name : 'Ekosistem UI') + '</span></div>' +
-        '<div class="sb-meta-item"><span class="sb-meta-k">Format & Rasio</span><span class="sb-meta-v">' + sb.width + 'x' + sb.height + ' (' + escHtml(sb.ratio) + ' @ ' + sb.fps + ' FPS)</span></div>' +
-        '<div class="sb-meta-item"><span class="sb-meta-k">Audio Bed & Tempo</span><span class="sb-meta-v">' + escHtml(bpmText) + '</span></div>' +
-        '<div class="sb-meta-item"><span class="sb-meta-k">Struktur Narasi</span><span class="sb-meta-v">Reverse Iceberg (5 Babak)</span></div>';
-      box.appendChild(metaWrap);
-
-      // 2. Visual Rhythm Bar (Peta Audio & Beat Grid 60s)
-      var rhythmBox = document.createElement('div');
-      rhythmBox.className = 'sb-rhythm-container';
-      var rHead = document.createElement('div');
-      rHead.className = 'sb-rhythm-head';
-      rHead.innerHTML = '<div class="sb-rhythm-title-wrap">' +
-        '<span class="sb-rhythm-title">Visual Rhythm & Audio Waveform Map (60.0s @ ' + (sb.tempo ? sb.tempo.bpm : 120) + ' BPM)</span>' +
-        '<button class="btn btn-ghost btn-sm sb-sim-btn" id="sbSimBtn" type="button">▶ Putar Audio 60s</button>' +
-        '</div>' +
-        '<span class="sb-rhythm-legend">' +
-        '<span class="sb-leg-dot leg-low"></span> Low (Sub 45Hz) ' +
-        '<span class="sb-leg-dot leg-mid"></span> Mid (Haptic) ' +
-        '<span class="sb-leg-dot leg-high"></span> High (Riser/Whoosh) ' +
-        '<span class="sb-leg-dot leg-vo"></span> VO Ducking (-14dB)' +
-        '</span>';
-      rhythmBox.appendChild(rHead);
-
-      var trackBar = document.createElement('div');
-      trackBar.className = 'sb-rhythm-track';
-      var playhead = document.createElement('div');
-      playhead.className = 'sb-playhead';
-      playhead.id = 'sbPlayhead';
-      trackBar.appendChild(playhead);
-
-      sb.beats.forEach(function (b) {
-        var pct = ((b.durationSec / sb.totalDuration) * 100).toFixed(1);
-        var seg = document.createElement('div');
-        seg.className = 'sb-rhythm-seg seg-' + b.role.toLowerCase();
-        seg.style.width = pct + '%';
-        seg.title = b.title + ' (' + b.timecode + ' · ' + pct + '%)';
-        seg.innerHTML = '<span class="sb-seg-label">' + escHtml(b.id.toUpperCase()) + '</span>' +
-          '<span class="sb-seg-dur">' + b.durationSec + 's</span>';
-
-        // Marker SFX di dalam segment
-        (b.sfx || []).forEach(function (s) {
-          var dot = document.createElement('i');
-          dot.className = 'sb-sfx-pin pin-' + (s.band || 'mid');
-          dot.title = s.at + ' [' + (s.band || 'mid').toUpperCase() + '] ' + s.desc;
-          seg.appendChild(dot);
-        });
-
-        trackBar.appendChild(seg);
-      });
-      rhythmBox.appendChild(trackBar);
-      box.appendChild(rhythmBox);
-
-      // 3. Beat Cards (Second-by-Second Breakdown)
-      sb.beats.forEach(function (b, idx) {
-        var card = document.createElement('article');
-        card.className = 'sb-card neu';
-        card.id = 'sb-beat-' + (idx + 1);
-
-        var head = document.createElement('div');
-        head.className = 'sb-card-head';
-        var bpTag = b.blueprint ? '<span class="sb-blueprint-badge">Blueprint: ' + escHtml(b.blueprint) + '</span>' : '';
-        head.innerHTML = '<div class="sb-card-tags">' +
-          '<span class="sb-time-chip">' + escHtml(b.timecode) + ' (' + b.durationSec + 's)</span>' +
-          '<span class="sb-bar-chip">' + escHtml(b.bars || '') + '</span>' +
-          '<span class="sb-role-chip role-' + escHtml(b.role.toLowerCase()) + '">' + escHtml(b.role) + '</span>' +
-          bpTag +
-          '</div>' +
-          '<h3 class="sb-beat-title">' + escHtml(b.title) + '</h3>';
-        card.appendChild(head);
-
-        var body = document.createElement('div');
-        body.className = 'sb-card-grid';
-
-        // Kolom 1: Narasi & Teks Kinetik
-        var col1 = document.createElement('div');
-        col1.className = 'sb-col';
-        var hlStyleBadge = b.highlightStyle ? '<span class="sb-style-badge">Style: ' + escHtml(b.highlightStyle) + '</span>' : '';
-        col1.innerHTML = '<div class="sb-field">' +
-          '<span class="sb-label">Naskah Narasi VO (Pacing ~135 WPM)</span>' +
-          '<p class="sb-vo-box">' + escHtml(b.vo) + '</p>' +
-          '</div>' +
-          '<div class="sb-field">' +
-          '<span class="sb-label">Tipografi Kinetik ' + hlStyleBadge + '</span>' +
-          '<div class="sb-headline-box">' +
-          '<strong class="sb-hl">' + escHtml(b.headline) + '</strong>' +
-          '<span class="sb-sub">' + escHtml(b.subtext) + '</span>' +
-          (b.highlightWord ? '<span class="sb-hl-word">Highlight: "' + escHtml(b.highlightWord) + '"</span>' : '') +
-          '</div>' +
-          '</div>';
-        body.appendChild(col1);
-
-        // Kolom 2: Layout & Kamera
-        var col2 = document.createElement('div');
-        col2.className = 'sb-col';
-        col2.innerHTML = '<div class="sb-field">' +
-          '<span class="sb-label">Arsitektur Komposisi & Layout</span>' +
-          '<p class="sb-desc-box">' + escHtml(b.layout) + '</p>' +
-          '</div>' +
-          '<div class="sb-field">' +
-          '<span class="sb-label">Koreografi Kamera & VFX</span>' +
-          '<p class="sb-desc-box">' + escHtml(b.camera) + '</p>' +
-          '</div>';
-        body.appendChild(col2);
-
-        // Kolom 3: Sound Design & Aset Mandiri
-        var col3 = document.createElement('div');
-        col3.className = 'sb-col';
-        var sfxHtml = (b.sfx || []).map(function (s) {
-          var bandClass = s.band ? ' band-' + s.band : '';
-          var bandBadge = s.band ? '<span class="sb-band-badge' + bandClass + '">' + escHtml(s.band.toUpperCase()) + '</span> ' : '';
-          var playBtn = '<button class="sb-play-btn" type="button" data-sfx-type="' + escHtml(s.type || 'click') + '" title="Dengarkan simulasi audio Web Audio API" aria-label="Tes suara ' + escHtml(s.desc) + '">▶</button>';
-          return '<li class="sb-sfx-item">' + playBtn + '<span class="sb-sfx-time">' + escHtml(s.at) + '</span> ' + bandBadge + escHtml(s.desc) + '</li>';
-        }).join('');
-
-        var assetLines = [];
-        if (Array.isArray(b.assets)) {
-          assetLines = b.assets.map(function (a) {
-            return '<li class="sb-asset-item"><code class="sb-query">' + escHtml(a) + '</code></li>';
-          });
-        } else if (b.assets && typeof b.assets === 'object') {
-          (b.assets.news || []).forEach(function (n) {
-            assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Berita</span> <code class="sb-query">' + escHtml(n) + '</code></li>');
-          });
-          (b.assets.footage || []).forEach(function (f) {
-            assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Footage B-Roll</span> <code class="sb-query">' + escHtml(f) + '</code></li>');
-          });
-          (b.assets.props || []).forEach(function (p) {
-            assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Vektor/Prop</span> <code class="sb-query">' + escHtml(p) + '</code></li>');
-          });
-          (b.assets.sfxKeys || []).forEach(function (k) {
-            assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Pustaka SFX</span> <code class="sb-query">' + escHtml(k) + '</code></li>');
-          });
-          if (b.assets.dossierStamp) {
-            assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Stempel Investigasi</span> <span class="sb-tag-stamp">' + escHtml(b.assets.dossierStamp) + '</span></li>');
-          }
-          if (b.assets.uiMockup) {
-            assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">UI Mockup</span> <span class="sb-ui-desc">' + escHtml(b.assets.uiMockup) + '</span></li>');
-          }
+      targets.forEach(function (box) {
+        box.innerHTML = '';
+        if (!sb || !sb.beats || !sb.beats.length) {
+          box.innerHTML = '<p class="empty">Storyboard 60 detik akan muncul setelah kamu menekan Susun.</p>';
+          return;
         }
-        var assetHtml = assetLines.join('');
 
-        col3.innerHTML = '<div class="sb-field">' +
-          '<span class="sb-label">Sound Effects (SFX Cue Sheet)</span>' +
-          '<ul class="sb-sfx-list">' + sfxHtml + '</ul>' +
+        // 1. Meta Summary Bar
+        var metaWrap = document.createElement('div');
+        metaWrap.className = 'sb-meta-bar';
+        var bpmText = (sb.tempo ? sb.tempo.bpm : 120) + ' BPM (1 Bar = ' + (sb.tempo ? sb.tempo.barSec : 2.0) + 's) · Ducking -14dB';
+        metaWrap.innerHTML = '<div class="sb-meta-item"><span class="sb-meta-k">Konsep Gerak</span><span class="sb-meta-v">' + escHtml(sb.concept ? sb.concept.name : 'Ekosistem UI') + '</span></div>' +
+          '<div class="sb-meta-item"><span class="sb-meta-k">Format & Rasio</span><span class="sb-meta-v">' + sb.width + 'x' + sb.height + ' (' + escHtml(sb.ratio) + ' @ ' + sb.fps + ' FPS)</span></div>' +
+          '<div class="sb-meta-item"><span class="sb-meta-k">Audio Bed & Tempo</span><span class="sb-meta-v">' + escHtml(bpmText) + '</span></div>' +
+          '<div class="sb-meta-item"><span class="sb-meta-k">Struktur Narasi</span><span class="sb-meta-v">Reverse Iceberg (5 Babak)</span></div>';
+        box.appendChild(metaWrap);
+
+        // 2. Visual Rhythm Bar (Peta Audio & Beat Grid 60s)
+        var rhythmBox = document.createElement('div');
+        rhythmBox.className = 'sb-rhythm-container';
+        var rHead = document.createElement('div');
+        rHead.className = 'sb-rhythm-head';
+        rHead.innerHTML = '<div class="sb-rhythm-title-wrap">' +
+          '<span class="sb-rhythm-title">Visual Rhythm & Audio Waveform Map (60.0s @ ' + (sb.tempo ? sb.tempo.bpm : 120) + ' BPM)</span>' +
+          '<button class="btn btn-ghost btn-sm sb-sim-btn" type="button">▶ Putar Audio 60s</button>' +
           '</div>' +
-          '<div class="sb-field">' +
-          '<span class="sb-label">Kueri Aset Mandiri (AI Agent)</span>' +
-          '<ul class="sb-asset-list">' + assetHtml + '</ul>' +
-          '</div>';
-        body.appendChild(col3);
+          '<span class="sb-rhythm-legend">' +
+          '<span class="sb-leg-dot leg-low"></span> Low (Sub 45Hz) ' +
+          '<span class="sb-leg-dot leg-mid"></span> Mid (Haptic) ' +
+          '<span class="sb-leg-dot leg-high"></span> High (Riser/Whoosh) ' +
+          '<span class="sb-leg-dot leg-vo"></span> VO Ducking (-14dB)' +
+          '</span>';
+        rhythmBox.appendChild(rHead);
 
-        card.appendChild(body);
-        box.appendChild(card);
-      });
+        var trackBar = document.createElement('div');
+        trackBar.className = 'sb-rhythm-track';
+        var playhead = document.createElement('div');
+        playhead.className = 'sb-playhead';
+        trackBar.appendChild(playhead);
 
-      // Pasang handler audio play button via delegasi
-      if (!box._hasAudioListener) {
-        box._hasAudioListener = true;
-        box.addEventListener('click', function (e) {
-          var simBtn = e.target.closest('#sbSimBtn');
-          if (simBtn) {
-            if (window._sbSimRunning) {
-              window.RenderOut.stopAudioSimulation();
-            } else {
-              window.RenderOut.startAudioSimulation(sb);
-            }
-            return;
-          }
-          var btn = e.target.closest('.sb-play-btn');
-          if (btn) {
-            var st = btn.getAttribute('data-sfx-type') || 'click';
-            window.RenderOut.playSfx(st);
-            btn.classList.add('playing');
-            setTimeout(function () { btn.classList.remove('playing'); }, 300);
-          }
+        sb.beats.forEach(function (b) {
+          var pct = ((b.durationSec / sb.totalDuration) * 100).toFixed(1);
+          var seg = document.createElement('div');
+          seg.className = 'sb-rhythm-seg seg-' + b.role.toLowerCase();
+          seg.style.width = pct + '%';
+          seg.title = b.title + ' (' + b.timecode + ' · ' + pct + '%)';
+          seg.innerHTML = '<span class="sb-seg-label">' + escHtml(b.id.toUpperCase()) + '</span>' +
+            '<span class="sb-seg-dur">' + b.durationSec + 's</span>';
+
+          // Marker SFX di dalam segment
+          (b.sfx || []).forEach(function (s) {
+            var dot = document.createElement('i');
+            dot.className = 'sb-sfx-pin pin-' + (s.band || 'mid');
+            dot.title = s.at + ' [' + (s.band || 'mid').toUpperCase() + '] ' + s.desc;
+            seg.appendChild(dot);
+          });
+
+          trackBar.appendChild(seg);
         });
-      }
+        rhythmBox.appendChild(trackBar);
+        box.appendChild(rhythmBox);
+
+        // 3. Beat Cards (Second-by-Second Breakdown)
+        sb.beats.forEach(function (b, idx) {
+          var card = document.createElement('article');
+          card.className = 'sb-card neu';
+          card.id = (box.id === 'storyboardTimelineDedicated' ? 'sbd-beat-' : 'sb-beat-') + (idx + 1);
+
+          var head = document.createElement('div');
+          head.className = 'sb-card-head';
+          var bpTag = b.blueprint ? '<span class="sb-blueprint-badge">Blueprint: ' + escHtml(b.blueprint) + '</span>' : '';
+          head.innerHTML = '<div class="sb-card-tags">' +
+            '<span class="sb-time-chip">' + escHtml(b.timecode) + ' (' + b.durationSec + 's)</span>' +
+            '<span class="sb-bar-chip">' + escHtml(b.bars || '') + '</span>' +
+            '<span class="sb-role-chip role-' + escHtml(b.role.toLowerCase()) + '">' + escHtml(b.role) + '</span>' +
+            bpTag +
+            '</div>' +
+            '<h3 class="sb-beat-title">' + escHtml(b.title) + '</h3>';
+          card.appendChild(head);
+
+          var body = document.createElement('div');
+          body.className = 'sb-card-grid';
+
+          // Kolom 1: Narasi & Teks Kinetik
+          var col1 = document.createElement('div');
+          col1.className = 'sb-col';
+          var hlStyleBadge = b.highlightStyle ? '<span class="sb-style-badge">Style: ' + escHtml(b.highlightStyle) + '</span>' : '';
+          col1.innerHTML = '<div class="sb-field">' +
+            '<span class="sb-label">Naskah Narasi VO (Pacing ~135 WPM)</span>' +
+            '<p class="sb-vo-box">' + escHtml(b.vo) + '</p>' +
+            '</div>' +
+            '<div class="sb-field">' +
+            '<span class="sb-label">Tipografi Kinetik ' + hlStyleBadge + '</span>' +
+            '<div class="sb-headline-box">' +
+            '<strong class="sb-hl">' + escHtml(b.headline) + '</strong>' +
+            '<span class="sb-sub">' + escHtml(b.subtext) + '</span>' +
+            (b.highlightWord ? '<span class="sb-hl-word">Highlight: "' + escHtml(b.highlightWord) + '"</span>' : '') +
+            '</div>' +
+            '</div>';
+          body.appendChild(col1);
+
+          // Kolom 2: Layout & Kamera
+          var col2 = document.createElement('div');
+          col2.className = 'sb-col';
+          col2.innerHTML = '<div class="sb-field">' +
+            '<span class="sb-label">Arsitektur Komposisi & Layout</span>' +
+            '<p class="sb-desc-box">' + escHtml(b.layout) + '</p>' +
+            '</div>' +
+            '<div class="sb-field">' +
+            '<span class="sb-label">Koreografi Kamera & VFX</span>' +
+            '<p class="sb-desc-box">' + escHtml(b.camera) + '</p>' +
+            '</div>';
+          body.appendChild(col2);
+
+          // Kolom 3: Sound Design & Aset Mandiri
+          var col3 = document.createElement('div');
+          col3.className = 'sb-col';
+          var sfxHtml = (b.sfx || []).map(function (s) {
+            var bandClass = s.band ? ' band-' + s.band : '';
+            var bandBadge = s.band ? '<span class="sb-band-badge' + bandClass + '">' + escHtml(s.band.toUpperCase()) + '</span> ' : '';
+            var playBtn = '<button class="sb-play-btn" type="button" data-sfx-type="' + escHtml(s.type || 'click') + '" title="Dengarkan simulasi audio Web Audio API" aria-label="Tes suara ' + escHtml(s.desc) + '">▶</button>';
+            return '<li class="sb-sfx-item">' + playBtn + '<span class="sb-sfx-time">' + escHtml(s.at) + '</span> ' + bandBadge + escHtml(s.desc) + '</li>';
+          }).join('');
+
+          var assetLines = [];
+          if (Array.isArray(b.assets)) {
+            assetLines = b.assets.map(function (a) {
+              return '<li class="sb-asset-item"><code class="sb-query">' + escHtml(a) + '</code></li>';
+            });
+          } else if (b.assets && typeof b.assets === 'object') {
+            (b.assets.news || []).forEach(function (n) {
+              assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Berita</span> <code class="sb-query">' + escHtml(n) + '</code></li>');
+            });
+            (b.assets.footage || []).forEach(function (f) {
+              assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Footage B-Roll</span> <code class="sb-query">' + escHtml(f) + '</code></li>');
+            });
+            (b.assets.props || []).forEach(function (p) {
+              assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Vektor/Prop</span> <code class="sb-query">' + escHtml(p) + '</code></li>');
+            });
+            (b.assets.sfxKeys || []).forEach(function (k) {
+              assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Pustaka SFX</span> <code class="sb-query">' + escHtml(k) + '</code></li>');
+            });
+            if (b.assets.dossierStamp) {
+              assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Stempel Investigasi</span> <span class="sb-tag-stamp">' + escHtml(b.assets.dossierStamp) + '</span></li>');
+            }
+            if (b.assets.uiMockup) {
+              assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">UI Mockup</span> <span class="sb-ui-desc">' + escHtml(b.assets.uiMockup) + '</span></li>');
+            }
+          }
+          var assetHtml = assetLines.join('');
+
+          col3.innerHTML = '<div class="sb-field">' +
+            '<span class="sb-label">Sound Effects (SFX Cue Sheet)</span>' +
+            '<ul class="sb-sfx-list">' + sfxHtml + '</ul>' +
+            '</div>' +
+            '<div class="sb-field">' +
+            '<span class="sb-label">Kueri Aset Mandiri (AI Agent)</span>' +
+            '<ul class="sb-asset-list">' + assetHtml + '</ul>' +
+            '</div>';
+          body.appendChild(col3);
+
+          card.appendChild(body);
+          box.appendChild(card);
+        });
+
+        // Pasang handler audio play button via delegasi
+        if (!box._hasAudioListener) {
+          box._hasAudioListener = true;
+          box.addEventListener('click', function (e) {
+            var simBtn = e.target.closest('.sb-sim-btn');
+            if (simBtn) {
+              if (window._sbSimRunning) {
+                window.RenderOut.stopAudioSimulation();
+              } else {
+                window.RenderOut.startAudioSimulation(sb);
+              }
+              return;
+            }
+            var btn = e.target.closest('.sb-play-btn');
+            if (btn) {
+              var st = btn.getAttribute('data-sfx-type') || 'click';
+              window.RenderOut.playSfx(st);
+              btn.classList.add('playing');
+              setTimeout(function () { btn.classList.remove('playing'); }, 300);
+            }
+          });
+        }
+      });
     },
     startAudioSimulation: function (sb) {
       if (!sb || !sb.beats) return;
       window.RenderOut.stopAudioSimulation();
-      var btn = document.getElementById('sbSimBtn');
-      var playhead = document.getElementById('sbPlayhead');
-      if (btn) { btn.textContent = '⏹ Hentikan Simulasi'; btn.classList.add('active'); }
+      document.querySelectorAll('.sb-sim-btn').forEach(function (btn) {
+        btn.textContent = '⏹ Hentikan Simulasi';
+        btn.classList.add('active');
+      });
       window._sbSimRunning = true;
 
       var events = [];
@@ -875,9 +884,10 @@
         if (!window._sbSimRunning) return;
         var now = (window.performance && performance.now) ? performance.now() : Date.now();
         var elapsed = (now - startTime) / 1000;
-        if (playhead) {
-          playhead.style.left = Math.min(100, (elapsed / 60) * 100) + '%';
-        }
+        var pct = Math.min(100, (elapsed / 60) * 100) + '%';
+        document.querySelectorAll('.sb-playhead').forEach(function (ph) {
+          ph.style.left = pct;
+        });
         events.forEach(function (ev) {
           if (!ev.played && elapsed >= ev.sec) {
             ev.played = true;
@@ -898,10 +908,13 @@
         cancelAnimationFrame(window._sbSimRaf);
         window._sbSimRaf = null;
       }
-      var btn = document.getElementById('sbSimBtn');
-      if (btn) { btn.textContent = '▶ Putar Audio 60s'; btn.classList.remove('active'); }
-      var playhead = document.getElementById('sbPlayhead');
-      if (playhead) { playhead.style.left = '0%'; }
+      document.querySelectorAll('.sb-sim-btn').forEach(function (btn) {
+        btn.textContent = '▶ Putar Audio 60s';
+        btn.classList.remove('active');
+      });
+      document.querySelectorAll('.sb-playhead').forEach(function (ph) {
+        ph.style.left = '0%';
+      });
     },
     diff: function (oldMd, newMd) {
       var box = document.getElementById('diffBox');

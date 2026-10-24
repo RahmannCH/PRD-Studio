@@ -59,7 +59,7 @@ window.Palette = (function () {
       ['copy-video-prompt', 'Salin Master Prompt HyperFrames', 'video hyperframes prompt agent motion'],
       ['copy-storyboard', 'Salin tabel storyboard (.md)', 'storyboard salin video copy'],
       ['dl-storyboard', 'Unduh STORYBOARD.md', 'unduh download storyboard video'],
-      ['dl-video-pack', 'Unduh paket video HyperFrames (5 berkas)', 'unduh paket video zip hyperframes'],
+      ['dl-video-pack', 'Unduh paket proyek video HyperFrames (11 berkas)', 'unduh paket video zip hyperframes runnable'],
       ['dl-roadmap-csv', 'Unduh CSV roadmap', 'unduh csv'],
       ['dl-prompts', 'Unduh PROMPTS.md', 'unduh prompt'],
       ['print', 'Cetak atau PDF', 'print pdf'],
@@ -71,6 +71,10 @@ window.Palette = (function () {
       var b = document.querySelector('[data-act="' + a[0] + '"]');
       if (b && !b.disabled) add(a[1], a[2], function () { b.click(); });
     });
+    var modeSoft = document.getElementById('modeBtnSoftware');
+    if (modeSoft) add('Ganti Mode: PRD Software', 'mode software aplikasi web prd', function () { modeSoft.click(); });
+    var modeStory = document.getElementById('modeBtnStoryboard');
+    if (modeStory) add('Ganti Mode: Storyboard HyperFrames', 'mode video storyboard hyperframes motion', function () { modeStory.click(); });
     var sample = document.getElementById('fillSampleBtn');
     if (sample) add('Isi contoh jawaban', 'contoh sample demo', function () { sample.click(); });
     var gen = document.getElementById('generateBtn');

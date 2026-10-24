@@ -1122,15 +1122,19 @@ const diagrams = window.GenDiagrams(sample);
   ok(htmlSt.indexOf('data-tab="video"') > -1 && htmlSt.indexOf('id="out-video"') > -1, 'studio.html has video tab and panel');
   ok(htmlSt.indexOf('id="storyboardTimeline"') > -1, 'studio.html contains storyboard timeline container');
   ok(htmlSt.indexOf('data-act="copy-video-prompt"') > -1 && htmlSt.indexOf('data-act="dl-video-pack"') > -1, 'studio.html has video prompt and video pack buttons');
+  ok(htmlSt.indexOf('id="modeSwitcher"') > -1 && htmlSt.indexOf('id="storyboardWorkspace"') > -1, 'studio.html contains dedicated mode switcher and storyboard workspace');
+  ok(htmlSt.indexOf('id="videoDirector"') > -1 && htmlSt.indexOf('id="btnPullSoftware"') > -1, 'studio.html contains director form and pull software button');
 
   const renderSt = fs.readFileSync(path.join(root, 'render.js'), 'utf8');
-  ok(renderSt.indexOf('startAudioSimulation') > -1 && renderSt.indexOf('sbSimBtn') > -1, 'render.js implements real-time audio simulation');
+  ok(renderSt.indexOf('startAudioSimulation') > -1 && renderSt.indexOf('sb-sim-btn') > -1, 'render.js implements real-time audio simulation');
 
   const appSt = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   ok(appSt.indexOf("'copy-video-prompt'") > -1 && appSt.indexOf("'dl-video-pack'") > -1 && appSt.indexOf('RenderOut.storyboard') > -1, 'app.js wires video prompt, pack download, and storyboard rendering');
+  ok(appSt.indexOf('setStudioMode') > -1 && appSt.indexOf('btnPullSoftware') > -1, 'app.js wires studio mode switching and director form logic');
 
   const palSt = fs.readFileSync(path.join(root, 'palette.js'), 'utf8');
   ok(palSt.indexOf('copy-video-prompt') > -1 && palSt.indexOf('dl-video-pack') > -1 && palSt.indexOf("['video', 'Video / Storyboard']") > -1, 'palette.js lists video commands in Ctrl+K');
+  ok(palSt.indexOf('Ganti Mode: PRD Software') > -1 && palSt.indexOf('Ganti Mode: Storyboard HyperFrames') > -1, 'palette.js lists studio mode switcher commands in Ctrl+K');
 
   // Empty data fallback
   const sbEmpty = G({});

@@ -73,6 +73,11 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   await page.click('[data-tab="video"]');
   await scan('results: video storyboard tab');
 
+  await page.click('#modeBtnStoryboard');
+  await page.waitForTimeout(200);
+  await scan('dedicated storyboard workspace');
+  await page.click('#modeBtnSoftware');
+
   await browser.close();
   server.close();
   console.log('PASS ' + pass + ' / FAIL ' + fail);

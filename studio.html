@@ -26,6 +26,10 @@
 <header class="topbar">
   <div class="wrap topbar-inner">
     <a class="brandmark" href="index.html"><span class="brandmark-mark" aria-hidden="true">P</span><span>PRD Studio<small>Wawancara ide, PRD, roadmap, prompt</small></span></a>
+    <div class="mode-switcher" id="modeSwitcher" role="tablist" aria-label="Pilih Mode Studio">
+      <button class="mode-btn active" type="button" role="tab" id="modeBtnSoftware" aria-selected="true" data-mode="software">💻 PRD Software</button>
+      <button class="mode-btn" type="button" role="tab" id="modeBtnStoryboard" aria-selected="false" data-mode="storyboard">🎬 Storyboard HyperFrames</button>
+    </div>
     <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav">Menu</button>
     <nav class="nav" id="nav" aria-label="Navigasi utama">
       <a href="index.html">Beranda</a>
@@ -55,7 +59,8 @@
     <span class="autosave" id="projMeta" role="status"></span>
   </div>
 
-  <div class="studio-grid">
+  <div id="softwareWorkspace">
+    <div class="studio-grid">
     <section class="card neu" id="wizard" aria-label="Wizard 7 langkah" tabindex="-1">
       <p class="step-meta" id="stepMeta" aria-live="polite">Langkah 1 dari 7</p>
       <div class="depth-row" id="depthChips" role="radiogroup" aria-label="Kedalaman wawancara">
@@ -287,6 +292,121 @@
       </div>
     </div>
   </section>
+  </div>
+
+  <div id="storyboardWorkspace" hidden>
+    <div class="studio-grid studio-video-grid">
+      <section class="card neu" id="videoDirector" aria-label="Wawancara Sutradara Video HyperFrames" tabindex="-1">
+        <div class="director-head">
+          <h2>Wawancara Sutradara & Storyboard 60 Detik</h2>
+          <p class="hint">Rancang video promosi, teaser, atau explainer HyperFrames frame demi frame. Tanpa halusinasi, langsung siap render.</p>
+          <div class="row2 aside-actions">
+            <button class="btn btn-accent btn-sm" id="btnPullSoftware" type="button" title="Salin data nama, masalah, dan fitur dari PRD Software aktif">Tarik Data dari PRD Software</button>
+            <button class="btn btn-ghost btn-sm" id="btnFillVideoSample" type="button">Isi Contoh Video</button>
+          </div>
+        </div>
+
+        <div class="director-form">
+          <div class="field">
+            <label for="vSubject">Judul Video / Nama Produk</label>
+            <input type="text" id="vSubject" placeholder="mis. Kasir Warung Pintar" autocomplete="off">
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="vVideoType">Tipe Video</label>
+              <select id="vVideoType">
+                <option value="Product Launch Promo (60s)">Product Launch Promo (60s)</option>
+                <option value="Technical Explainer (60s)">Technical Explainer (60s)</option>
+                <option value="Kinetic Feature Teaser (60s)">Kinetic Feature Teaser (60s)</option>
+                <option value="Workflow Deep-Dive (60s)">Workflow Deep-Dive (60s)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="vAudience">Target Penonton</label>
+              <input type="text" id="vAudience" placeholder="mis. Pemilik toko kelontong, developer, tim B2B" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="vHookPain">Hook Masalah Lama (Detik 0-6)</label>
+            <textarea id="vHookPain" rows="2" placeholder="Masalah lama apa yang menyakitkan dan membuang waktu sebelum ada produk ini?"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="vValueClaim">Pesan Nilai Inti / Solusi (Detik 6-14)</label>
+            <textarea id="vValueClaim" rows="2" placeholder="Satu kalimat janji utama yang mengubah cara kerja selamanya."></textarea>
+          </div>
+
+          <div class="field">
+            <label>Tiga Langkah Alur Kerja di Layar (Detik 14-38)</label>
+            <input type="text" id="vMust1" class="v-step-input" placeholder="Langkah 1: Input transaksi kasir seketika" autocomplete="off">
+            <input type="text" id="vMust2" class="v-step-input" placeholder="Langkah 2: Struk thermal 58mm tercetak dalam 3 detik" autocomplete="off">
+            <input type="text" id="vMust3" class="v-step-input" placeholder="Langkah 3: Sinkronisasi otomatis saat online tanpa duplikat" autocomplete="off">
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label for="vMetric">Bukti Angka / Benchmark (Detik 38-50)</label>
+              <input type="text" id="vMetric" placeholder="mis. 1.000 transaksi/hari, hemat 2 jam kerja" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="vCta">Call to Action (Detik 50-60)</label>
+              <input type="text" id="vCta" placeholder="mis. Buka prd-studio.com, tanpa akun" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="director-settings-card">
+            <div class="video-cfg-group">
+              <span class="video-cfg-label">Konsep Gerak:</span>
+              <div class="chips" id="vConceptChips" role="radiogroup" aria-label="Pilih konsep gerak video">
+                <button class="chip" type="button" role="radio" aria-checked="true" data-vconcept="ui-journey">Ekosistem UI</button>
+                <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="kinetic-term">Terminal Monospace</button>
+                <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="visual-journal">Jurnalisme Data</button>
+                <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="object-relay">Estafet Benda</button>
+              </div>
+            </div>
+            <div class="row2 v-cfg-row">
+              <div class="video-cfg-group">
+                <span class="video-cfg-label">Rasio:</span>
+                <div class="chips" id="vRatioChips" role="radiogroup" aria-label="Pilih rasio aspek video">
+                  <button class="chip" type="button" role="radio" aria-checked="true" data-vratio="16:9">16:9 Landscape</button>
+                  <button class="chip" type="button" role="radio" aria-checked="false" data-vratio="9:16">9:16 Reels/Shorts</button>
+                </div>
+              </div>
+              <div class="video-cfg-group">
+                <span class="video-cfg-label">Tempo:</span>
+                <div class="chips" id="vTempoChips" role="radiogroup" aria-label="Pilih tempo audio video">
+                  <button class="chip" type="button" role="radio" aria-checked="false" data-vtempo="relax">100 BPM</button>
+                  <button class="chip" type="button" role="radio" aria-checked="true" data-vtempo="standard">120 BPM</button>
+                  <button class="chip" type="button" role="radio" aria-checked="false" data-vtempo="fast">135 BPM</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="director-submit-row">
+            <button class="btn btn-accent" id="btnBuildStoryboard" type="button">Susun Storyboard & Paket Video</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card neu" id="videoCanvas" aria-label="Kanvas Storyboard & Ekspor HyperFrames" tabindex="-1">
+        <div class="hasil-head">
+          <h2>Kanvas Produksi Video HyperFrames</h2>
+          <p>Storyboard 60 detik frame-akurat, cue audio SFX, dan paket ekspor 11 berkas HyperFrames siap pakai.</p>
+        </div>
+        <div id="storyboardTimelineDedicated">
+          <p class="empty">Tekan 'Susun Storyboard' di sebelah kiri atau 'Tarik Data dari PRD Software' untuk melihat kanvas storyboard.</p>
+        </div>
+        <div class="output-actions">
+          <button class="btn btn-primary btn-sm" data-act="copy-video-prompt" type="button" disabled title="Salin satu Master Prompt mandiri untuk AI Agent guna membangun video HyperFrames">Salin Master Prompt AI Agent</button>
+          <button class="btn btn-ghost btn-sm" data-act="copy-storyboard" type="button" disabled>Salin tabel storyboard (.md)</button>
+          <button class="btn btn-ghost btn-sm" data-act="dl-storyboard" type="button" disabled>Unduh STORYBOARD.md</button>
+          <button class="btn btn-ghost btn-sm" data-act="dl-video-pack" type="button" disabled title="Unduh seluruh paket proyek video HyperFrames runnable (11 berkas: index.html root, 5 frame sub-komposisi, storyboard, frame.md, prompt, audio synth, linter)">Unduh Paket Proyek Video (11 berkas)</button>
+        </div>
+      </section>
+    </div>
+  </div>
 
   <section class="card neu" id="pengaturan" aria-labelledby="pengaturanTitle">
     <h2 id="pengaturanTitle" class="h-sm">Pengaturan AI (opsional)</h2>
