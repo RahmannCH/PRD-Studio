@@ -595,6 +595,12 @@
 .sb-band-badge.band-mid { border-color:var(--accent); color:var(--accent); }
 .sb-band-badge.band-high { border-color:var(--brand); color:var(--brand); }
 
+.sb-tag-stamp {
+  font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; font-weight:800;
+  background:var(--danger); color:#fff; padding:1px 6px; border-radius:3px;
+  letter-spacing:0.04em; display:inline-block;
+}
+
 .sb-asset-item { font-size:12px; line-height:1.4; }
 .sb-tag-kind {
   font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;

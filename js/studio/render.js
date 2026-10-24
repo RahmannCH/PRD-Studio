@@ -600,6 +600,42 @@
           g5.gain.setValueAtTime(0.05, t); g5.gain.linearRampToValueAtTime(0.6, t + 1.0); g5.gain.linearRampToValueAtTime(0.001, t + 1.15);
           var f3 = c.createBiquadFilter(); f3.type = 'lowpass'; f3.frequency.setValueAtTime(400, t); f3.frequency.exponentialRampToValueAtTime(2500, t + 1.1);
           o4.connect(f3); f3.connect(g5); g5.connect(c.destination); o4.start(t); o4.stop(t + 1.2);
+        } else if (type === 'shutter') {
+          var bs = c.createBuffer(1, c.sampleRate * 0.12, c.sampleRate);
+          var ds = bs.getChannelData(0); for (var is = 0; is < ds.length; is++) ds[is] = (Math.random() * 2 - 1) * Math.exp(-is / (c.sampleRate * 0.02));
+          var ss = c.createBufferSource(); ss.buffer = bs;
+          var fs = c.createBiquadFilter(); fs.type = 'highpass'; fs.frequency.setValueAtTime(1200, t);
+          var gs = c.createGain(); gs.gain.setValueAtTime(0.7, t); gs.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+          ss.connect(fs); fs.connect(gs); gs.connect(c.destination); ss.start(t);
+        } else if (type === 'gavel') {
+          var og = c.createOscillator(), gg = c.createGain();
+          og.type = 'triangle'; og.frequency.setValueAtTime(140, t);
+          og.frequency.exponentialRampToValueAtTime(45, t + 0.25);
+          gg.gain.setValueAtTime(1.0, t); gg.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+          var bg = c.createBuffer(1, c.sampleRate * 0.04, c.sampleRate);
+          var dg = bg.getChannelData(0); for (var ig = 0; ig < dg.length; ig++) dg[ig] = (Math.random() * 2 - 1) * 0.8;
+          var sg2 = c.createBufferSource(); sg2.buffer = bg;
+          var sgGain = c.createGain(); sgGain.gain.setValueAtTime(0.8, t); sgGain.exponentialRampToValueAtTime(0.001, t + 0.04);
+          og.connect(gg); gg.connect(c.destination);
+          sg2.connect(sgGain); sgGain.connect(c.destination);
+          og.start(t); og.stop(t + 0.3); sg2.start(t);
+        } else if (type === 'klaxon') {
+          var ok = c.createOscillator(), gk = c.createGain();
+          ok.type = 'sawtooth'; ok.frequency.setValueAtTime(880, t); ok.frequency.setValueAtTime(660, t + 0.12); ok.frequency.setValueAtTime(880, t + 0.24);
+          gk.gain.setValueAtTime(0.35, t); gk.gain.exponentialRampToValueAtTime(0.001, t + 0.36);
+          var fk = c.createBiquadFilter(); fk.type = 'bandpass'; fk.frequency.setValueAtTime(750, t);
+          ok.connect(fk); fk.connect(gk); gk.connect(c.destination); ok.start(t); ok.stop(t + 0.38);
+        } else if (type === 'glitch') {
+          var bgl = c.createBuffer(1, c.sampleRate * 0.08, c.sampleRate);
+          var dgl = bgl.getChannelData(0); for (var igl = 0; igl < dgl.length; igl++) dgl[igl] = (igl % 8 < 4 ? 0.4 : -0.4) * (Math.random() > 0.3 ? 1 : 0);
+          var sgl = c.createBufferSource(); sgl.buffer = bgl;
+          var ggl = c.createGain(); ggl.gain.setValueAtTime(0.5, t); ggl.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+          sgl.connect(ggl); ggl.connect(c.destination); sgl.start(t);
+        } else if (type === 'subdrop') {
+          var os = c.createOscillator(), gos = c.createGain();
+          os.type = 'sine'; os.frequency.setValueAtTime(70, t); os.frequency.exponentialRampToValueAtTime(28, t + 0.45);
+          gos.gain.setValueAtTime(1.0, t); gos.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+          os.connect(gos); gos.connect(c.destination); os.start(t); os.stop(t + 0.46);
         } else {
           var o = c.createOscillator(), g = c.createGain();
           o.type = 'sine'; o.frequency.setValueAtTime(1800, t);
@@ -762,12 +798,18 @@
           (b.assets.news || []).forEach(function (n) {
             assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Berita</span> <code class="sb-query">' + escHtml(n) + '</code></li>');
           });
+          (b.assets.footage || []).forEach(function (f) {
+            assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Footage B-Roll</span> <code class="sb-query">' + escHtml(f) + '</code></li>');
+          });
           (b.assets.props || []).forEach(function (p) {
             assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Vektor/Prop</span> <code class="sb-query">' + escHtml(p) + '</code></li>');
           });
           (b.assets.sfxKeys || []).forEach(function (k) {
             assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Pustaka SFX</span> <code class="sb-query">' + escHtml(k) + '</code></li>');
           });
+          if (b.assets.dossierStamp) {
+            assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Stempel Investigasi</span> <span class="sb-tag-stamp">' + escHtml(b.assets.dossierStamp) + '</span></li>');
+          }
           if (b.assets.uiMockup) {
             assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">UI Mockup</span> <span class="sb-ui-desc">' + escHtml(b.assets.uiMockup) + '</span></li>');
           }

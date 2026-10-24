@@ -125,13 +125,18 @@
         sfx: [
           { at: '00:00.0', band: 'high', type: 'riser', desc: 'Riser atmosferik gelap (riser-dark-4s.wav)' },
           { at: '00:01.8', band: 'mid', type: 'click', desc: 'Mechanical friction / paper tear (paper-tear-harsh.wav)' },
-          { at: '00:04.5', band: 'mid', type: 'click', desc: 'Clock ticking anxious (ticker-heavy.wav)' },
-          { at: '00:05.4', band: 'low', type: 'thud', desc: 'Sub-bass impact drop 45Hz (sub-drop-punch.wav)' }
+          { at: '00:03.5', band: 'mid', type: 'klaxon', desc: 'Warning klaxon alert deteksi selisih (klaxon-alert.wav)' },
+          { at: '00:05.4', band: 'low', type: 'subdrop', desc: 'Deep 30Hz sub-drop menandai akhir rasa sakit (subdrop-heavy.wav)' }
         ],
         assets: {
+          dossierStamp: 'MASALAH_LAMA_TERVERIFIKASI',
           news: [
             'headline berita: "' + problem.slice(0, 35) + ' site:kompas.com OR site:detik.com"',
             'studi kasus UMKM: "kerugian akibat pembukuan manual sistem lama"'
+          ],
+          footage: [
+            'rekaman b-roll 4K antrean kasir toko manual lambat',
+            'close-up tangan meraba struk robek di bawah lampu redup'
           ],
           props: [
             'texture: crumpled paper / nota robek PNG transparent 4K',
@@ -175,11 +180,17 @@
           { at: '00:06.0', band: 'high', type: 'whoosh', desc: 'Cinematic air whoosh melesat (whoosh-air-whip.wav)' },
           { at: '00:07.0', band: 'mid', type: 'click', desc: 'Haptic switch click menyalakan panggung (switch-mechanical-on.wav)' },
           { at: '00:08.5', band: 'low', type: 'thud', desc: 'Resonant warm 808 sub hit (bass-hit-warm.wav)' },
+          { at: '00:10.5', band: 'high', type: 'shutter', desc: 'Hardware camera shutter snapshot (camera-shutter-clean.wav)' },
           { at: '00:12.5', band: 'high', type: 'chime', desc: 'Crystalline shimmer ambient swell (crystal-shimmer.wav)' }
         ],
         assets: {
+          dossierStamp: 'SOLUSI_RESMI_TERDAFTAR',
           news: [
             'brand mention / release note: "' + name + ' platform rilis resmi"'
+          ],
+          footage: [
+            'footage b-roll unboxing tablet modern minimal cinematic lighting',
+            'layar oled menyala menampilkan antarmuka bersih dalam studio gelap'
           ],
           props: [
             'official brand vector: logo-' + slug + '.svg',
@@ -221,14 +232,19 @@
         sfx: [
           { at: '00:14.5', band: 'high', type: 'whoosh', desc: 'Swift camera pan whoosh (whoosh-soft.wav)' },
           { at: '00:16.0', band: 'mid', type: 'click', desc: 'Keyboard mechanical clack rapid typing (keystrokes-fast.wav)' },
-          { at: '00:22.0', band: 'mid', type: 'beep', desc: 'Process completion hum (digital-process-hum.wav)' },
+          { at: '00:22.0', band: 'mid', type: 'glitch', desc: 'Digital glitch transform packet data (data-glitch-transform.wav)' },
           { at: '00:28.0', band: 'high', type: 'thermal', desc: 'Crisp thermal print chatter / data packet sound (hardware-action.wav)' },
           { at: '00:34.0', band: 'high', type: 'chime', desc: 'Success harmony chime (ui-success-bell.wav)' },
           { at: '00:37.2', band: 'low', type: 'thud', desc: 'Sub bass transition sweep (bass-sweep-deep.wav)' }
         ],
         assets: {
+          dossierStamp: 'WORKFLOW_3_LANGKAH_SELESAI',
           news: [
             'arsitektur teknologi: "' + stack + ' performa tinggi offline sync"'
+          ],
+          footage: [
+            'macro close-up jari menekan layar sentuh kasir 60fps',
+            'kertas struk thermal 58mm keluar dari lubang printer dengan gerakan mekanik mulus'
           ],
           props: [
             'icon: lightning-charge-line, database-check-line, file-text-line (Phosphor Light)',
@@ -269,13 +285,18 @@
         camera: 'Low-angle isometric 3D tilt, grid garis ukur bernapas, angka bercahaya saat mencapai 100%',
         sfx: [
           { at: '00:38.2', band: 'high', type: 'beep', desc: 'High-speed numeric ticker (counter-fast-click.wav)' },
-          { at: '00:41.5', band: 'low', type: 'thud', desc: 'Heavy sub-bass slam saat counter mencapai angka kunci (heavy-sub-slam.wav)' },
+          { at: '00:41.5', band: 'low', type: 'gavel', desc: 'Gavel impact definitive slam bukti 100% (gavel-impact-heavy.wav)' },
           { at: '00:45.0', band: 'mid', type: 'whoosh', desc: 'Bar chart rise sound / whoosh swell (bar-rise-whoosh.wav)' },
           { at: '00:48.5', band: 'high', type: 'riser', desc: 'Reverse cymbal riser menuju penutup (reverse-cymbal-riser.wav)' }
         ],
         assets: {
+          dossierStamp: 'BENCHMARK_100_PERSEN_LOLOS',
           news: [
             'benchmark report: "hasil uji beban performa latency ' + stack + '"'
+          ],
+          footage: [
+            'b-roll server rack ruang data center dengan lampu hijau berkedip',
+            'terminal console streaming baris data dengan kecepatan tinggi'
           ],
           props: [
             'chart: SVG animated bar chart with glow filter',
@@ -314,12 +335,17 @@
         camera: 'Push-through melintasi grid angka menuju logo sentral, diakhiri hold tenang yang elegan',
         sfx: [
           { at: '00:50.0', band: 'high', type: 'riser', desc: 'Impactful reverse swell audio (reverse-swell.wav)' },
-          { at: '00:52.0', band: 'low', type: 'thud', desc: 'Definitive brand sonic punch (brand-sonic-punch.wav)' },
-          { at: '00:54.0', band: 'high', type: 'chime', desc: 'Subtle high-resonance chime (crystal-chime-long.wav)' },
+          { at: '00:52.0', band: 'low', type: 'subdrop', desc: 'Brand definitive sonic sub-drop punch (brand-sonic-subdrop.wav)' },
+          { at: '00:54.0', band: 'high', type: 'chime', desc: 'Subtle high-resonance signature chime (crystal-chime-long.wav)' },
           { at: '00:58.5', band: 'mid', type: 'whoosh', desc: 'Smooth master audio fade-out to black' }
         ],
         assets: {
+          dossierStamp: 'MULAI_SEKARANG_CALL_TO_ACTION',
           news: [],
+          footage: [
+            'cinematic lighting sweep melintasi permukaan chrome logo 4K',
+            'partikel cahaya halus melayang di sekitar tombol CTA'
+          ],
           props: [
             'logo: logo-' + slug + '-hires.svg',
             'cta button: nested pill island with arrow icon circle'
@@ -349,8 +375,10 @@
 
         var assetItems = [];
         if (b.assets.news && b.assets.news.length) assetItems.push('📰 **Berita:** ' + b.assets.news.join('; '));
+        if (b.assets.footage && b.assets.footage.length) assetItems.push('🎬 **Footage:** ' + b.assets.footage.join('; '));
         if (b.assets.props && b.assets.props.length) assetItems.push('🎨 **Props:** ' + b.assets.props.join('; '));
         if (b.assets.sfxKeys && b.assets.sfxKeys.length) assetItems.push('🎧 **SFX Library:** ' + b.assets.sfxKeys.join(', '));
+        if (b.assets.dossierStamp) assetItems.push('🏷️ **Stempel:** `' + b.assets.dossierStamp + '`');
         if (b.assets.uiMockup) assetItems.push('💻 **UI:** ' + b.assets.uiMockup);
         var assetStr = assetItems.join('<br>');
 
@@ -398,7 +426,7 @@
 
     function buildProceduralAudioScript() {
       return [
-        '/* sfx-synth.js — Sintesis Audio Prosedural 7-Instrumen Web Audio API (Offline Fallback)',
+        '/* sfx-synth.js — Sintesis Audio Prosedural 12-Instrumen Web Audio API (Offline Fallback)',
         '   Dipakai HyperFrames saat merender bila file audio eksternal tidak tersedia. */',
         '(function () {',
         '  var ctx = null;',
@@ -493,6 +521,71 @@
         '      f.frequency.exponentialRampToValueAtTime(2500, (t || c.currentTime) + 1.2);',
         '      o.connect(f); f.connect(g); g.connect(c.destination);',
         '      o.start(t || c.currentTime); o.stop((t || c.currentTime) + 1.3);',
+        '    },',
+        '    shutter: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var b = c.createBuffer(1, c.sampleRate * 0.12, c.sampleRate);',
+        '      var d = b.getChannelData(0);',
+        '      for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (c.sampleRate * 0.02));',
+        '      var src = c.createBufferSource(); src.buffer = b;',
+        '      var f = c.createBiquadFilter(); f.type = "highpass"; f.frequency.setValueAtTime(1200, t || c.currentTime);',
+        '      var g = c.createGain(); g.gain.setValueAtTime(0.7, t || c.currentTime);',
+        '      g.gain.exponentialRampToValueAtTime(0.001, (t || c.currentTime) + 0.12);',
+        '      src.connect(f); f.connect(g); g.connect(c.destination);',
+        '      src.start(t || c.currentTime);',
+        '    },',
+        '    gavel: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      var o = c.createOscillator(), g = c.createGain();',
+        '      o.type = "triangle"; o.frequency.setValueAtTime(140, now);',
+        '      o.frequency.exponentialRampToValueAtTime(45, now + 0.25);',
+        '      g.gain.setValueAtTime(1.0, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.28);',
+        '      var b = c.createBuffer(1, c.sampleRate * 0.04, c.sampleRate);',
+        '      var d = b.getChannelData(0);',
+        '      for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.8;',
+        '      var s = c.createBufferSource(); s.buffer = b;',
+        '      var sg = c.createGain(); sg.gain.setValueAtTime(0.8, now);',
+        '      sg.gain.exponentialRampToValueAtTime(0.001, now + 0.04);',
+        '      o.connect(g); g.connect(c.destination);',
+        '      s.connect(sg); sg.connect(c.destination);',
+        '      o.start(now); o.stop(now + 0.3);',
+        '      s.start(now);',
+        '    },',
+        '    klaxon: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      var o = c.createOscillator(), g = c.createGain();',
+        '      o.type = "sawtooth";',
+        '      o.frequency.setValueAtTime(880, now);',
+        '      o.frequency.setValueAtTime(660, now + 0.12);',
+        '      o.frequency.setValueAtTime(880, now + 0.24);',
+        '      g.gain.setValueAtTime(0.35, now);',
+        '      g.gain.exponentialRampToValueAtTime(0.001, now + 0.36);',
+        '      var f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.setValueAtTime(750, now);',
+        '      o.connect(f); f.connect(g); g.connect(c.destination);',
+        '      o.start(now); o.stop(now + 0.38);',
+        '    },',
+        '    glitch: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var b = c.createBuffer(1, c.sampleRate * 0.08, c.sampleRate);',
+        '      var d = b.getChannelData(0);',
+        '      for (var i = 0; i < d.length; i++) d[i] = (i % 8 < 4 ? 0.4 : -0.4) * (Math.random() > 0.3 ? 1 : 0);',
+        '      var src = c.createBufferSource(); src.buffer = b;',
+        '      var g = c.createGain(); g.gain.setValueAtTime(0.5, t || c.currentTime);',
+        '      g.gain.exponentialRampToValueAtTime(0.001, (t || c.currentTime) + 0.08);',
+        '      src.connect(g); g.connect(c.destination);',
+        '      src.start(t || c.currentTime);',
+        '    },',
+        '    subdrop: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var o = c.createOscillator(), g = c.createGain();',
+        '      o.type = "sine"; o.frequency.setValueAtTime(70, t || c.currentTime);',
+        '      o.frequency.exponentialRampToValueAtTime(28, (t || c.currentTime) + 0.45);',
+        '      g.gain.setValueAtTime(1.0, t || c.currentTime);',
+        '      g.gain.exponentialRampToValueAtTime(0.001, (t || c.currentTime) + 0.45);',
+        '      o.connect(g); g.connect(c.destination);',
+        '      o.start(t || c.currentTime); o.stop((t || c.currentTime) + 0.46);',
         '    }',
         '  };',
         '})();'
@@ -599,8 +692,10 @@
         lines.push('### ' + b.title);
         lines.push('- **Blueprint HyperFrames:** `' + b.blueprint + '` | Rules: `' + b.rules.join('`, `') + '`');
         if (b.assets.news && b.assets.news.length) lines.push('- **Berita/Isu:** `' + b.assets.news.join('`, `') + '`');
+        if (b.assets.footage && b.assets.footage.length) lines.push('- **Footage B-Roll:** `' + b.assets.footage.join('`, `') + '`');
         if (b.assets.props && b.assets.props.length) lines.push('- **Props/Vektor:** `' + b.assets.props.join('`, `') + '`');
         if (b.assets.sfxKeys && b.assets.sfxKeys.length) lines.push('- **Pustaka SFX:** `' + b.assets.sfxKeys.join('`, `') + '`');
+        if (b.assets.dossierStamp) lines.push('- **Stempel Investigasi:** `' + b.assets.dossierStamp + '`');
         if (b.assets.uiMockup) lines.push('- **UI Mockup:** ' + b.assets.uiMockup);
       });
       lines.push('');
