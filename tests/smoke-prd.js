@@ -184,6 +184,12 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   const rChecked = await page.getAttribute('[data-ratio="9:16"]', 'aria-checked');
   ok(rChecked === 'true', 'ratio chip switches dynamically to 9:16');
 
+  // Klik tombol tes audio SFX interaktif
+  const playBtnsCount = await page.locator('.sb-play-btn').count();
+  ok(playBtnsCount >= 5, 'interactive sfx play buttons rendered', playBtnsCount);
+  await page.click('.sb-play-btn');
+  await page.waitForTimeout(100);
+
   // Salin Master Prompt HyperFrames ke clipboard
   await page.click('[data-act="copy-video-prompt"]');
   await page.waitForTimeout(300);

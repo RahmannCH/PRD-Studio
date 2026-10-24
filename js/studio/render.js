@@ -550,6 +550,65 @@
         box.appendChild(d);
       });
     },
+    playSfx: function (type) {
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        if (!window._sfxCtx) window._sfxCtx = new AC();
+        var c = window._sfxCtx;
+        if (c.state === 'suspended') c.resume();
+        var t = c.currentTime;
+        if (type === 'thud') {
+          var o1 = c.createOscillator(), g1 = c.createGain();
+          o1.type = 'sine'; o1.frequency.setValueAtTime(90, t);
+          o1.frequency.exponentialRampToValueAtTime(35, t + 0.35);
+          g1.gain.setValueAtTime(1.0, t); g1.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          o1.connect(g1); g1.connect(c.destination);
+          o1.start(t); o1.stop(t + 0.36);
+        } else if (type === 'whoosh') {
+          var b1 = c.createBuffer(1, c.sampleRate * 0.4, c.sampleRate);
+          var d1 = b1.getChannelData(0); for (var i = 0; i < d1.length; i++) d1[i] = (Math.random() * 2 - 1) * 0.4;
+          var s1 = c.createBufferSource(); s1.buffer = b1;
+          var f1 = c.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.setValueAtTime(200, t);
+          f1.frequency.exponentialRampToValueAtTime(1600, t + 0.2); f1.frequency.exponentialRampToValueAtTime(300, t + 0.4);
+          var g2 = c.createGain(); g2.gain.setValueAtTime(0.01, t); g2.gain.linearRampToValueAtTime(0.8, t + 0.2); g2.gain.linearRampToValueAtTime(0.001, t + 0.4);
+          s1.connect(f1); f1.connect(g2); g2.connect(c.destination);
+          s1.start(t);
+        } else if (type === 'chime') {
+          [880, 1760].forEach(function (f, idx) {
+            var o = c.createOscillator(), g = c.createGain();
+            o.type = 'sine'; o.frequency.setValueAtTime(f, t + idx * 0.05);
+            g.gain.setValueAtTime(0.4, t + idx * 0.05); g.gain.exponentialRampToValueAtTime(0.001, t + 0.8 + idx * 0.05);
+            o.connect(g); g.connect(c.destination); o.start(t + idx * 0.05); o.stop(t + 0.85 + idx * 0.05);
+          });
+        } else if (type === 'beep') {
+          var o3 = c.createOscillator(), g3 = c.createGain();
+          o3.type = 'sine'; o3.frequency.setValueAtTime(2400, t);
+          g3.gain.setValueAtTime(0.5, t); g3.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+          o3.connect(g3); g3.connect(c.destination); o3.start(t); o3.stop(t + 0.09);
+        } else if (type === 'thermal') {
+          var b2 = c.createBuffer(1, c.sampleRate * 0.5, c.sampleRate);
+          var d2 = b2.getChannelData(0); for (var k = 0; k < d2.length; k++) d2[k] = (k % 30 < 15 ? 0.3 : -0.3) + (Math.random() * 0.2 - 0.1);
+          var s2 = c.createBufferSource(); s2.buffer = b2;
+          var f2 = c.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.setValueAtTime(1400, t);
+          var g4 = c.createGain(); g4.gain.setValueAtTime(0.5, t); g4.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+          s2.connect(f2); f2.connect(g4); g4.connect(c.destination); s2.start(t);
+        } else if (type === 'riser') {
+          var o4 = c.createOscillator(), g5 = c.createGain();
+          o4.type = 'sawtooth'; o4.frequency.setValueAtTime(180, t);
+          o4.frequency.exponentialRampToValueAtTime(1400, t + 1.1);
+          g5.gain.setValueAtTime(0.05, t); g5.gain.linearRampToValueAtTime(0.6, t + 1.0); g5.gain.linearRampToValueAtTime(0.001, t + 1.15);
+          var f3 = c.createBiquadFilter(); f3.type = 'lowpass'; f3.frequency.setValueAtTime(400, t); f3.frequency.exponentialRampToValueAtTime(2500, t + 1.1);
+          o4.connect(f3); f3.connect(g5); g5.connect(c.destination); o4.start(t); o4.stop(t + 1.2);
+        } else {
+          var o = c.createOscillator(), g = c.createGain();
+          o.type = 'sine'; o.frequency.setValueAtTime(1800, t);
+          o.frequency.exponentialRampToValueAtTime(80, t + 0.015);
+          g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+          o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + 0.02);
+        }
+      } catch (e) {}
+    },
     storyboard: function (sb) {
       var box = document.getElementById('storyboardTimeline');
       if (!box) return;
@@ -626,10 +685,12 @@
 
         var head = document.createElement('div');
         head.className = 'sb-card-head';
+        var bpTag = b.blueprint ? '<span class="sb-blueprint-badge">Blueprint: ' + escHtml(b.blueprint) + '</span>' : '';
         head.innerHTML = '<div class="sb-card-tags">' +
           '<span class="sb-time-chip">' + escHtml(b.timecode) + ' (' + b.durationSec + 's)</span>' +
           '<span class="sb-bar-chip">' + escHtml(b.bars || '') + '</span>' +
           '<span class="sb-role-chip role-' + escHtml(b.role.toLowerCase()) + '">' + escHtml(b.role) + '</span>' +
+          bpTag +
           '</div>' +
           '<h3 class="sb-beat-title">' + escHtml(b.title) + '</h3>';
         card.appendChild(head);
@@ -674,7 +735,8 @@
         var sfxHtml = (b.sfx || []).map(function (s) {
           var bandClass = s.band ? ' band-' + s.band : '';
           var bandBadge = s.band ? '<span class="sb-band-badge' + bandClass + '">' + escHtml(s.band.toUpperCase()) + '</span> ' : '';
-          return '<li class="sb-sfx-item"><span class="sb-sfx-time">' + escHtml(s.at) + '</span> ' + bandBadge + escHtml(s.desc) + '</li>';
+          var playBtn = '<button class="sb-play-btn" type="button" data-sfx-type="' + escHtml(s.type || 'click') + '" title="Dengarkan simulasi audio Web Audio API" aria-label="Tes suara ' + escHtml(s.desc) + '">▶</button>';
+          return '<li class="sb-sfx-item">' + playBtn + '<span class="sb-sfx-time">' + escHtml(s.at) + '</span> ' + bandBadge + escHtml(s.desc) + '</li>';
         }).join('');
 
         var assetLines = [];
@@ -688,6 +750,9 @@
           });
           (b.assets.props || []).forEach(function (p) {
             assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Vektor/Prop</span> <code class="sb-query">' + escHtml(p) + '</code></li>');
+          });
+          (b.assets.sfxKeys || []).forEach(function (k) {
+            assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">Pustaka SFX</span> <code class="sb-query">' + escHtml(k) + '</code></li>');
           });
           if (b.assets.uiMockup) {
             assetLines.push('<li class="sb-asset-item"><span class="sb-tag-kind">UI Mockup</span> <span class="sb-ui-desc">' + escHtml(b.assets.uiMockup) + '</span></li>');
@@ -708,6 +773,20 @@
         card.appendChild(body);
         box.appendChild(card);
       });
+
+      // Pasang handler audio play button via delegasi
+      if (!box._hasAudioListener) {
+        box._hasAudioListener = true;
+        box.addEventListener('click', function (e) {
+          var btn = e.target.closest('.sb-play-btn');
+          if (btn) {
+            var st = btn.getAttribute('data-sfx-type') || 'click';
+            window.RenderOut.playSfx(st);
+            btn.classList.add('playing');
+            setTimeout(function () { btn.classList.remove('playing'); }, 300);
+          }
+        });
+      }
     },
     diff: function (oldMd, newMd) {
       var box = document.getElementById('diffBox');
