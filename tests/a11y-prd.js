@@ -65,6 +65,7 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
 
   await page.click('#generateBtn');
   await page.waitForSelector('#prdSections .sect');
+  await page.waitForTimeout(250);
   await scan('results: PRD tab');
   await page.click('[data-tab="roadmap"]');
   await scan('results: roadmap tab');

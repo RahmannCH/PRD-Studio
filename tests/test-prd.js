@@ -1117,9 +1117,10 @@ const diagrams = window.GenDiagrams(sample);
   const sbRelax = G(sample, null, { tempo: 'relax' });
   ok(sbRelax.tempo.bpm === 100 && sbRelax.tempo.id === 'relax', 'relax tempo sets 100 BPM');
 
-  ok(Object.keys(sb.concepts).length === 6, 'six motion concepts defined');
+  ok(Object.keys(sb.concepts).length === 8, 'eight motion concepts defined');
   ok(sb.beats.every(b => b.motionVerb && b.gsapEasing), 'every beat defines an explicit motion verb and GSAP easing');
-  ok(sb.proceduralAudio.indexOf('cash:') > -1 && sb.proceduralAudio.indexOf('keytype:') > -1 && sb.proceduralAudio.indexOf('scan:') > -1, 'procedural audio synth implements 15 instruments');
+  ok(sb.proceduralAudio.indexOf('cash:') > -1 && sb.proceduralAudio.indexOf('keytype:') > -1 && sb.proceduralAudio.indexOf('scan:') > -1 && sb.proceduralAudio.indexOf('heartbeat:') > -1 && sb.proceduralAudio.indexOf('siren:') > -1 && sb.proceduralAudio.indexOf('geiger:') > -1, 'procedural audio synth implements 22 instruments');
+  ok(sb.assetMatrix && Array.isArray(sb.assetMatrix.broll) && Array.isArray(sb.assetMatrix.sfx) && sb.assetMatrix.directSearchUrls, 'comprehensive multi-platform asset matrix generated');
 
   // Markup & palette verification
   const htmlSt = fs.readFileSync(path.join(__dirname, '..', 'studio.html'), 'utf8');

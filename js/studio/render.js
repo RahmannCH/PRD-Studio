@@ -656,6 +656,90 @@
           oscan.type = 'sine'; oscan.frequency.setValueAtTime(900, t); oscan.frequency.linearRampToValueAtTime(2600, t + 0.22);
           gscan.gain.setValueAtTime(0.3, t); gscan.exponentialRampToValueAtTime(0.001, t + 0.25);
           oscan.connect(gscan); gscan.connect(c.destination); oscan.start(t); oscan.stop(t + 0.26);
+        } else if (type === 'heartbeat') {
+          [0, 0.12].forEach(function (dt, i) {
+            var o = c.createOscillator(), g = c.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(i === 0 ? 62 : 48, t + dt);
+            o.frequency.exponentialRampToValueAtTime(32, t + dt + 0.16);
+            g.gain.setValueAtTime(i === 0 ? 0.9 : 0.7, t + dt);
+            g.gain.exponentialRampToValueAtTime(0.001, t + dt + 0.18);
+            var f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(120, t + dt);
+            o.connect(f); f.connect(g); g.connect(c.destination);
+            o.start(t + dt); o.stop(t + dt + 0.2);
+          });
+        } else if (type === 'siren') {
+          var osir = c.createOscillator(), gsir = c.createGain();
+          osir.type = 'sawtooth';
+          osir.frequency.setValueAtTime(650, t);
+          osir.frequency.linearRampToValueAtTime(950, t + 0.2);
+          osir.frequency.linearRampToValueAtTime(650, t + 0.4);
+          gsir.gain.setValueAtTime(0.3, t);
+          gsir.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+          var fsir = c.createBiquadFilter(); fsir.type = 'bandpass'; fsir.frequency.setValueAtTime(800, t);
+          osir.connect(fsir); fsir.connect(gsir); gsir.connect(c.destination);
+          osir.start(t); osir.stop(t + 0.46);
+        } else if (type === 'geiger') {
+          var bg = c.createBuffer(1, Math.floor(c.sampleRate * 0.15), c.sampleRate);
+          var dg = bg.getChannelData(0);
+          for (var ig = 0; ig < dg.length; ig++) dg[ig] = Math.random() > 0.985 ? (Math.random() * 2 - 1) * 0.9 : 0;
+          var sg = c.createBufferSource(); sg.buffer = bg;
+          var fg = c.createBiquadFilter(); fg.type = 'highpass'; fg.frequency.setValueAtTime(2500, t);
+          var gg = c.createGain(); gg.gain.setValueAtTime(0.6, t);
+          gg.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+          sg.connect(fg); fg.connect(gg); gg.connect(c.destination);
+          sg.start(t);
+        } else if (type === 'typewriter') {
+          var ot = c.createOscillator(), gt = c.createGain();
+          ot.type = 'triangle';
+          ot.frequency.setValueAtTime(320, t);
+          ot.frequency.exponentialRampToValueAtTime(70, t + 0.04);
+          gt.gain.setValueAtTime(0.8, t);
+          gt.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+          var btw = c.createBuffer(1, Math.floor(c.sampleRate * 0.03), c.sampleRate);
+          var dtw = btw.getChannelData(0);
+          for (var itw = 0; itw < dtw.length; itw++) dtw[itw] = (Math.random() * 2 - 1) * 0.8;
+          var stw = c.createBufferSource(); stw.buffer = btw;
+          var gtw = c.createGain(); gtw.gain.setValueAtTime(0.7, t);
+          gtw.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+          ot.connect(gt); gt.connect(c.destination);
+          stw.connect(gtw); gtw.connect(c.destination);
+          ot.start(t); ot.stop(t + 0.06); stw.start(t);
+        } else if (type === 'sonar') {
+          var oson = c.createOscillator(), gson = c.createGain();
+          oson.type = 'sine';
+          oson.frequency.setValueAtTime(880, t);
+          oson.frequency.exponentialRampToValueAtTime(870, t + 0.6);
+          gson.gain.setValueAtTime(0.5, t);
+          gson.gain.exponentialRampToValueAtTime(0.001, t + 0.85);
+          oson.connect(gson); gson.connect(c.destination);
+          oson.start(t); oson.stop(t + 0.9);
+        } else if (type === 'tapestop') {
+          var ots = c.createOscillator(), gts = c.createGain();
+          ots.type = 'sawtooth';
+          ots.frequency.setValueAtTime(440, t);
+          ots.frequency.exponentialRampToValueAtTime(30, t + 0.4);
+          gts.gain.setValueAtTime(0.6, t);
+          gts.gain.exponentialRampToValueAtTime(0.001, t + 0.42);
+          var fts = c.createBiquadFilter(); fts.type = 'lowpass';
+          fts.frequency.setValueAtTime(1800, t);
+          fts.frequency.exponentialRampToValueAtTime(100, t + 0.4);
+          ots.connect(fts); fts.connect(gts); gts.connect(c.destination);
+          ots.start(t); ots.stop(t + 0.45);
+        } else if (type === 'radiochatter') {
+          var brc = c.createBuffer(1, Math.floor(c.sampleRate * 0.22), c.sampleRate);
+          var drc = brc.getChannelData(0);
+          for (var irc = 0; irc < drc.length; irc++) drc[irc] = (Math.random() * 2 - 1) * 0.6;
+          var src = c.createBufferSource(); src.buffer = brc;
+          var frc = c.createBiquadFilter(); frc.type = 'bandpass';
+          frc.frequency.setValueAtTime(1400, t);
+          frc.Q.setValueAtTime(4.0, t);
+          var grc = c.createGain();
+          grc.gain.setValueAtTime(0.05, t);
+          grc.gain.linearRampToValueAtTime(0.6, t + 0.03);
+          grc.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+          src.connect(frc); frc.connect(grc); grc.connect(c.destination);
+          src.start(t);
         } else {
           var o = c.createOscillator(), g = c.createGain();
           o.type = 'sine'; o.frequency.setValueAtTime(1800, t);
@@ -753,6 +837,37 @@
         });
         rhythmBox.appendChild(trackBar);
         box.appendChild(rhythmBox);
+
+        // 2b. Sound Bank Audition Launchpad (22 SFX Instrumen Web Audio API)
+        var soundBankCard = document.createElement('div');
+        soundBankCard.className = 'sb-soundbank-card';
+        soundBankCard.innerHTML = '<div class="sb-soundbank-head">' +
+          '<span class="sb-sb-title">Pustaka 22 Suara Prosedural Web Audio API (Live Audition)</span>' +
+          '<span class="sb-sb-hint">Klik tombol untuk menguji respon audio haptic & diegetic secara real-time</span>' +
+          '</div>';
+        var soundGrid = document.createElement('div');
+        soundGrid.className = 'sb-soundbank-grid';
+        var allSfxTypes = [
+          { id: 'click', label: 'Click' }, { id: 'thud', label: 'Thud 808' }, { id: 'whoosh', label: 'Whoosh' },
+          { id: 'chime', label: 'Chime' }, { id: 'thermal', label: 'Thermal' }, { id: 'beep', label: 'Beep' },
+          { id: 'riser', label: 'Riser' }, { id: 'shutter', label: 'Shutter' }, { id: 'gavel', label: 'Gavel' },
+          { id: 'klaxon', label: 'Klaxon' }, { id: 'glitch', label: 'Glitch' }, { id: 'subdrop', label: 'Sub-drop' },
+          { id: 'cash', label: 'Cash Ring' }, { id: 'keytype', label: 'Keystrokes' }, { id: 'scan', label: 'Scanner' },
+          { id: 'heartbeat', label: 'Heartbeat' }, { id: 'siren', label: 'Siren Wail' }, { id: 'geiger', label: 'Geiger Ticks' },
+          { id: 'typewriter', label: 'Typewriter' }, { id: 'sonar', label: 'Sonar Ping' }, { id: 'tapestop', label: 'Tape Stop' },
+          { id: 'radiochatter', label: 'Radio Squelch' }
+        ];
+        allSfxTypes.forEach(function (item) {
+          var sBtn = document.createElement('button');
+          sBtn.type = 'button';
+          sBtn.className = 'sb-sb-btn';
+          sBtn.setAttribute('data-sfx-type', item.id);
+          sBtn.setAttribute('title', 'Uji suara: ' + item.label);
+          sBtn.innerHTML = '<span class="sb-sb-dot"></span>' + escHtml(item.label);
+          soundGrid.appendChild(sBtn);
+        });
+        soundBankCard.appendChild(soundGrid);
+        box.appendChild(soundBankCard);
 
         // 3. Beat Cards (Second-by-Second Breakdown)
         sb.beats.forEach(function (b, idx) {
@@ -858,6 +973,57 @@
           box.appendChild(card);
         });
 
+        // 4. Matriks Pencarian Aset Mandiri (Multi-Platform)
+        if (sb.assetMatrix) {
+          var mat = sb.assetMatrix;
+          var matCard = document.createElement('div');
+          matCard.className = 'sb-matrix-card neu';
+          var matHead = document.createElement('div');
+          matHead.className = 'sb-matrix-head';
+          matHead.innerHTML = '<div class="sb-matrix-title-wrap">' +
+            '<h3 class="sb-matrix-title">Matriks Pencarian Aset Mandiri Multi-Platform</h3>' +
+            '<span class="sb-matrix-sub">Kueri presisi untuk Footage 4K, SFX Diegetic, Drone Musik & Arsip Publik</span>' +
+            '</div>' +
+            '<div class="sb-matrix-actions">' +
+            '<a class="btn btn-ghost btn-sm sb-link-ext" href="' + escHtml(mat.directSearchUrls.pexels) + '" target="_blank" rel="noopener">Buka Pexels ↗</a>' +
+            '<a class="btn btn-ghost btn-sm sb-link-ext" href="' + escHtml(mat.directSearchUrls.freesound) + '" target="_blank" rel="noopener">Buka FreeSound ↗</a>' +
+            '<a class="btn btn-ghost btn-sm sb-link-ext" href="' + escHtml(mat.directSearchUrls.archive) + '" target="_blank" rel="noopener">Buka Archive.org ↗</a>' +
+            '</div>';
+          matCard.appendChild(matHead);
+
+          var matGrid = document.createElement('div');
+          matGrid.className = 'sb-matrix-grid';
+
+          // B-Roll Grid
+          var brollCol = document.createElement('div');
+          brollCol.className = 'sb-matrix-col';
+          var brollItems = (mat.broll || []).map(function (b) {
+            return '<div class="sb-mat-item">' +
+              '<span class="sb-mat-cat">' + escHtml(b.category) + '</span>' +
+              '<code class="sb-query">' + escHtml(b.query) + '</code>' +
+              '<a class="sb-mat-link" href="' + escHtml(b.url) + '" target="_blank" rel="noopener">Cari Pexels ↗</a>' +
+              '</div>';
+          }).join('');
+          brollCol.innerHTML = '<h4 class="sb-mat-sec-title">🎬 Footage B-Roll & Kamera 4K</h4>' + brollItems;
+          matGrid.appendChild(brollCol);
+
+          // SFX Grid
+          var sfxCol = document.createElement('div');
+          sfxCol.className = 'sb-matrix-col';
+          var sfxItems = (mat.sfx || []).map(function (s) {
+            return '<div class="sb-mat-item">' +
+              '<span class="sb-mat-cat">' + escHtml(s.category) + ' (' + escHtml(s.freq) + ')</span>' +
+              '<code class="sb-query">' + escHtml(s.query) + '</code>' +
+              '<a class="sb-mat-link" href="' + escHtml(s.url) + '" target="_blank" rel="noopener">Cari FreeSound ↗</a>' +
+              '</div>';
+          }).join('');
+          sfxCol.innerHTML = '<h4 class="sb-mat-sec-title">🎧 Sound Design & SFX Diegetic</h4>' + sfxItems;
+          matGrid.appendChild(sfxCol);
+
+          matCard.appendChild(matGrid);
+          box.appendChild(matCard);
+        }
+
         // Pasang handler audio play button via delegasi
         if (!box._hasAudioListener) {
           box._hasAudioListener = true;
@@ -871,7 +1037,7 @@
               }
               return;
             }
-            var btn = e.target.closest('.sb-play-btn');
+            var btn = e.target.closest('.sb-play-btn, .sb-sb-btn');
             if (btn) {
               var st = btn.getAttribute('data-sfx-type') || 'click';
               window.RenderOut.playSfx(st);

@@ -1,7 +1,7 @@
 /* Generator Storyboard & Motion HyperFrames 60 Detik (1920x1080 @ 30fps & 1080x1920 @ 30fps).
    Menghasilkan storyboard babak per babak, pemetaan blueprint resmi HyperFrames,
    petunjuk kamera, sound design (SFX), kueri pencarian aset mandiri multi-kategori,
-   kode sintesis audio prosedural 7-instrumen, kode scaffold runnable HyperFrames
+   kode sintesis audio prosedural 22-instrumen, matriks pencarian aset multi-platform, kode scaffold runnable HyperFrames
    (index.html & 5 sub-komposisi), dan Master Prompt HyperFrames otonom.
    Mendukung 4 konsep gerak, 3 variasi tempo BPM, dan rasio 16:9 / 9:16.
    ES5 murni untuk lingkungan browser tanpa bundler. */
@@ -68,6 +68,22 @@
       cameraStyle: 'Low-angle technical pan, zoom stepped 1x -> 2x tanpa interpolasi lembut (stepped mechanical)',
       bgStyle: 'Deep Blueprint Blue (#001833) atau Military Slate (#0B0E14) dengan grid koordinat teknis',
       cardStyle: 'Chiseled metal panel dengan sekrup sudut SVG, stempel classified merah, dan monospaced metadata'
+    },
+    'investigative-leak': {
+      id: 'investigative-leak',
+      name: 'Arsip Dokumen Bocor & Investigasi',
+      tagline: 'Stempel classified merah, stabilo investigatif, declassified redaction wipe, zoom bukti forensik',
+      cameraStyle: 'Forensic camera scanner, rack focus dari stempel vonis ke arsip dokumen, snap-zoom 1.8x',
+      bgStyle: 'Dark Archival Charcoal (#090A0E) dengan grid koordinat mikro dan debu arsip 4%',
+      cardStyle: 'Declassified docket folder dengan border merah berdarah, nomor perkara, dan stempel stensil'
+    },
+    'cyber-surveillance': {
+      id: 'cyber-surveillance',
+      name: 'Pemantauan Biometrik & Telemetri Forensik',
+      tagline: 'Viewfinder reticle, audio data packet burst, status peringatan krisis, sensor EKG live',
+      cameraStyle: 'CCTV tilt stepped, scanning line sweep vertikal, glitch jump cut saat anomali terdeteksi',
+      bgStyle: 'Cold Surveillance Navy (#040812) dengan reticle HUD hijau/cyan dan barcode ticker dinamis',
+      cardStyle: 'Tactical HUD visor glass panel dengan corner targeting brackets dan status bar hijau/merah'
     }
   };
 
@@ -116,6 +132,37 @@
 
     var nfrList = Array.isArray(spec.nfr) ? spec.nfr : [];
     var nfrMetric = nfrList[0] ? clean(nfrList[0].text || nfrList[0]) : 'Respons di bawah 2 detik';
+
+    var assetMatrix = {
+      broll: [
+        { category: 'CCTV & Pengawas', query: slug + ' CCTV overhead security camera surveillance high angle 4K', platforms: ['Pexels', 'Coverr'], tags: ['surveillance', 'isometric'], url: 'https://www.pexels.com/search/videos/' + encodeURIComponent('cctv surveillance security camera') },
+        { category: 'Lab & Forensik Medis', query: 'microscope bacterial culture petri dish laboratory sterile 4K', platforms: ['Pexels', 'Pixabay'], tags: ['medical', 'forensic'], url: 'https://www.pexels.com/search/videos/' + encodeURIComponent('laboratory microscope petri dish') },
+        { category: 'Server & Infrastruktur', query: 'server rack blinking led data center ethernet cable dark room', platforms: ['Pexels', 'Mixkit'], tags: ['tech', 'datacenter'], url: 'https://www.pexels.com/search/videos/' + encodeURIComponent('server rack data center') },
+        { category: 'Dokumen & Audit Fiskal', query: 'financial audit ledger paper stamps budget macro lens', platforms: ['Pexels', 'Unsplash'], tags: ['fiscal', 'document'], url: 'https://www.pexels.com/search/videos/' + encodeURIComponent('financial audit documents paper') },
+        { category: 'Dapur Industri & Katering', query: 'commercial industrial kitchen stainless steel cooking mass food prep', platforms: ['Pexels', 'Pixabay'], tags: ['food', 'catering'], url: 'https://www.pexels.com/search/videos/' + encodeURIComponent('industrial commercial kitchen food') },
+        { category: 'Infrastruktur Rusak', query: 'cracked concrete building dilapidated school classroom hallway', platforms: ['Pexels', 'Unsplash'], tags: ['infrastructure', 'school'], url: 'https://www.pexels.com/search/videos/' + encodeURIComponent('dilapidated school cracked concrete') }
+      ],
+      sfx: [
+        { category: 'Impact Sub-drop', query: 'heavy cinematic anvil sub drop bass punch 808', band: 'low', freq: '30-80 Hz', duration: '< 1.5s', url: 'https://freesound.org/search/?q=' + encodeURIComponent('sub drop bass heavy') },
+        { category: 'Alarm Darurat', query: 'emergency klaxon siren warning alarm tone loop', band: 'mid-high', freq: '600-1200 Hz', duration: '< 3.0s', url: 'https://freesound.org/search/?q=' + encodeURIComponent('emergency siren alarm klaxon') },
+        { category: 'Ketukan Vonis Gavel', query: 'wooden judge gavel desk slam definitive impact', band: 'mid', freq: '100-3000 Hz', duration: '< 0.8s', url: 'https://freesound.org/search/?q=' + encodeURIComponent('judge gavel wood slam') },
+        { category: 'Keystrokes Digital', query: 'computer keyboard typing mechanical keystroke rapid', band: 'high', freq: '1500-6000 Hz', duration: '< 2.0s', url: 'https://freesound.org/search/?q=' + encodeURIComponent('mechanical keyboard typing rapid') },
+        { category: 'Cardiac Pulse EKG', query: 'human heartbeat ekg monitor hospital pulse thump', band: 'low', freq: '45-120 Hz', duration: '< 2.0s', url: 'https://freesound.org/search/?q=' + encodeURIComponent('human heartbeat pulse thump') },
+        { category: 'Kertas Dokumen Bukti', query: 'paper rustling document handling file folder open', band: 'high', freq: '2000-8000 Hz', duration: '< 1.0s', url: 'https://freesound.org/search/?q=' + encodeURIComponent('paper handling rustle folder') },
+        { category: 'Geiger & Glitch', query: 'geiger counter radiation click burst digital glitch artifact', band: 'high', freq: '1000-12000 Hz', duration: '< 1.2s', url: 'https://freesound.org/search/?q=' + encodeURIComponent('geiger counter click burst') }
+      ],
+      musicBeds: [
+        { mood: 'Tensi Investigasi & Misteri', style: 'Dark pulsating analog synth drone with relentless ticking clock', bpm: tempo.bpm, scale: 'D Minor', ref: 'Hildur Guðnadóttir (Chernobyl) score' },
+        { mood: 'Krisis & Urgensi Tinggi', style: 'Sub-bass 50Hz rumble, cello tremolo tension, distorted 808 percussion', bpm: tempo.bpm, scale: 'C Phrygian', ref: 'Sicario / The Social Network OST' },
+        { mood: 'Optimisme & Solusi Futuristik', style: 'Warm uplifting arpeggiated analog synth, punchy four-on-the-floor kick', bpm: tempo.bpm, scale: 'F Major / A Minor', ref: 'Vangelis / Tron Legacy Daft Punk' }
+      ],
+      directSearchUrls: {
+        pexels: 'https://www.pexels.com/search/videos/' + encodeURIComponent(slug + ' investigation evidence'),
+        freesound: 'https://freesound.org/search/?q=' + encodeURIComponent(slug + ' impact whoosh riser'),
+        archive: 'https://archive.org/search?query=' + encodeURIComponent(slug + ' report data public'),
+        wikimedia: 'https://commons.wikimedia.org/w/index.php?search=' + encodeURIComponent(slug)
+      }
+    };
 
     var beats = [
       {
@@ -452,7 +499,7 @@
 
     function buildProceduralAudioScript() {
       return [
-        '/* sfx-synth.js — Sintesis Audio Prosedural 15-Instrumen Web Audio API (Offline Fallback)',
+        '/* sfx-synth.js — Sintesis Audio Prosedural 22-Instrumen Web Audio API (Offline Fallback)',
         '   Dipakai HyperFrames saat merender bila file audio eksternal tidak tersedia. */',
         '(function () {',
         '  var ctx = null;',
@@ -648,6 +695,113 @@
         '      g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);',
         '      o.connect(g); g.connect(c.destination);',
         '      o.start(now); o.stop(now + 0.26);',
+        '    },',
+        '    heartbeat: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      [0, 0.12].forEach(function (dt, i) {',
+        '        var o = c.createOscillator(), g = c.createGain();',
+        '        o.type = "triangle";',
+        '        o.frequency.setValueAtTime(i === 0 ? 62 : 48, now + dt);',
+        '        o.frequency.exponentialRampToValueAtTime(32, now + dt + 0.16);',
+        '        g.gain.setValueAtTime(i === 0 ? 0.9 : 0.7, now + dt);',
+        '        g.gain.exponentialRampToValueAtTime(0.001, now + dt + 0.18);',
+        '        var f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.setValueAtTime(120, now + dt);',
+        '        o.connect(f); f.connect(g); g.connect(c.destination);',
+        '        o.start(now + dt); o.stop(now + dt + 0.2);',
+        '      });',
+        '    },',
+        '    siren: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      var o = c.createOscillator(), g = c.createGain();',
+        '      o.type = "sawtooth";',
+        '      o.frequency.setValueAtTime(650, now);',
+        '      o.frequency.linearRampToValueAtTime(950, now + 0.2);',
+        '      o.frequency.linearRampToValueAtTime(650, now + 0.4);',
+        '      g.gain.setValueAtTime(0.3, now);',
+        '      g.gain.exponentialRampToValueAtTime(0.001, now + 0.45);',
+        '      var f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.setValueAtTime(800, now);',
+        '      o.connect(f); f.connect(g); g.connect(c.destination);',
+        '      o.start(now); o.stop(now + 0.46);',
+        '    },',
+        '    geiger: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      var b = c.createBuffer(1, Math.floor(c.sampleRate * 0.15), c.sampleRate);',
+        '      var d = b.getChannelData(0);',
+        '      for (var i = 0; i < d.length; i++) {',
+        '        d[i] = Math.random() > 0.985 ? (Math.random() * 2 - 1) * 0.9 : 0;',
+        '      }',
+        '      var s = c.createBufferSource(); s.buffer = b;',
+        '      var f = c.createBiquadFilter(); f.type = "highpass"; f.frequency.setValueAtTime(2500, now);',
+        '      var g = c.createGain(); g.gain.setValueAtTime(0.6, now);',
+        '      g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);',
+        '      s.connect(f); f.connect(g); g.connect(c.destination);',
+        '      s.start(now);',
+        '    },',
+        '    typewriter: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      var o = c.createOscillator(), g = c.createGain();',
+        '      o.type = "triangle";',
+        '      o.frequency.setValueAtTime(320, now);',
+        '      o.frequency.exponentialRampToValueAtTime(70, now + 0.04);',
+        '      g.gain.setValueAtTime(0.8, now);',
+        '      g.gain.exponentialRampToValueAtTime(0.001, now + 0.05);',
+        '      var b = c.createBuffer(1, Math.floor(c.sampleRate * 0.03), c.sampleRate);',
+        '      var d = b.getChannelData(0);',
+        '      for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.8;',
+        '      var sb = c.createBufferSource(); sb.buffer = b;',
+        '      var sbg = c.createGain(); sbg.gain.setValueAtTime(0.7, now);',
+        '      sbg.gain.exponentialRampToValueAtTime(0.001, now + 0.03);',
+        '      o.connect(g); g.connect(c.destination);',
+        '      sb.connect(sbg); sbg.connect(c.destination);',
+        '      o.start(now); o.stop(now + 0.06); sb.start(now);',
+        '    },',
+        '    sonar: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      var o = c.createOscillator(), g = c.createGain();',
+        '      o.type = "sine";',
+        '      o.frequency.setValueAtTime(880, now);',
+        '      o.frequency.exponentialRampToValueAtTime(870, now + 0.6);',
+        '      g.gain.setValueAtTime(0.5, now);',
+        '      g.gain.exponentialRampToValueAtTime(0.001, now + 0.85);',
+        '      o.connect(g); g.connect(c.destination);',
+        '      o.start(now); o.stop(now + 0.9);',
+        '    },',
+        '    tapestop: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      var o = c.createOscillator(), g = c.createGain();',
+        '      o.type = "sawtooth";',
+        '      o.frequency.setValueAtTime(440, now);',
+        '      o.frequency.exponentialRampToValueAtTime(30, now + 0.4);',
+        '      g.gain.setValueAtTime(0.6, now);',
+        '      g.gain.exponentialRampToValueAtTime(0.001, now + 0.42);',
+        '      var f = c.createBiquadFilter(); f.type = "lowpass";',
+        '      f.frequency.setValueAtTime(1800, now);',
+        '      f.frequency.exponentialRampToValueAtTime(100, now + 0.4);',
+        '      o.connect(f); f.connect(g); g.connect(c.destination);',
+        '      o.start(now); o.stop(now + 0.45);',
+        '    },',
+        '    radiochatter: function (t) {',
+        '      var c = getCtx(); if (!c) return;',
+        '      var now = t || c.currentTime;',
+        '      var b = c.createBuffer(1, Math.floor(c.sampleRate * 0.22), c.sampleRate);',
+        '      var d = b.getChannelData(0);',
+        '      for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.6;',
+        '      var s = c.createBufferSource(); s.buffer = b;',
+        '      var f = c.createBiquadFilter(); f.type = "bandpass";',
+        '      f.frequency.setValueAtTime(1400, now);',
+        '      f.Q.setValueAtTime(4.0, now);',
+        '      var g = c.createGain();',
+        '      g.gain.setValueAtTime(0.05, now);',
+        '      g.gain.linearRampToValueAtTime(0.6, now + 0.03);',
+        '      g.gain.exponentialRampToValueAtTime(0.001, now + 0.22);',
+        '      s.connect(f); f.connect(g); g.connect(c.destination);',
+        '      s.start(now);',
         '    }',
         '  };',
         '})();'
@@ -791,6 +945,7 @@
       width: width,
       height: height,
       beats: beats,
+      assetMatrix: assetMatrix,
       markdown: toMarkdownTable(),
       frameSpec: buildFrameSpec(),
       proceduralAudio: buildProceduralAudioScript(),
