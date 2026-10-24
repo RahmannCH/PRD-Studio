@@ -1,8 +1,9 @@
 /* Generator Storyboard & Motion HyperFrames 60 Detik (1920x1080 @ 30fps & 1080x1920 @ 30fps).
    Menghasilkan storyboard babak per babak, pemetaan blueprint resmi HyperFrames,
    petunjuk kamera, sound design (SFX), kueri pencarian aset mandiri multi-kategori,
-   kode sintesis audio prosedural 7-instrumen, dan Master Prompt HyperFrames otonom.
-   Mendukung 4 konsep gerak dan rasio 16:9 / 9:16.
+   kode sintesis audio prosedural 7-instrumen, kode scaffold runnable HyperFrames
+   (index.html & 5 sub-komposisi), dan Master Prompt HyperFrames otonom.
+   Mendukung 4 konsep gerak, 3 variasi tempo BPM, dan rasio 16:9 / 9:16.
    ES5 murni untuk lingkungan browser tanpa bundler. */
 (function () {
   var esc = (window.Exporter && window.Exporter.escMd) || function (x) { return String(x || ''); };
@@ -54,6 +55,13 @@
     }
   };
 
+  /* Tempo & Pacing */
+  var TEMPOS = {
+    'relax': { id: 'relax', name: 'Santai', bpm: 100, wpm: 120, barSec: 2.4 },
+    'standard': { id: 'standard', name: 'Standar', bpm: 120, wpm: 135, barSec: 2.0 },
+    'fast': { id: 'fast', name: 'Agresif', bpm: 135, wpm: 150, barSec: 1.77 }
+  };
+
   function GenStoryboard(data, spec, opts) {
     data = data || {};
     opts = opts || {};
@@ -65,6 +73,10 @@
     var conceptKey = opts.concept || data.videoConcept || 'ui-journey';
     if (!CONCEPTS[conceptKey]) conceptKey = 'ui-journey';
     var concept = CONCEPTS[conceptKey];
+
+    var tempoKey = opts.tempo || data.videoTempo || 'standard';
+    if (!TEMPOS[tempoKey]) tempoKey = 'standard';
+    var tempo = TEMPOS[tempoKey];
 
     var ratio = opts.ratio || data.videoRatio || '16:9';
     var isVertical = ratio === '9:16';
@@ -96,7 +108,7 @@
         startSec: 0,
         endSec: 6,
         durationSec: 6.0,
-        bars: 'Bar 1-3 (Ketukan 1-12 pada 120 BPM)',
+        bars: 'Bar 1-3 (' + tempo.bpm + ' BPM)',
         timecode: '00:00 - 00:06',
         role: 'HOOK_PAIN',
         blueprint: 'overwhelm-surround',
@@ -145,7 +157,7 @@
         startSec: 6,
         endSec: 14,
         durationSec: 8.0,
-        bars: 'Bar 4-7 (Ketukan 13-28 pada 120 BPM)',
+        bars: 'Bar 4-7 (' + tempo.bpm + ' BPM)',
         timecode: '00:06 - 00:14',
         role: 'VALUE_CLAIM',
         blueprint: 'device-surface-showcase',
@@ -192,7 +204,7 @@
         startSec: 14,
         endSec: 38,
         durationSec: 24.0,
-        bars: 'Bar 8-19 (Ketukan 29-76 pada 120 BPM)',
+        bars: 'Bar 8-19 (' + tempo.bpm + ' BPM)',
         timecode: '00:14 - 00:38',
         role: 'CORE_MECHANICS',
         blueprint: 'cursor-ui-demo',
@@ -241,7 +253,7 @@
         startSec: 38,
         endSec: 50,
         durationSec: 12.0,
-        bars: 'Bar 20-25 (Ketukan 77-100 pada 120 BPM)',
+        bars: 'Bar 20-25 (' + tempo.bpm + ' BPM)',
         timecode: '00:38 - 00:50',
         role: 'HARD_EVIDENCE',
         blueprint: 'dataviz-countup',
@@ -288,7 +300,7 @@
         startSec: 50,
         endSec: 60,
         durationSec: 10.0,
-        bars: 'Bar 26-30 (Ketukan 101-120 pada 120 BPM)',
+        bars: 'Bar 26-30 (' + tempo.bpm + ' BPM)',
         timecode: '00:50 - 01:00',
         role: 'OUTRO_CTA',
         blueprint: 'logo-assemble-lockup',
@@ -328,7 +340,7 @@
 
     function toMarkdownTable() {
       var lines = [];
-      lines.push('| Detik | Babak & Blueprint | Narasi VO (135 WPM) | Visual Kinetik & Layout | Kamera & VFX | Sound Effects (SFX Cue Sheet) | Resep Aset Mandiri (AI Agent) |');
+      lines.push('| Detik | Babak & Blueprint | Narasi VO (~' + tempo.wpm + ' WPM) | Visual Kinetik & Layout | Kamera & VFX | Sound Effects (SFX Cue Sheet) | Resep Aset Mandiri (AI Agent) |');
       lines.push('|---|---|---|---|---|---|---|');
       beats.forEach(function (b) {
         var sfxStr = b.sfx.map(function (s) {
@@ -350,7 +362,7 @@
     function buildFrameSpec() {
       return [
         '# frame.md — Design Tokens untuk HyperFrames',
-        '# Dihasilkan otomatis oleh PRD Studio (Konsep: ' + concept.name + ', Rasio: ' + ratio + ')',
+        '# Dihasilkan otomatis oleh PRD Studio (Konsep: ' + concept.name + ', Rasio: ' + ratio + ', Tempo: ' + tempo.name + ')',
         '',
         '```yaml',
         'format: "' + width + 'x' + height + '"',
@@ -377,8 +389,8 @@
         '  spring_ease: "cubic-bezier(0.175, 0.885, 0.32, 1.275)"',
         '  camera_drift: "cubic-bezier(0.25, 1, 0.5, 1)"',
         'audio:',
-        '  bpm: 120',
-        '  ducking_db: -14',
+        '  bpm: ' + tempo.bpm + ',',
+        '  ducking_db: -14,',
         '  master_volume: 0.9',
         '```'
       ].join('\n');
@@ -487,6 +499,69 @@
       ].join('\n');
     }
 
+    function buildRootIndexHtml() {
+      var lines = [];
+      lines.push('<!DOCTYPE html>');
+      lines.push('<html lang="id">');
+      lines.push('<head>');
+      lines.push('  <meta charset="UTF-8">');
+      lines.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
+      lines.push('  <title>' + esc(name) + ' — HyperFrames Video 60s</title>');
+      lines.push('  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>');
+      lines.push('  <script src="sfx-synth.js"></script>');
+      lines.push('  <style>');
+      lines.push('    * { box-sizing: border-box; margin: 0; padding: 0; }');
+      lines.push('    body { background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }');
+      lines.push('    #root { width: 100%; height: 100%; position: relative; overflow: hidden; background: #080C14; font-family: Satoshi, "Plus Jakarta Sans", system-ui, sans-serif; }');
+      lines.push('  </style>');
+      lines.push('</head>');
+      lines.push('<body>');
+      lines.push('  <div id="root" data-composition-id="root" data-width="' + width + '" data-height="' + height + '" data-duration="60.0">');
+      lines.push('    <audio id="bgm" src="assets/audio/bgm-' + tempo.bpm + 'bpm.mp3" data-start="0.0" data-duration="60.0" volume="0.25"></audio>');
+      beats.forEach(function (b) {
+        lines.push('    <div class="clip" data-composition-id="' + b.hyperframes.subcomp + '" data-composition-src="' + b.hyperframes.path + '" data-start="' + b.startSec.toFixed(1) + '" data-duration="' + b.durationSec.toFixed(1) + '" data-track-index="1"></div>');
+      });
+      lines.push('  </div>');
+      lines.push('  <script>');
+      lines.push('    var tl = gsap.timeline({ paused: true });');
+      lines.push('    window.__timelines["root"] = tl;');
+      lines.push('  </script>');
+      lines.push('</body>');
+      lines.push('</html>');
+      return lines.join('\n');
+    }
+
+    function buildSubcompositionHtml(beat) {
+      var lines = [];
+      lines.push('<template id="' + beat.hyperframes.subcomp + '">');
+      lines.push('  <div id="root" data-composition-id="' + beat.hyperframes.subcomp + '" data-width="' + width + '" data-height="' + height + '" data-duration="' + beat.durationSec.toFixed(1) + '">');
+      lines.push('    <style>');
+      lines.push('      #root { width: 100%; height: 100%; background: ' + (beat.role === 'HOOK_PAIN' ? '#070A10' : '#080C14') + '; color: #F4F7FB; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: 60px; font-family: Satoshi, "Plus Jakarta Sans", system-ui, sans-serif; }');
+      lines.push('      .bg-ambient { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(72, 202, 228, 0.18), transparent 70%); pointer-events: none; }');
+      lines.push('      .headline { font-size: ' + (isVertical ? '48px' : '72px') + '; font-weight: 700; text-align: center; line-height: 1.1; margin-bottom: 16px; color: #F4F7FB; }');
+      lines.push('      .subtext { font-size: ' + (isVertical ? '20px' : '26px') + '; color: rgba(244, 247, 251, 0.65); text-align: center; max-width: 800px; }');
+      lines.push('      .card-box { background: rgba(14, 21, 36, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 24px 32px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.15); margin-top: 24px; }');
+      lines.push('    </style>');
+      lines.push('    <div class="bg-ambient"></div>');
+      lines.push('    <div class="clip content" data-start="0.3" data-duration="' + (beat.durationSec - 0.4).toFixed(1) + '">');
+      lines.push('      <h1 class="headline">' + esc(beat.headline) + '</h1>');
+      lines.push('      <p class="subtext">' + esc(beat.subtext) + '</p>');
+      lines.push('      <div class="card-box">');
+      lines.push('        <span>' + esc(beat.role) + ' · ' + esc(beat.blueprint) + '</span>');
+      lines.push('      </div>');
+      lines.push('    </div>');
+      lines.push('    <script>');
+      lines.push('      var tl = gsap.timeline({ paused: true });');
+      lines.push('      tl.fromTo(".headline", { opacity: 0, y: 35 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, 0.4);');
+      lines.push('      tl.fromTo(".subtext", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.6);');
+      lines.push('      tl.fromTo(".card-box", { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.7)" }, 0.8);');
+      lines.push('      window.__timelines["' + beat.hyperframes.subcomp + '"] = tl;');
+      lines.push('    </script>');
+      lines.push('  </div>');
+      lines.push('</template>');
+      return lines.join('\n');
+    }
+
     function buildMasterPrompt() {
       var lines = [];
       lines.push('# MASTER PROMPT: Bangun Video HyperFrames 60 Detik Berkelas Dunia');
@@ -503,6 +578,7 @@
       lines.push('- **Stack:** ' + stack);
       lines.push('- **Konsep Gerak:** ' + concept.name + ' (' + concept.tagline + ')');
       lines.push('- **Rasio & Resolusi:** ' + ratio + ' (' + width + 'x' + height + ')');
+      lines.push('- **Tempo & Pacing:** ' + tempo.name + ' (' + tempo.bpm + ' BPM, ~' + tempo.wpm + ' WPM)');
       lines.push('- **Koreografi Kamera:** ' + concept.cameraStyle);
       lines.push('- **Desain Latar Belakang:** ' + concept.bgStyle);
       lines.push('- **Desain Kartu UI:** ' + concept.cardStyle);
@@ -531,15 +607,14 @@
       lines.push('## Protokol Eksekusi Mandiri untuk AI Agent:');
       lines.push('Jalankan langkah-langkah berikut secara berurutan:');
       lines.push('1. Scaffold proyek: `npx hyperframes init videos/' + slug + ' --non-interactive --example=blank`');
-      lines.push('2. Buat sub-komposisi modular di `videos/' + slug + '/compositions/frames/`:');
+      lines.push('2. Salin template komposisi dari paket video ke `videos/' + slug + '/`:');
+      lines.push('   - `index.html` (root composition)');
       beats.forEach(function (b) {
-        lines.push('   - `' + b.hyperframes.path + '` (Blueprint: ' + b.blueprint + ', durasi ' + b.durationSec + 's)');
+        lines.push('   - `' + b.hyperframes.path + '` (durasi ' + b.durationSec + 's, Blueprint: ' + b.blueprint + ')');
       });
-      lines.push('3. Susun `index.html` root yang merakit kelima sub-komposisi di atas.');
-      lines.push('4. Tulis timeline GSAP tunggal yang seekable: `window.__timelines["<id>"] = tl`. Tanpa `Math.random` acak, tanpa konflik transform CSS.');
-      lines.push('5. Siapkan trek audio: letakkan BGM dengan ducking -14dB saat narasi VO aktif, dan bunyikan tag `<audio id="...">` untuk SFX.');
-      lines.push('6. Lakukan audit otomatis: `npx hyperframes check --json` di folder proyek. Wajib perbaiki sampai 0 error.');
-      lines.push('7. Render video final: `npx hyperframes render --format mp4`.');
+      lines.push('3. Jalankan linter: `node lint-anti-ppt.js` untuk memverifikasi kepatuhan.');
+      lines.push('4. Lakukan audit resmi: `npx hyperframes check --json` di folder proyek. Wajib perbaiki sampai 0 error.');
+      lines.push('5. Render video final: `npx hyperframes render --format mp4`.');
       lines.push('');
       lines.push('Mulai sekarang dari Langkah 1.');
       return lines.join('\n');
@@ -552,6 +627,8 @@
       fps: 30,
       concept: concept,
       concepts: CONCEPTS,
+      tempo: tempo,
+      tempos: TEMPOS,
       ratio: ratio,
       isVertical: isVertical,
       width: width,
@@ -560,10 +637,15 @@
       markdown: toMarkdownTable(),
       frameSpec: buildFrameSpec(),
       proceduralAudio: buildProceduralAudioScript(),
+      rootHtml: buildRootIndexHtml(),
+      subcompHtmls: beats.map(function (b) {
+        return { name: b.hyperframes.path, text: buildSubcompositionHtml(b) };
+      }),
       masterPrompt: buildMasterPrompt()
     };
   }
 
   GenStoryboard.CONCEPTS = CONCEPTS;
+  GenStoryboard.TEMPOS = TEMPOS;
   window.GenStoryboard = GenStoryboard;
 })();

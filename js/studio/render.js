@@ -629,13 +629,19 @@
         var on = r.getAttribute('data-ratio') === ratioVal;
         r.setAttribute('aria-checked', on ? 'true' : 'false');
       });
+      var tempoVal = (sb.tempo && sb.tempo.id) || 'standard';
+      document.querySelectorAll('#videoTempoChips [data-tempo]').forEach(function (t) {
+        var on = t.getAttribute('data-tempo') === tempoVal;
+        t.setAttribute('aria-checked', on ? 'true' : 'false');
+      });
 
       // 1. Meta Summary Bar
       var metaWrap = document.createElement('div');
       metaWrap.className = 'sb-meta-bar';
+      var bpmText = (sb.tempo ? sb.tempo.bpm : 120) + ' BPM (1 Bar = ' + (sb.tempo ? sb.tempo.barSec : 2.0) + 's) · Ducking -14dB';
       metaWrap.innerHTML = '<div class="sb-meta-item"><span class="sb-meta-k">Konsep Gerak</span><span class="sb-meta-v">' + escHtml(sb.concept ? sb.concept.name : 'Ekosistem UI') + '</span></div>' +
         '<div class="sb-meta-item"><span class="sb-meta-k">Format & Rasio</span><span class="sb-meta-v">' + sb.width + 'x' + sb.height + ' (' + escHtml(sb.ratio) + ' @ ' + sb.fps + ' FPS)</span></div>' +
-        '<div class="sb-meta-item"><span class="sb-meta-k">Audio Bed & Tempo</span><span class="sb-meta-v">120 BPM (1 Bar = 2.0s) · Ducking -14dB</span></div>' +
+        '<div class="sb-meta-item"><span class="sb-meta-k">Audio Bed & Tempo</span><span class="sb-meta-v">' + escHtml(bpmText) + '</span></div>' +
         '<div class="sb-meta-item"><span class="sb-meta-k">Struktur Narasi</span><span class="sb-meta-v">Reverse Iceberg (5 Babak)</span></div>';
       box.appendChild(metaWrap);
 
@@ -644,7 +650,10 @@
       rhythmBox.className = 'sb-rhythm-container';
       var rHead = document.createElement('div');
       rHead.className = 'sb-rhythm-head';
-      rHead.innerHTML = '<span class="sb-rhythm-title">Visual Rhythm & Audio Waveform Map (60.0s @ 120 BPM)</span>' +
+      rHead.innerHTML = '<div class="sb-rhythm-title-wrap">' +
+        '<span class="sb-rhythm-title">Visual Rhythm & Audio Waveform Map (60.0s @ ' + (sb.tempo ? sb.tempo.bpm : 120) + ' BPM)</span>' +
+        '<button class="btn btn-ghost btn-sm sb-sim-btn" id="sbSimBtn" type="button">▶ Putar Audio 60s</button>' +
+        '</div>' +
         '<span class="sb-rhythm-legend">' +
         '<span class="sb-leg-dot leg-low"></span> Low (Sub 45Hz) ' +
         '<span class="sb-leg-dot leg-mid"></span> Mid (Haptic) ' +
@@ -655,6 +664,11 @@
 
       var trackBar = document.createElement('div');
       trackBar.className = 'sb-rhythm-track';
+      var playhead = document.createElement('div');
+      playhead.className = 'sb-playhead';
+      playhead.id = 'sbPlayhead';
+      trackBar.appendChild(playhead);
+
       sb.beats.forEach(function (b) {
         var pct = ((b.durationSec / sb.totalDuration) * 100).toFixed(1);
         var seg = document.createElement('div');
@@ -778,6 +792,15 @@
       if (!box._hasAudioListener) {
         box._hasAudioListener = true;
         box.addEventListener('click', function (e) {
+          var simBtn = e.target.closest('#sbSimBtn');
+          if (simBtn) {
+            if (window._sbSimRunning) {
+              window.RenderOut.stopAudioSimulation();
+            } else {
+              window.RenderOut.startAudioSimulation(sb);
+            }
+            return;
+          }
           var btn = e.target.closest('.sb-play-btn');
           if (btn) {
             var st = btn.getAttribute('data-sfx-type') || 'click';
@@ -787,6 +810,56 @@
           }
         });
       }
+    },
+    startAudioSimulation: function (sb) {
+      if (!sb || !sb.beats) return;
+      window.RenderOut.stopAudioSimulation();
+      var btn = document.getElementById('sbSimBtn');
+      var playhead = document.getElementById('sbPlayhead');
+      if (btn) { btn.textContent = '⏹ Hentikan Simulasi'; btn.classList.add('active'); }
+      window._sbSimRunning = true;
+
+      var events = [];
+      sb.beats.forEach(function (b) {
+        (b.sfx || []).forEach(function (s) {
+          var m = String(s.at || '').match(/(\d+):(\d+\.?\d*)/);
+          var sec = m ? (parseFloat(m[1]) * 60 + parseFloat(m[2])) : 0;
+          events.push({ sec: sec, type: s.type || 'click', desc: s.desc, played: false });
+        });
+      });
+
+      var startTime = (window.performance && performance.now) ? performance.now() : Date.now();
+      function step() {
+        if (!window._sbSimRunning) return;
+        var now = (window.performance && performance.now) ? performance.now() : Date.now();
+        var elapsed = (now - startTime) / 1000;
+        if (playhead) {
+          playhead.style.left = Math.min(100, (elapsed / 60) * 100) + '%';
+        }
+        events.forEach(function (ev) {
+          if (!ev.played && elapsed >= ev.sec) {
+            ev.played = true;
+            window.RenderOut.playSfx(ev.type);
+          }
+        });
+        if (elapsed >= 60.0) {
+          window.RenderOut.stopAudioSimulation();
+        } else {
+          window._sbSimRaf = requestAnimationFrame(step);
+        }
+      }
+      window._sbSimRaf = requestAnimationFrame(step);
+    },
+    stopAudioSimulation: function () {
+      window._sbSimRunning = false;
+      if (window._sbSimRaf) {
+        cancelAnimationFrame(window._sbSimRaf);
+        window._sbSimRaf = null;
+      }
+      var btn = document.getElementById('sbSimBtn');
+      if (btn) { btn.textContent = '▶ Putar Audio 60s'; btn.classList.remove('active'); }
+      var playhead = document.getElementById('sbPlayhead');
+      if (playhead) { playhead.style.left = '0%'; }
     },
     diff: function (oldMd, newMd) {
       var box = document.getElementById('diffBox');

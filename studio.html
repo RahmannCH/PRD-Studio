@@ -269,13 +269,21 @@
             <button class="chip" type="button" role="radio" aria-checked="false" data-ratio="9:16">9:16 Reels/Shorts</button>
           </div>
         </div>
+        <div class="video-cfg-group">
+          <span class="video-cfg-label">Tempo Audio:</span>
+          <div class="chips" id="videoTempoChips" role="radiogroup" aria-label="Pilih tempo audio video">
+            <button class="chip" type="button" role="radio" aria-checked="false" data-tempo="relax">100 BPM (Santai)</button>
+            <button class="chip" type="button" role="radio" aria-checked="true" data-tempo="standard">120 BPM (Standar)</button>
+            <button class="chip" type="button" role="radio" aria-checked="false" data-tempo="fast">135 BPM (Agresif)</button>
+          </div>
+        </div>
       </div>
       <div id="storyboardTimeline"><p class="empty">Storyboard 60 detik akan muncul setelah kamu menekan Susun.</p></div>
       <div class="output-actions">
         <button class="btn btn-primary btn-sm" data-act="copy-video-prompt" type="button" disabled title="Salin satu Master Prompt mandiri untuk AI Agent guna membangun video HyperFrames">Salin Master Prompt AI Agent</button>
         <button class="btn btn-ghost btn-sm" data-act="copy-storyboard" type="button" disabled>Salin tabel storyboard (.md)</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-storyboard" type="button" disabled>Unduh STORYBOARD.md</button>
-        <button class="btn btn-ghost btn-sm" data-act="dl-video-pack" type="button" disabled title="Unduh seluruh paket spesifikasi video HyperFrames">Unduh Paket Video (5 berkas)</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-video-pack" type="button" disabled title="Unduh seluruh paket proyek video HyperFrames runnable (11 berkas: index.html root, 5 frame sub-komposisi, storyboard, frame.md, prompt, audio synth, linter)">Unduh Paket Proyek Video (11 berkas)</button>
       </div>
     </div>
   </section>

@@ -1104,9 +1104,9 @@ const diagrams = window.GenDiagrams(sample);
   const sbMd = SP.storyboard(sample);
   ok(sbMd.indexOf('00:00 - 00:06') > -1 && sbMd.indexOf('HOOK_PAIN') > -1, 'SpecPack.storyboard returns markdown table with timecodes');
   const vFiles = SP.videoFiles(sample);
-  ok(vFiles.length === 5 && vFiles[0].name.indexOf('STORYBOARD-') === 0 && vFiles[4].name === 'lint-anti-ppt.js', 'SpecPack.videoFiles returns five dedicated video spec files (incl. sfx-synth and linter)');
+  ok(vFiles.length === 11 && vFiles[0].name.indexOf('STORYBOARD-') === 0 && vFiles[vFiles.length - 1].name === 'lint-anti-ppt.js', 'SpecPack.videoFiles returns eleven runnable video project files (incl. index.html, 5 subcomps, sfx-synth, and linter)');
   const fullFiles = SP.files(sample, null, { includeVideo: true });
-  ok(fullFiles.length === 11, 'SpecPack.files with includeVideo returns eleven files (6 software + 5 video)');
+  ok(fullFiles.length === 17, 'SpecPack.files with includeVideo returns seventeen files (6 software + 11 video)');
 
   // Multi-concept & 9:16 vertical ratio adaptation
   const sb916 = G(sample, null, { concept: 'kinetic-term', ratio: '9:16' });
@@ -1114,11 +1114,17 @@ const diagrams = window.GenDiagrams(sample);
   ok(sb916.concept.id === 'kinetic-term', 'kinetic-term concept selected');
   ok(sb.proceduralAudio.indexOf('window.SfxSynth') > -1, 'procedural audio synthesizer script generated');
 
+  const sbRelax = G(sample, null, { tempo: 'relax' });
+  ok(sbRelax.tempo.bpm === 100 && sbRelax.tempo.id === 'relax', 'relax tempo sets 100 BPM');
+
   // Markup & palette verification
   const htmlSt = fs.readFileSync(path.join(__dirname, '..', 'studio.html'), 'utf8');
   ok(htmlSt.indexOf('data-tab="video"') > -1 && htmlSt.indexOf('id="out-video"') > -1, 'studio.html has video tab and panel');
   ok(htmlSt.indexOf('id="storyboardTimeline"') > -1, 'studio.html contains storyboard timeline container');
   ok(htmlSt.indexOf('data-act="copy-video-prompt"') > -1 && htmlSt.indexOf('data-act="dl-video-pack"') > -1, 'studio.html has video prompt and video pack buttons');
+
+  const renderSt = fs.readFileSync(path.join(root, 'render.js'), 'utf8');
+  ok(renderSt.indexOf('startAudioSimulation') > -1 && renderSt.indexOf('sbSimBtn') > -1, 'render.js implements real-time audio simulation');
 
   const appSt = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   ok(appSt.indexOf("'copy-video-prompt'") > -1 && appSt.indexOf("'dl-video-pack'") > -1 && appSt.indexOf('RenderOut.storyboard') > -1, 'app.js wires video prompt, pack download, and storyboard rendering');

@@ -383,13 +383,18 @@ window.SpecPack = (function () {
     var spec = specOf(data, res);
     var sb = (window.GenStoryboard) ? window.GenStoryboard(data, spec) : null;
     if (!sb) return [];
-    return [
+    var out = [
       { name: 'STORYBOARD-' + slug + '.md', text: sb.markdown, type: 'text/markdown' },
       { name: 'FRAME-' + slug + '.md', text: sb.frameSpec, type: 'text/markdown' },
       { name: 'AGENT-HYPERFRAMES-' + slug + '.md', text: sb.masterPrompt, type: 'text/markdown' },
-      { name: 'sfx-synth.js', text: sb.proceduralAudio || '', type: 'application/javascript' },
-      { name: 'lint-anti-ppt.js', text: antiPptLinter(), type: 'application/javascript' }
+      { name: 'index.html', text: sb.rootHtml || '', type: 'text/html' }
     ];
+    (sb.subcompHtmls || []).forEach(function (f) {
+      out.push({ name: f.name.replace(/^compositions\/frames\//, ''), text: f.text, type: 'text/html' });
+    });
+    out.push({ name: 'sfx-synth.js', text: sb.proceduralAudio || '', type: 'application/javascript' });
+    out.push({ name: 'lint-anti-ppt.js', text: antiPptLinter(), type: 'application/javascript' });
+    return out;
   }
 
   function files(data, res, opts) {

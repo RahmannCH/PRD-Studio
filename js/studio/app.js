@@ -163,7 +163,7 @@
         window.RenderOut.diagrams(r.diagrams);
         window.RenderOut.prompts(applyPromptEdits(r.prompts));
         if (!r.storyboard && window.GenStoryboard) {
-          r.storyboard = window.GenStoryboard(S.data, r.spec);
+          r.storyboard = window.GenStoryboard(S.data, r.spec, { concept: S.data.videoConcept, ratio: S.data.videoRatio, tempo: S.data.videoTempo });
         }
         if (window.RenderOut.storyboard) {
           window.RenderOut.storyboard(r.storyboard);
@@ -285,7 +285,7 @@
           var roadmap = window.GenRoadmap(d);
           var diagrams = window.GenDiagrams(d);
           var prompts = window.GenPrompts(d, prd, varsFromDom());
-          var storyboard = (window.GenStoryboard) ? window.GenStoryboard(d, spec) : null;
+          var storyboard = (window.GenStoryboard) ? window.GenStoryboard(d, spec, { concept: d.videoConcept, ratio: d.videoRatio, tempo: d.videoTempo }) : null;
           applyPromptEdits(prompts);
           var same = prevPrompts === JSON.stringify(prompts.map(function (p) { return p.body; }));
 
@@ -491,7 +491,7 @@
         files.forEach(function (f, i) {
           setTimeout(function () { window.Exporter.download(f.name, f.text, f.type); }, i * 250);
         });
-        window.UX.toast('Paket Video: ' + files.length + ' berkas diunduh (Storyboard, frame.md, Prompt, Audio Synth, Linter).');
+        window.UX.toast('Paket Proyek Video: ' + files.length + ' berkas diunduh (index.html, 5 sub-komposisi, Storyboard, frame.md, Prompt, Synth, Linter).');
       },
       'ai-polish': function () {
         /* B3: klik kedua SELAMA permintaan berjalan = tombol Batal. */
@@ -577,7 +577,7 @@
           S.data.videoConcept = cKey;
           S.save();
           if (S.data.lastResult && window.GenStoryboard) {
-            var newSb = window.GenStoryboard(S.data, S.data.lastResult.spec, { concept: cKey, ratio: S.data.videoRatio });
+            var newSb = window.GenStoryboard(S.data, S.data.lastResult.spec, { concept: cKey, ratio: S.data.videoRatio, tempo: S.data.videoTempo });
             S.data.lastResult.storyboard = newSb;
             window.RenderOut.storyboard(newSb);
             window.UX.toast('Konsep gerak: ' + (newSb.concept ? newSb.concept.name : cKey));
@@ -590,10 +590,23 @@
           S.data.videoRatio = rVal;
           S.save();
           if (S.data.lastResult && window.GenStoryboard) {
-            var newSb2 = window.GenStoryboard(S.data, S.data.lastResult.spec, { concept: S.data.videoConcept, ratio: rVal });
+            var newSb2 = window.GenStoryboard(S.data, S.data.lastResult.spec, { concept: S.data.videoConcept, ratio: rVal, tempo: S.data.videoTempo });
             S.data.lastResult.storyboard = newSb2;
             window.RenderOut.storyboard(newSb2);
             window.UX.toast('Rasio video diubah ke ' + rVal);
+          }
+          return;
+        }
+        var tBtn = e.target.closest('[data-tempo]');
+        if (tBtn) {
+          var tVal = tBtn.getAttribute('data-tempo');
+          S.data.videoTempo = tVal;
+          S.save();
+          if (S.data.lastResult && window.GenStoryboard) {
+            var newSb3 = window.GenStoryboard(S.data, S.data.lastResult.spec, { concept: S.data.videoConcept, ratio: S.data.videoRatio, tempo: tVal });
+            S.data.lastResult.storyboard = newSb3;
+            window.RenderOut.storyboard(newSb3);
+            window.UX.toast('Tempo audio: ' + (newSb3.tempo ? newSb3.tempo.name : tVal) + ' (' + (newSb3.tempo ? newSb3.tempo.bpm : 120) + ' BPM)');
           }
         }
       });

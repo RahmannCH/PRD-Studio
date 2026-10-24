@@ -464,7 +464,17 @@
   display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;
   margin-bottom:10px;
 }
+.sb-rhythm-title-wrap { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .sb-rhythm-title { font-size:12px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.04em; }
+.sb-sim-btn {
+  font-size:11px; font-weight:700; border-radius:999px; padding:3px 12px;
+  min-height:28px; line-height:1; color:var(--accent); border:1px solid var(--line);
+  background:var(--surface); cursor:pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.sb-sim-btn:hover { border-color:var(--accent); }
+.sb-sim-btn.active { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+
 .sb-rhythm-legend { font-size:11px; color:var(--muted); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .sb-leg-dot { display:inline-block; width:8px; height:8px; border-radius:50%; vertical-align:middle; margin-right:2px; }
 .sb-leg-dot.leg-low { background:var(--danger); }
@@ -476,6 +486,11 @@
   display:flex; width:100%; height:32px; background:var(--inset);
   border:1px solid var(--line); border-radius:var(--radius-xs); overflow:hidden;
   position:relative; box-shadow: var(--neu-in-dark), var(--neu-in-light);
+}
+.sb-playhead {
+  position:absolute; top:0; bottom:0; width:2px; background:var(--accent);
+  z-index:10; pointer-events:none; box-shadow:0 0 8px var(--accent);
+  transition: left 0.05s linear;
 }
 .sb-rhythm-seg {
   height:100%; display:flex; align-items:center; justify-content:space-between;

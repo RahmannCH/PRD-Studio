@@ -184,11 +184,29 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   const rChecked = await page.getAttribute('[data-ratio="9:16"]', 'aria-checked');
   ok(rChecked === 'true', 'ratio chip switches dynamically to 9:16');
 
+  // Ganti tempo audio dinamis di UI
+  await page.click('[data-tempo="fast"]');
+  await page.waitForTimeout(150);
+  const tChecked = await page.getAttribute('[data-tempo="fast"]', 'aria-checked');
+  ok(tChecked === 'true', 'tempo chip switches dynamically to 135 BPM');
+
   // Klik tombol tes audio SFX interaktif
   const playBtnsCount = await page.locator('.sb-play-btn').count();
   ok(playBtnsCount >= 5, 'interactive sfx play buttons rendered', playBtnsCount);
   await page.click('.sb-play-btn');
   await page.waitForTimeout(100);
+
+  // Simulasi audio 60s real-time
+  const simBtn = await page.locator('#sbSimBtn');
+  ok(await simBtn.count() === 1, 'real-time audio simulation button present');
+  await simBtn.click();
+  await page.waitForTimeout(200);
+  const simTextRunning = await simBtn.textContent();
+  ok(simTextRunning.indexOf('Hentikan') > -1, 'simulation button toggles to stop mode while playing');
+  await simBtn.click();
+  await page.waitForTimeout(100);
+  const simTextStopped = await simBtn.textContent();
+  ok(simTextStopped.indexOf('Putar') > -1, 'simulation button resets cleanly on stop');
 
   // Salin Master Prompt HyperFrames ke clipboard
   await page.click('[data-act="copy-video-prompt"]');
