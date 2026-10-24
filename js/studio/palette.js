@@ -65,6 +65,7 @@ window.Palette = (function () {
       ['print', 'Cetak atau PDF', 'print pdf'],
       ['ai-advise', 'Minta usulan AI', 'ai usulan'],
       ['ai-polish', 'Rapikan dengan AI', 'ai rapikan'],
+      ['ai-polish-video', 'Poles Storyboard dengan AI', 'ai poles video storyboard naskah'],
       ['copy-all-prompt', 'Salin semua prompt terbuka', 'salin prompt']
     ];
     acts.forEach(function (a) {

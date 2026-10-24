@@ -980,7 +980,101 @@
     };
   }
 
+  /* AI Assistant untuk Video Storyboard (Draft & Polish) */
+  var AI_DIRECTOR_SYSTEM = [
+    'Kamu adalah sutradara dan creative director video motion graphic HyperFrames berbahasa Indonesia.',
+    'Dari ide pengguna, rancang premis video promosi/explainer 60 detik secara tajam, konkret, dan anti-cliché.',
+    'Balas HANYA satu objek JSON valid tanpa komentar, tanpa fence markdown.',
+    'Format JSON wajib persis:',
+    '{',
+    '  "vSubject": "Judul/Nama produk",',
+    '  "vVideoType": "Product Launch Promo (60s)|Technical Explainer (60s)|Kinetic Feature Teaser (60s)|Workflow Deep-Dive (60s)",',
+    '  "vAudience": "Target penonton spesifik",',
+    '  "vHookPain": "Masalah lama yang menyakitkan di detik 0-6",',
+    '  "vValueClaim": "Satu kalimat janji nilai utama di detik 6-14",',
+    '  "vMust1": "Langkah 1: aksi pembuka alur",',
+    '  "vMust2": "Langkah 2: aksi proses inti",',
+    '  "vMust3": "Langkah 3: hasil instan",',
+    '  "vMetric": "Angka terukur bukti performa",',
+    '  "vCta": "Ajakan bertindak ringkas",',
+    '  "vConcept": "ui-journey|kinetic-term|visual-journal|object-relay|swiss-minimal|brutalist-blue",',
+    '  "vRatio": "16:9|9:16",',
+    '  "vTempo": "relax|standard|fast"',
+    '}'
+  ].join('\n');
+
+  function buildDraftRequest(idea) {
+    return [
+      { role: 'system', content: AI_DIRECTOR_SYSTEM },
+      { role: 'user', content: 'Ide video produk (2-5 kalimat):\n' + String(idea || '').trim() + '\n\nSusun spesifikasi sutradara video 60 detik dalam JSON di atas.' }
+    ];
+  }
+
+  function parseDraft(raw) {
+    var t = String(raw == null ? '' : raw).trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    var j;
+    try { j = JSON.parse(t); } catch (e) { throw new Error('Balasan AI bukan JSON yang valid.'); }
+    if (!j || typeof j !== 'object' || Array.isArray(j)) throw new Error('Format JSON tidak sesuai.');
+    return {
+      vSubject: String(j.vSubject || '').trim(),
+      vVideoType: String(j.vVideoType || 'Product Launch Promo (60s)').trim(),
+      vAudience: String(j.vAudience || '').trim(),
+      vHookPain: String(j.vHookPain || '').trim(),
+      vValueClaim: String(j.vValueClaim || '').trim(),
+      vMust1: String(j.vMust1 || '').trim(),
+      vMust2: String(j.vMust2 || '').trim(),
+      vMust3: String(j.vMust3 || '').trim(),
+      vMetric: String(j.vMetric || '').trim(),
+      vCta: String(j.vCta || 'Buka sekarang, tanpa akun').trim(),
+      vConcept: String(j.vConcept || 'ui-journey').trim(),
+      vRatio: String(j.vRatio || '16:9').trim(),
+      vTempo: String(j.vTempo || 'standard').trim()
+    };
+  }
+
+  var AI_POLISH_SYSTEM = [
+    'Kamu adalah editor naskah dan voice director video motion graphic HyperFrames.',
+    'Tugasmu memoles naskah suara (VO) dan teks kinetik 5 babak storyboard 60 detik agar lebih ritmis, bertenaga, dan alami di telinga Indonesia.',
+    'Aturan keras:',
+    '1. Pertahankan jeda napas eksplisit [jeda 0.4s].',
+    '2. Tulis angka dengan huruf agar natural dibaca.',
+    '3. Maksimal 135 kata total untuk 5 babak.',
+    '4. Balas HANYA array JSON berisi 5 objek babak persis: [{"id":"beat-01","vo":"...","headline":"...","subtext":"...","highlightWord":"..."}, ...].'
+  ].join('\n');
+
+  function buildPolishRequest(beats) {
+    var inputBeats = (beats || []).map(function (b) {
+      return { id: b.id, vo: b.vo, headline: b.headline, subtext: b.subtext, highlightWord: b.highlightWord };
+    });
+    return [
+      { role: 'system', content: AI_POLISH_SYSTEM },
+      { role: 'user', content: 'Poles naskah dan teks kinetik 5 babak berikut:\n' + JSON.stringify(inputBeats, null, 2) }
+    ];
+  }
+
+  function parsePolish(raw) {
+    var t = String(raw == null ? '' : raw).trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    var j;
+    try { j = JSON.parse(t); } catch (e) { throw new Error('Balasan AI bukan JSON yang valid.'); }
+    if (!Array.isArray(j) || !j.length) throw new Error('Format balasan bukan array babak.');
+    return j.map(function (item) {
+      return {
+        id: String(item.id || ''),
+        vo: String(item.vo || '').trim(),
+        headline: String(item.headline || '').trim(),
+        subtext: String(item.subtext || '').trim(),
+        highlightWord: String(item.highlightWord || '').trim()
+      };
+    });
+  }
+
   GenStoryboard.CONCEPTS = CONCEPTS;
   GenStoryboard.TEMPOS = TEMPOS;
+  GenStoryboard.ai = {
+    buildDraftRequest: buildDraftRequest,
+    parseDraft: parseDraft,
+    buildPolishRequest: buildPolishRequest,
+    parsePolish: parsePolish
+  };
   window.GenStoryboard = GenStoryboard;
 })();

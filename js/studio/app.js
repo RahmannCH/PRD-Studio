@@ -103,7 +103,7 @@
     /* ---------- Tombol export: aktif hanya kalau ada hasil ---------- */
     var exportActs = ['copy-prd', 'dl-prd', 'dl-bab', 'dl-spec-pack', 'dl-json', 'share-link', 'dl-roadmap-csv', 'print', 'ai-polish', 'ai-advise',
       'dl-html', 'dl-brief', 'dl-spec-yaml', 'copy-mermaid', 'copy-all-prompt', 'dl-prompts',
-      'copy-video-prompt', 'copy-storyboard', 'dl-storyboard', 'dl-video-pack'];
+      'copy-video-prompt', 'copy-storyboard', 'dl-storyboard', 'dl-video-pack', 'ai-polish-video'];
     function setExportEnabled(on) {
       exportActs.forEach(function (a) {
         document.querySelectorAll('[data-act="' + a + '"]').forEach(function (b) {
@@ -486,6 +486,46 @@
           setTimeout(function () { window.Exporter.download(f.name, f.text, f.type); }, i * 250);
         });
         window.UX.toast('Paket Proyek Video: ' + files.length + ' berkas diunduh (index.html, 5 sub-komposisi, Storyboard, frame.md, Prompt, Synth, Linter).');
+      },
+      'ai-polish-video': function (b) {
+        if (!window.LLM || !window.LLM.configured()) {
+          window.UX.toast('Isi endpoint dan API key di bagian Pengaturan dulu.');
+          scrollTo($('pengaturan'));
+          return;
+        }
+        var sb = (S.data.lastResult && S.data.lastResult.storyboard);
+        if (!sb || !sb.beats || !sb.beats.length) {
+          window.UX.toast('Susun storyboard terlebih dahulu sebelum dipoles.');
+          return;
+        }
+        var oldText = b ? b.textContent : '';
+        if (b) { b.textContent = 'Memoles...'; b.disabled = true; }
+        window.LLM.chat(window.GenStoryboard.ai.buildPolishRequest(sb.beats)).then(function (raw) {
+          var polished = window.GenStoryboard.ai.parsePolish(raw);
+          polished.forEach(function (p) {
+            var targetBeat = sb.beats.filter(function (x) { return x.id === p.id; })[0];
+            if (targetBeat) {
+              if (p.vo) targetBeat.vo = p.vo;
+              if (p.headline) targetBeat.headline = p.headline;
+              if (p.subtext) targetBeat.subtext = p.subtext;
+              if (p.highlightWord) targetBeat.highlightWord = p.highlightWord;
+            }
+          });
+          var newSb = window.GenStoryboard(S.data, S.data.lastResult.spec, {
+            concept: S.data.videoConcept,
+            ratio: S.data.videoRatio,
+            tempo: S.data.videoTempo
+          });
+          newSb.beats = sb.beats;
+          S.data.lastResult.storyboard = newSb;
+          S.save();
+          window.RenderOut.storyboard(newSb);
+          window.UX.toast('Naskah VO dan tipografi storyboard berhasil dipoles AI!');
+        }).catch(function (e) {
+          window.UX.toast('Gagal memoles: ' + (e && e.message ? e.message : 'kesalahan AI'), { level: 'error' });
+        }).then(function () {
+          if (b) { b.textContent = oldText; b.disabled = false; }
+        });
       },
       'ai-polish': function () {
         /* B3: klik kedua SELAMA permintaan berjalan = tombol Batal. */
@@ -970,16 +1010,25 @@
       if (close) close.addEventListener('click', aiClose);
     })();
 
-    /* ---------- E: reverse-wizard — ide bebas → draft 7 langkah ---------- */
+    /* ---------- E: reverse-wizard — ide bebas → draft 7 langkah / video ---------- */
     var ideRunning = false;
+    var ideTargetMode = 'software';
     function updateIdeBtn() {
+      var ready = window.LLM && typeof window.LLM.configured === 'function' && window.LLM.configured();
       var b = $('ideBtn');
-      if (b) b.hidden = !(window.LLM && typeof window.LLM.configured === 'function' && window.LLM.configured());
+      if (b) b.hidden = !ready;
+      var bv = $('btnAiVideoDraft');
+      if (bv) bv.title = ready ? 'Rancang alur video otomatis dari ide bebas lewat AI' : 'Butuh pengaturan AI di bawah';
+      var bpv = document.querySelectorAll('[data-act="ai-polish-video"]');
+      bpv.forEach(function (btn) {
+        btn.title = ready ? 'Poles naskah VO dan tipografi storyboard dengan AI' : 'Butuh pengaturan AI di bawah';
+      });
     }
     (function reverseWizard() {
       var back = $('ideBack'), text = $('ideText'), status = $('ideStatus'),
-        ok = $('ideOk'), cancel = $('ideCancel'), openBtn = $('ideBtn');
-      if (!back || !openBtn) return;
+        ok = $('ideOk'), cancel = $('ideCancel'), openBtn = $('ideBtn'),
+        videoDraftBtn = $('btnAiVideoDraft');
+      if (!back) return;
       function setStatus(msg, isErr) {
         if (!status) return;
         status.className = isErr ? 'err' : 'hint';
@@ -987,7 +1036,7 @@
       }
       function setRunning(on) {
         ideRunning = on;
-        ok.textContent = on ? 'Batalkan' : 'Buat draft';
+        ok.textContent = on ? 'Batalkan' : (ideTargetMode === 'video' ? 'Rancang video' : 'Buat draft');
         if (text) text.disabled = on;
       }
       function closeIde() {
@@ -996,16 +1045,38 @@
         back.classList.remove('open');
         back.hidden = true;
       }
-      openBtn.addEventListener('click', function () {
-        if (!window.LLM || !window.LLM.configured()) {
-          window.UX.toast('Isi endpoint dan API key di bagian Pengaturan dulu.');
-          scrollTo($('pengaturan'));
-          return;
-        }
-        setStatus('', false);
-        back.classList.add('open'); back.hidden = false;
-        if (text) text.focus();
-      });
+      if (openBtn) {
+        openBtn.addEventListener('click', function () {
+          if (!window.LLM || !window.LLM.configured()) {
+            window.UX.toast('Isi endpoint dan API key di bagian Pengaturan dulu.');
+            scrollTo($('pengaturan'));
+            return;
+          }
+          ideTargetMode = 'software';
+          var tEl = $('ideTitle'), hEl = $('ideHelp');
+          if (tEl) tEl.textContent = 'Isi draft dari ide';
+          if (hEl) hEl.textContent = 'Tulis ide produkmu dalam 2-6 kalimat. AI akan mengisikan jawaban 7 langkah sebagai DRAFT. Kamu tetap wajib memeriksa dan mengoreksinya sebelum susun.';
+          setStatus('', false);
+          back.classList.add('open'); back.hidden = false;
+          if (text) text.focus();
+        });
+      }
+      if (videoDraftBtn) {
+        videoDraftBtn.addEventListener('click', function () {
+          if (!window.LLM || !window.LLM.configured()) {
+            window.UX.toast('Isi endpoint dan API key di bagian Pengaturan dulu.');
+            scrollTo($('pengaturan'));
+            return;
+          }
+          ideTargetMode = 'video';
+          var tEl = $('ideTitle'), hEl = $('ideHelp');
+          if (tEl) tEl.textContent = 'Rancang Video dari Ide (AI)';
+          if (hEl) hEl.textContent = 'Tulis ide produk atau konsep videomu dalam 2-5 kalimat. AI akan menyusun seluruh alur sutradara (Hook, Nilai, 3 Aksi, Benchmark, Konsep Gerak) secara otomatis.';
+          setStatus('', false);
+          back.classList.add('open'); back.hidden = false;
+          if (text) text.focus();
+        });
+      }
       cancel.addEventListener('click', closeIde);
       /* Klik luar panel = tutup; sama perilaku dengan modal bawaan. */
       back.addEventListener('click', function (e) { if (e.target === back) closeIde(); });
@@ -1014,14 +1085,64 @@
       });
       ok.addEventListener('click', function () {
         if (ideRunning) { closeIde(); return; } /* klik kedua = batalkan chat */
-        if (!window.ReverseWizard) {
-          setStatus('Modul reverse-wizard tidak termuat. Muat ulang halaman.', true);
-          return;
-        }
         var ide = (text ? text.value : '').trim();
         if (ide.length < 10) {
           setStatus('Tulis ide minimal 10 karakter supaya AI punya bahan.', true);
           if (text) text.focus();
+          return;
+        }
+
+        if (ideTargetMode === 'video') {
+          if (!window.GenStoryboard || !window.GenStoryboard.ai) {
+            setStatus('Modul AI Storyboard tidak termuat. Muat ulang halaman.', true);
+            return;
+          }
+          setRunning(true);
+          setStatus('Meminta AI merancang video...', false);
+          window.LLM.chat(window.GenStoryboard.ai.buildDraftRequest(ide), { temperature: 0.3 }).then(function (raw) {
+            var d = window.GenStoryboard.ai.parseDraft(raw);
+            if ($('vSubject')) $('vSubject').value = d.vSubject;
+            if ($('vVideoType') && d.vVideoType) $('vVideoType').value = d.vVideoType;
+            if ($('vAudience')) $('vAudience').value = d.vAudience;
+            if ($('vHookPain')) $('vHookPain').value = d.vHookPain;
+            if ($('vValueClaim')) $('vValueClaim').value = d.vValueClaim;
+            if ($('vMust1')) $('vMust1').value = d.vMust1;
+            if ($('vMust2')) $('vMust2').value = d.vMust2;
+            if ($('vMust3')) $('vMust3').value = d.vMust3;
+            if ($('vMetric')) $('vMetric').value = d.vMetric;
+            if ($('vCta')) $('vCta').value = d.vCta;
+
+            if (d.vConcept) {
+              document.querySelectorAll('#vConceptChips [data-vconcept]').forEach(function (x) {
+                x.setAttribute('aria-checked', x.getAttribute('data-vconcept') === d.vConcept ? 'true' : 'false');
+              });
+            }
+            if (d.vRatio) {
+              document.querySelectorAll('#vRatioChips [data-vratio]').forEach(function (x) {
+                x.setAttribute('aria-checked', x.getAttribute('data-vratio') === d.vRatio ? 'true' : 'false');
+              });
+            }
+            if (d.vTempo) {
+              document.querySelectorAll('#vTempoChips [data-vtempo]').forEach(function (x) {
+                x.setAttribute('aria-checked', x.getAttribute('data-vtempo') === d.vTempo ? 'true' : 'false');
+              });
+            }
+
+            buildFromDirectorForm();
+            setRunning(false);
+            back.classList.remove('open'); back.hidden = true;
+            window.UX.toast('Draf video selesai dirancang AI dan siap di kanvas!');
+          }).catch(function (e) {
+            var m = e && e.message ? e.message : 'tidak diketahui';
+            setRunning(false);
+            setStatus((m.indexOf('dibatalkan') > -1 ? 'Dibatalkan. ' : 'Gagal: ') + m, m.indexOf('dibatalkan') < 0);
+            if (m.indexOf('dibatalkan') > -1) window.UX.toast('Permintaan draf video dibatalkan.');
+          });
+          return;
+        }
+
+        if (!window.ReverseWizard) {
+          setStatus('Modul reverse-wizard tidak termuat. Muat ulang halaman.', true);
           return;
         }
         var RW = window.ReverseWizard;
