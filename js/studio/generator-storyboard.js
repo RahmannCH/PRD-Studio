@@ -902,6 +902,29 @@
       lines.push('4. **Semua Gerakan Punya Suara:** Setiap transisi visual, teks mendarat, atau interaksi kartu WAJIB dipasangkan tag `<audio>` SFX sesuai detik di tabel.');
       lines.push('5. **Desain Haptic Double-Bezel:** Setiap kartu UI harus memiliki outer shell (`border: 1px solid rgba(255,255,255,0.08)`) dan inner core berkilau (`box-shadow: inset 0 1px 1px rgba(255,255,255,0.15)`).');
       lines.push('');
+      if (assetMatrix) {
+        lines.push('## Matriks Kurasi Aset Multi-Platform (Pexels, FreeSound, Archive.org):');
+        lines.push('### Footage B-Roll & Visual Kinetik 4K:');
+        (assetMatrix.broll || []).forEach(function (br) {
+          lines.push('- **[' + br.category + ']**: `' + br.query + '` (Platform: ' + br.platforms.join(', ') + ') → URL: ' + br.url);
+        });
+        lines.push('');
+        lines.push('### Sound Design & SFX Diegetic:');
+        (assetMatrix.sfx || []).forEach(function (sf) {
+          lines.push('- **[' + sf.category + ' / ' + sf.freq + ']**: `' + sf.query + '` (Durasi: ' + sf.duration + ') → URL: ' + sf.url);
+        });
+        lines.push('');
+        lines.push('### Soundscape Ambience & Music Bed:');
+        (assetMatrix.musicBeds || []).forEach(function (mb) {
+          lines.push('- **' + mb.mood + '** (' + mb.bpm + ' BPM, ' + mb.scale + '): ' + mb.style + ' _(Ref: ' + mb.ref + ')_');
+        });
+        lines.push('');
+        lines.push('### Tautan Langsung Pencarian Aset Multi-Platform:');
+        lines.push('- **Pexels (Footage Bebas Royalti):** ' + assetMatrix.directSearchUrls.pexels);
+        lines.push('- **FreeSound (SFX Creative Commons):** ' + assetMatrix.directSearchUrls.freesound);
+        lines.push('- **Archive.org (Dokumen & Rekaman Berita Terbuka):** ' + assetMatrix.directSearchUrls.archive);
+        lines.push('');
+      }
       lines.push('## Resep Pencarian Aset Mandiri untuk AI Agent:');
       lines.push('Gunakan kueri pencarian berikut untuk menemukan aset nyata (jangan memakai placeholder):');
       beats.forEach(function (b) {
