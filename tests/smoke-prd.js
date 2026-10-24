@@ -140,7 +140,7 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   // export buttons aktif
   const exportEnabled = await page.evaluate(() => !document.querySelector('[data-act="copy-prd"]').disabled);
   ok(exportEnabled, 'copy-prd enabled after generate');
-  const allExportActs = ['dl-html', 'dl-brief', 'dl-spec-yaml', 'dl-spec-pack', 'ai-advise', 'dl-json', 'share-link', 'dl-roadmap-csv', 'ai-polish', 'copy-video-prompt', 'copy-storyboard', 'dl-storyboard'];
+  const allExportActs = ['dl-html', 'dl-brief', 'dl-spec-yaml', 'dl-spec-pack', 'ai-advise', 'dl-json', 'share-link', 'dl-roadmap-csv', 'ai-polish', 'copy-video-prompt', 'copy-storyboard', 'dl-storyboard', 'dl-video-pack'];
   for (const act of allExportActs) {
     const dis = await page.evaluate(a => document.querySelector('[data-act="' + a + '"]').disabled, act);
     ok(!dis, 'export act enabled after generate: ' + act);
@@ -171,6 +171,18 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   ok(videoTabSelected === 'true', 'video tab becomes active on click');
   const sbCardsCount = await page.locator('.sb-card').count();
   ok(sbCardsCount === 5, 'storyboard renders five distinct beat cards', sbCardsCount);
+  ok(await page.locator('.sb-rhythm-track').count() === 1, 'visual rhythm bar rendered');
+
+  // Ganti konsep dan rasio dinamis di UI
+  await page.click('[data-concept="kinetic-term"]');
+  await page.waitForTimeout(150);
+  const kChecked = await page.getAttribute('[data-concept="kinetic-term"]', 'aria-checked');
+  ok(kChecked === 'true', 'concept chip switches dynamically');
+
+  await page.click('[data-ratio="9:16"]');
+  await page.waitForTimeout(150);
+  const rChecked = await page.getAttribute('[data-ratio="9:16"]', 'aria-checked');
+  ok(rChecked === 'true', 'ratio chip switches dynamically to 9:16');
 
   // Salin Master Prompt HyperFrames ke clipboard
   await page.click('[data-act="copy-video-prompt"]');

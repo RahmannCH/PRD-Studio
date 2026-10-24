@@ -351,6 +351,33 @@ window.SpecPack = (function () {
     return sb ? sb.masterPrompt : '';
   }
 
+  function antiPptLinter() {
+    return [
+      '#!/usr/bin/env node',
+      '/* lint-anti-ppt.js — Pemeriksa Kepatuhan Hukum Anti-PPT HyperFrames */',
+      'const fs = require("fs");',
+      'const path = require("path");',
+      'let errors = 0;',
+      'function err(msg) { console.error("ANTI-PPT VIOLATION: " + msg); errors++; }',
+      'const root = process.cwd();',
+      'const indexHtml = path.join(root, "index.html");',
+      'if (fs.existsSync(indexHtml)) {',
+      '  const src = fs.readFileSync(indexHtml, "utf8");',
+      '  if ((src.match(/class=["\']scene["\']/g) || []).length >= 3 && /autoAlpha/.test(src)) {',
+      '    err("Ditemukan 3+ adegan berganti dengan autoAlpha (pola slide deck terlarang). Wajib gunakan kamera/dunia berkelanjutan.");',
+      '  }',
+      '  if (/font-family:[^;]*(Inter|Roboto|Arial|Helvetica)/i.test(src)) {',
+      '    err("Menggunakan font generic terlarang (Inter/Roboto/Arial). Wajib gunakan Satoshi / Plus Jakarta Sans.");',
+      '  }',
+      '  if (!/window\\.__timelines/i.test(src)) {',
+      '    err("Tidak mendaftarkan timeline GSAP ke window.__timelines.");',
+      '  }',
+      '}',
+      'if (errors) { console.log("Total " + errors + " pelanggaran."); process.exit(1); }',
+      'console.log("Anti-PPT Linter: Lolos 100%. Komposisi layak diproduksi.");'
+    ].join('\n');
+  }
+
   function videoFiles(data, res) {
     var slug = slugOf(data);
     var spec = specOf(data, res);
@@ -359,7 +386,9 @@ window.SpecPack = (function () {
     return [
       { name: 'STORYBOARD-' + slug + '.md', text: sb.markdown, type: 'text/markdown' },
       { name: 'FRAME-' + slug + '.md', text: sb.frameSpec, type: 'text/markdown' },
-      { name: 'AGENT-HYPERFRAMES-' + slug + '.md', text: sb.masterPrompt, type: 'text/markdown' }
+      { name: 'AGENT-HYPERFRAMES-' + slug + '.md', text: sb.masterPrompt, type: 'text/markdown' },
+      { name: 'sfx-synth.js', text: sb.proceduralAudio || '', type: 'application/javascript' },
+      { name: 'lint-anti-ppt.js', text: antiPptLinter(), type: 'application/javascript' }
     ];
   }
 

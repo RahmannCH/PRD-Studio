@@ -103,7 +103,7 @@
     /* ---------- Tombol export: aktif hanya kalau ada hasil ---------- */
     var exportActs = ['copy-prd', 'dl-prd', 'dl-bab', 'dl-spec-pack', 'dl-json', 'share-link', 'dl-roadmap-csv', 'print', 'ai-polish', 'ai-advise',
       'dl-html', 'dl-brief', 'dl-spec-yaml', 'copy-mermaid', 'copy-all-prompt', 'dl-prompts',
-      'copy-video-prompt', 'copy-storyboard', 'dl-storyboard'];
+      'copy-video-prompt', 'copy-storyboard', 'dl-storyboard', 'dl-video-pack'];
     function setExportEnabled(on) {
       exportActs.forEach(function (a) {
         var b = document.querySelector('[data-act="' + a + '"]');
@@ -484,6 +484,15 @@
         if (!sb) { window.UX.toast('Storyboard belum tersedia.'); return; }
         window.Exporter.download('STORYBOARD-' + window.Exporter.slug(S.data.productName) + '.md', sb.markdown, 'text/markdown');
       },
+      'dl-video-pack': function () {
+        if (!guard()) return;
+        var files = window.SpecPack.videoFiles(S.data, S.data.lastResult);
+        if (!files || !files.length) { window.UX.toast('Paket video belum tersedia.'); return; }
+        files.forEach(function (f, i) {
+          setTimeout(function () { window.Exporter.download(f.name, f.text, f.type); }, i * 250);
+        });
+        window.UX.toast('Paket Video: ' + files.length + ' berkas diunduh (Storyboard, frame.md, Prompt, Audio Synth, Linter).');
+      },
       'ai-polish': function () {
         /* B3: klik kedua SELAMA permintaan berjalan = tombol Batal. */
         if (aiPolishing) { window.LLM.cancel(); return; }
@@ -557,6 +566,38 @@
       var b = document.querySelector('[data-act="' + a + '"]');
       if (b) b.addEventListener('click', function () { clickMap[a](b); });
     });
+
+    /* Interaksi dinamis kontrol konsep & rasio video */
+    var vCfg = document.getElementById('videoConfigBar');
+    if (vCfg) {
+      vCfg.addEventListener('click', function (e) {
+        var cBtn = e.target.closest('[data-concept]');
+        if (cBtn) {
+          var cKey = cBtn.getAttribute('data-concept');
+          S.data.videoConcept = cKey;
+          S.save();
+          if (S.data.lastResult && window.GenStoryboard) {
+            var newSb = window.GenStoryboard(S.data, S.data.lastResult.spec, { concept: cKey, ratio: S.data.videoRatio });
+            S.data.lastResult.storyboard = newSb;
+            window.RenderOut.storyboard(newSb);
+            window.UX.toast('Konsep gerak: ' + (newSb.concept ? newSb.concept.name : cKey));
+          }
+          return;
+        }
+        var rBtn = e.target.closest('[data-ratio]');
+        if (rBtn) {
+          var rVal = rBtn.getAttribute('data-ratio');
+          S.data.videoRatio = rVal;
+          S.save();
+          if (S.data.lastResult && window.GenStoryboard) {
+            var newSb2 = window.GenStoryboard(S.data, S.data.lastResult.spec, { concept: S.data.videoConcept, ratio: rVal });
+            S.data.lastResult.storyboard = newSb2;
+            window.RenderOut.storyboard(newSb2);
+            window.UX.toast('Rasio video diubah ke ' + rVal);
+          }
+        }
+      });
+    }
     function updateAiBtn() {
       var ready = window.LLM && window.LLM.configured();
       var btn = document.querySelector('[data-act="ai-polish"]');

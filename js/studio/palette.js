@@ -59,6 +59,7 @@ window.Palette = (function () {
       ['copy-video-prompt', 'Salin Master Prompt HyperFrames', 'video hyperframes prompt agent motion'],
       ['copy-storyboard', 'Salin tabel storyboard (.md)', 'storyboard salin video copy'],
       ['dl-storyboard', 'Unduh STORYBOARD.md', 'unduh download storyboard video'],
+      ['dl-video-pack', 'Unduh paket video HyperFrames (5 berkas)', 'unduh paket video zip hyperframes'],
       ['dl-roadmap-csv', 'Unduh CSV roadmap', 'unduh csv'],
       ['dl-prompts', 'Unduh PROMPTS.md', 'unduh prompt'],
       ['print', 'Cetak atau PDF', 'print pdf'],

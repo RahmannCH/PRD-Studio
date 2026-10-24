@@ -1089,7 +1089,7 @@ const diagrams = window.GenDiagrams(sample);
 
   // All beats have camera, layout, sfx cues, and autonomous asset queries
   ok(sb.beats.every(b => b.sfx && b.sfx.length >= 2), 'every beat has at least two timestamped SFX cues');
-  ok(sb.beats.every(b => b.assets && b.assets.length >= 1), 'every beat provides autonomous search queries for AI agents');
+  ok(sb.beats.every(b => b.assets && (Array.isArray(b.assets) ? b.assets.length >= 1 : (b.assets.props && b.assets.props.length >= 1))), 'every beat provides autonomous search queries for AI agents');
   ok(sb.beats.every(b => b.camera && b.layout && b.headline), 'every beat defines camera motion, layout archetype, and kinetic headline');
 
   // Master Prompt
@@ -1104,21 +1104,27 @@ const diagrams = window.GenDiagrams(sample);
   const sbMd = SP.storyboard(sample);
   ok(sbMd.indexOf('00:00 - 00:06') > -1 && sbMd.indexOf('HOOK_PAIN') > -1, 'SpecPack.storyboard returns markdown table with timecodes');
   const vFiles = SP.videoFiles(sample);
-  ok(vFiles.length === 3 && vFiles[0].name.indexOf('STORYBOARD-') === 0 && vFiles[2].name.indexOf('AGENT-HYPERFRAMES-') === 0, 'SpecPack.videoFiles returns three dedicated video spec files');
+  ok(vFiles.length === 5 && vFiles[0].name.indexOf('STORYBOARD-') === 0 && vFiles[4].name === 'lint-anti-ppt.js', 'SpecPack.videoFiles returns five dedicated video spec files (incl. sfx-synth and linter)');
   const fullFiles = SP.files(sample, null, { includeVideo: true });
-  ok(fullFiles.length === 9, 'SpecPack.files with includeVideo returns nine files (6 software + 3 video)');
+  ok(fullFiles.length === 11, 'SpecPack.files with includeVideo returns eleven files (6 software + 5 video)');
+
+  // Multi-concept & 9:16 vertical ratio adaptation
+  const sb916 = G(sample, null, { concept: 'kinetic-term', ratio: '9:16' });
+  ok(sb916.isVertical === true && sb916.width === 1080 && sb916.height === 1920, 'vertical 9:16 ratio sets 1080x1920 dimension');
+  ok(sb916.concept.id === 'kinetic-term', 'kinetic-term concept selected');
+  ok(sb.proceduralAudio.indexOf('window.SfxSynth') > -1, 'procedural audio synthesizer script generated');
 
   // Markup & palette verification
   const htmlSt = fs.readFileSync(path.join(__dirname, '..', 'studio.html'), 'utf8');
   ok(htmlSt.indexOf('data-tab="video"') > -1 && htmlSt.indexOf('id="out-video"') > -1, 'studio.html has video tab and panel');
   ok(htmlSt.indexOf('id="storyboardTimeline"') > -1, 'studio.html contains storyboard timeline container');
-  ok(htmlSt.indexOf('data-act="copy-video-prompt"') > -1, 'studio.html has copy-video-prompt button');
+  ok(htmlSt.indexOf('data-act="copy-video-prompt"') > -1 && htmlSt.indexOf('data-act="dl-video-pack"') > -1, 'studio.html has video prompt and video pack buttons');
 
   const appSt = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
-  ok(appSt.indexOf("'copy-video-prompt'") > -1 && appSt.indexOf('RenderOut.storyboard') > -1, 'app.js wires video prompt and storyboard rendering');
+  ok(appSt.indexOf("'copy-video-prompt'") > -1 && appSt.indexOf("'dl-video-pack'") > -1 && appSt.indexOf('RenderOut.storyboard') > -1, 'app.js wires video prompt, pack download, and storyboard rendering');
 
   const palSt = fs.readFileSync(path.join(root, 'palette.js'), 'utf8');
-  ok(palSt.indexOf('copy-video-prompt') > -1 && palSt.indexOf("['video', 'Video / Storyboard']") > -1, 'palette.js lists video commands in Ctrl+K');
+  ok(palSt.indexOf('copy-video-prompt') > -1 && palSt.indexOf('dl-video-pack') > -1 && palSt.indexOf("['video', 'Video / Storyboard']") > -1, 'palette.js lists video commands in Ctrl+K');
 
   // Empty data fallback
   const sbEmpty = G({});
