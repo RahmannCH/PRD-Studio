@@ -71,6 +71,7 @@ load('dep-graph.js');
 load('prd-templates.js');
 load('export-hub.js');
 load('prd-diff.js');
+load('prd-autofix.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -2003,6 +2004,50 @@ const diagrams = window.GenDiagrams(sample);
   ok(pdEmpty.hasChanges === false, 'empty specs have no changes');
   const pdEmptyMerge = PD.mergeSpecs({}, {}, 'union');
   ok(typeof pdEmptyMerge === 'object', 'merge empty specs works');
+
+  // PRD Auto-Fix Suggestions (Ide 21)
+  const AF = window.PRDAutoFix;
+  ok(AF && typeof AF.analyzeGaps === 'function', 'PRDAutoFix exposes analyzeGaps');
+  ok(typeof AF.autoFix === 'function', 'PRDAutoFix exposes autoFix');
+  ok(typeof AF.reportMarkdown === 'function', 'PRDAutoFix exposes reportMarkdown');
+
+  // Empty spec has many gaps
+  const afGaps = AF.analyzeGaps({});
+  ok(Array.isArray(afGaps) && afGaps.length > 0, 'empty spec has gaps');
+  ok(afGaps.some(function (g) { return g.id === 'missing-name'; }), 'detects missing name');
+  ok(afGaps.some(function (g) { return g.id === 'missing-features'; }), 'detects missing features');
+
+  // Complete spec has fewer gaps
+  const afComplete = AF.analyzeGaps({ meta: { productName: 'App' }, answers: { problem: 'A long enough problem statement here', mustHave: 'login, dashboard', primaryUser: 'admin', nfr: 'fast and secure', mainFlow: 'login then dashboard', roles: 'admin, user' }, entities: [{ label: 'User', fields: [] }], endpoints: [{ m: 'GET', p: '/users' }] });
+  ok(afComplete.length < afGaps.length, 'complete spec has fewer gaps');
+
+  // suggestFixes
+  const afSuggest = AF.suggestFixes({});
+  ok(Array.isArray(afSuggest) && afSuggest.length > 0, 'suggestFixes returns array');
+  ok(afSuggest[0].suggestion, 'suggestion has suggestion text');
+
+  // priorityOrder
+  const afSorted = AF.priorityOrder(afGaps);
+  ok(afSorted[0].severity === 'high', 'priorityOrder puts high first');
+
+  // autoFix roles
+  const afFix1 = AF.autoFix({ answers: {} }, ['missing-roles']);
+  ok(afFix1.fixes.length > 0, 'autoFix applies roles fix');
+  ok(afFix1.spec.answers.roles === 'Admin, User', 'autoFix sets roles');
+
+  // autoFix endpoints
+  const afFix2 = AF.autoFix({ entities: [{ label: 'User', fields: [] }], endpoints: [] }, ['missing-endpoints']);
+  ok(afFix2.fixes.length > 0, 'autoFix applies endpoints fix');
+  ok(afFix2.spec.endpoints.length > 0, 'autoFix generates endpoints');
+
+  // reportMarkdown
+  const afReport = AF.reportMarkdown({});
+  ok(afReport.indexOf('# PRD Auto-Fix Report') > -1, 'reportMarkdown has header');
+  ok(afReport.indexOf('Total issues:') > -1, 'reportMarkdown has total issues');
+
+  // Clean spec report
+  const afCleanReport = AF.reportMarkdown(afComplete);
+  ok(typeof afCleanReport === 'string', 'clean report is string');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.

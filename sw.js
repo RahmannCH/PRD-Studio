@@ -69,6 +69,7 @@ const CORE = [
   'js/studio/prd-templates.js',
   'js/studio/export-hub.js',
   'js/studio/prd-diff.js',
+  'js/studio/prd-autofix.js',
   'js/studio/render.js',
   'js/studio/palette.js',
   'js/studio/llm-adapter.js',
