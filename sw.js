@@ -63,6 +63,7 @@ const CORE = [
   'js/studio/agent-prompt-library.js',
   'js/studio/collab-review.js',
   'js/studio/reverse-engineer.js',
+  'js/studio/prd-analytics.js',
   'js/studio/render.js',
   'js/studio/palette.js',
   'js/studio/llm-adapter.js',

@@ -65,6 +65,7 @@ load('version-control.js');
 load('agent-prompt-library.js');
 load('collab-review.js');
 load('reverse-engineer.js');
+load('prd-analytics.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -1644,6 +1645,51 @@ const diagrams = window.GenDiagrams(sample);
   // extractFeatures standalone
   const feats = RE.extractFeatures('Sistem bisa mencatat transaksi. Dapat mencetak struk.');
   ok(Array.isArray(feats) && feats.length >= 1, 'extractFeatures returns features');
+
+  // PRD Analytics & Insights Dashboard (Ide 15)
+  const PA = window.PRDAnalytics;
+  ok(PA && typeof PA.analyze === 'function', 'PRDAnalytics exposes analyze');
+  ok(typeof PA.reportMarkdown === 'function', 'PRDAnalytics exposes reportMarkdown');
+  ok(typeof PA.completionRate === 'function', 'PRDAnalytics exposes completionRate');
+
+  const paProjects = [
+    { name: 'P1', score: 85, data: { industry: 'Retail', gaps: ['gap-a'] }, createdAt: '2026-01-01' },
+    { name: 'P2', score: 45, data: { industry: 'SaaS', gaps: ['gap-a', 'gap-b'] }, createdAt: '2026-02-01' },
+    { name: 'P3', score: 92, data: { industry: 'Retail', gaps: [] }, createdAt: '2026-03-01' },
+    { name: 'P4', score: 0, data: { industry: 'Mobile' }, createdAt: '2026-04-01' }
+  ];
+
+  const paAnalysis = PA.analyze(paProjects);
+  ok(paAnalysis && typeof paAnalysis.totalProjects === 'number', 'analyze returns totalProjects');
+  ok(paAnalysis.totalProjects === 4, 'totalProjects is 4');
+  ok(paAnalysis.completionRate === 50, 'completionRate is 50 (2 of 4 complete)');
+  ok(paAnalysis.averageScore > 0, 'averageScore is positive');
+  ok(paAnalysis.scoreDistribution && typeof paAnalysis.scoreDistribution === 'object', 'scoreDistribution is object');
+  ok(paAnalysis.industryDistribution && paAnalysis.industryDistribution.Retail === 2, 'industryDistribution counts Retail');
+  ok(Array.isArray(paAnalysis.topGaps) && paAnalysis.topGaps.length > 0, 'topGaps returns gaps');
+  ok(paAnalysis.topGaps[0].gap === 'gap-a', 'topGaps sorted by count');
+  ok(Array.isArray(paAnalysis.qualityTrend) && paAnalysis.qualityTrend.length === 4, 'qualityTrend has 4 months');
+  ok(Array.isArray(paAnalysis.insights) && paAnalysis.insights.length > 0, 'insights returns array');
+  ok(paAnalysis.statusBreakdown && paAnalysis.statusBreakdown.complete === 2, 'statusBreakdown complete count');
+
+  const paReport = PA.reportMarkdown(paAnalysis);
+  ok(paReport.indexOf('# PRD Analytics Report') > -1, 'reportMarkdown has header');
+  ok(paReport.indexOf('Total Proyek:') > -1, 'reportMarkdown has total projects');
+  ok(paReport.indexOf('Completion Rate:') > -1, 'reportMarkdown has completion rate');
+
+  // Empty projects
+  const paEmpty = PA.analyze([]);
+  ok(paEmpty.totalProjects === 0, 'empty analyze returns 0 projects');
+  ok(paEmpty.completionRate === 0, 'empty completion rate is 0');
+  ok(Array.isArray(paEmpty.insights) && paEmpty.insights.length > 0, 'empty has insights');
+
+  // Standalone functions
+  ok(PA.completionRate(paProjects) === 50, 'completionRate standalone');
+  ok(PA.averageScore(paProjects) > 0, 'averageScore standalone');
+  const paDist = PA.scoreDistribution(paProjects);
+  ok(typeof paDist === 'object', 'scoreDistribution standalone');
+  const paInd = PA.industryDistribution(paProjects);
+  ok(paInd.Retail === 2 && paInd.SaaS === 1, 'industryDistribution standalone');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
