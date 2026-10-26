@@ -179,6 +179,13 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   const kChecked = await page.getAttribute('[data-concept="kinetic-term"]', 'aria-checked');
   ok(kChecked === 'true', 'concept chip switches dynamically');
 
+  await page.click('[data-concept="3d-explainer"]');
+  await page.waitForTimeout(150);
+  const explainerChecked = await page.getAttribute('[data-concept="3d-explainer"]', 'aria-checked');
+  ok(explainerChecked === 'true', '3d-explainer concept chip switches dynamically');
+  const promptBoxesCount = await page.locator('.sb-card-prompt-bar').count();
+  ok(promptBoxesCount >= 5, '3D prompt bars rendered on cards', promptBoxesCount);
+
   await page.click('[data-ratio="9:16"]');
   await page.waitForTimeout(150);
   const rChecked = await page.getAttribute('[data-ratio="9:16"]', 'aria-checked');

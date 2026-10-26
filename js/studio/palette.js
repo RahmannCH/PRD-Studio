@@ -38,7 +38,7 @@ window.Palette = (function () {
   function build() {
     var out = [];
     function add(label, kw, run) { out.push({ label: label, kw: kw, run: run }); }
-    [['prd', 'PRD'], ['roadmap', 'Roadmap'], ['diagram', 'Diagram'], ['prompt', 'Prompt'], ['video', 'Video / Storyboard']].forEach(function (t) {
+    [['prd', 'PRD'], ['roadmap', 'Roadmap'], ['diagram', 'Diagram'], ['prompt', 'Prompt'], ['video', 'Video / Storyboard'], ['kanban', 'Task Kanban']].forEach(function (t) {
       var btn = document.querySelector('[data-tab="' + t[0] + '"]');
       if (btn) add('Buka tab ' + t[1], 'tab ' + t[1], function () { btn.click(); });
     });
@@ -52,7 +52,8 @@ window.Palette = (function () {
       ['dl-html', 'Unduh PRD (.html)', 'unduh html'],
       ['dl-brief', 'Unduh brief (.md)', 'unduh ringkas'],
       ['dl-spec-yaml', 'Unduh spec (.yaml)', 'unduh yaml'],
-      ['dl-bab', 'Unduh paket lengkap (.md)', 'unduh semua bundle'],
+      ['dl-bab', 'Unduh paket lengkap (.md)', 'unduh semua bab prd paket lengkap markdown'],
+      ['dl-prototype', 'Unduh Prototipe HTML (DesainPakeAI)', 'unduh prototipe mockup html desain ui prototype'],
       ['dl-spec-pack', 'Unduh Spec Pack (AI agent)', 'unduh spec pack kiro agen'],
       ['dl-json', 'Unduh arsip (.json)', 'unduh json'],
       ['share-link', 'Salin tautan berbagi', 'tautan share link bagikan'],

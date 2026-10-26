@@ -56,6 +56,9 @@ load('criteria.js');
 load('spec-pack.js');
 load('coach.js');
 load('undo.js');
+load('kanban.js');
+load('cinematic.js');
+load('template-browser.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -550,6 +553,16 @@ const diagrams = window.GenDiagrams(sample);
   ok(orphans.length === 0, 'ERD has no table absent from PRD model text', orphans.join(','));
   ok(r.erd.indexOf('TRANSAKSI_ITEM') > -1, 'N-M relation renders its junction table');
 
+  // 23b. Architectural Stack Catalog & Presets
+  ok(K.stacks && K.stacks.frontend && K.stacks.backend && K.stacks.database && K.stacks.deployment, 'stack catalog has 4 pillars');
+  ok(K.stacks.frontend.length >= 10, 'frontend catalog has 10+ options');
+  ok(K.stacks.backend.length >= 10, 'backend catalog has 10+ options');
+  ok(K.presets.length >= 5, 'starter presets has 5+ presets');
+  const composed = K.composeStack('TanStack Start', 'Node.js (Hono / Fastify)', 'PostgreSQL', 'Docker');
+  ok(composed === 'TanStack Start, Node.js (Hono / Fastify), PostgreSQL, Docker', 'composeStack combines 4 pillars');
+  const aiFallback = K.composeStack('ai-pilih', 'ai-pilih', 'ai-pilih', 'ai-pilih');
+  ok(aiFallback === 'Belum tahu, minta saran', 'composeStack defaults when all AI-pilih');
+
   const model = window.IndustrySpec['Retail & F&B'].model;
   ok(model.indexOf('Kasir (id, nama, pin_hash, aktif)') > -1, 'model text keeps field list');
   ok(window.IndustrySpec['SaaS internal'].model.indexOf('peran: {roles}') > -1,
@@ -589,6 +602,13 @@ const diagrams = window.GenDiagrams(sample);
   const yamlOut = SR.yaml(sp);
   const htmlOut = SR.html(sp);
   const jsonOut = SR.json(sp);
+  const protoOut = SR.prototypeHtml(sp);
+
+  ok(typeof SR.prototypeHtml === 'function', 'SpecRender exports prototypeHtml');
+  ok(protoOut.indexOf('<!DOCTYPE html>') === 0, 'prototypeHtml produces a standalone document');
+  ok(protoOut.indexOf('DesainPakeAI Prototype') > -1, 'prototypeHtml carries DesainPakeAI title');
+  ok(protoOut.indexOf('Design Tokens (DesainPakeAI System)') > -1, 'prototypeHtml defines design tokens');
+  ok(protoOut.indexOf('form id="mockForm"') > -1, 'prototypeHtml has interactive mock form');
 
   ok(JSON.parse(jsonOut).meta.productName === sample.productName, 'json round-trips the spec');
   ok((htmlOut.match(/<h2>/g) || []).length === 12, 'html renders exactly 12 sections');
@@ -683,8 +703,18 @@ const diagrams = window.GenDiagrams(sample);
   // llm-adapter: preset, timeout clamp, key dibuang saat endpoint pindah
   const L = window.LLM;
   ok(L.presets.some(p => p.id === 'gemini' && /googleapis/.test(p.baseUrl)), 'gemini preset present');
+  ok(L.presets.some(p => p.id === 'deepseek' && /deepseek/.test(p.baseUrl)), 'deepseek preset present');
+  ok(L.presets.some(p => p.id === 'kimi' && /moonshot/.test(p.baseUrl)), 'kimi preset present');
+  ok(L.presets.some(p => p.id === 'groq' && /groq/.test(p.baseUrl)), 'groq preset present');
+  ok(L.presets.some(p => p.id === 'minimax' && /minimax/.test(p.baseUrl)), 'minimax preset present');
   ok(L.presetFor('https://api.openai.com/v1') && L.presetFor('https://api.openai.com/v1').id === 'openai',
     'presetFor recognises OpenAI endpoint');
+  ok(L.presetFor('https://api.deepseek.com/v1') && L.presetFor('https://api.deepseek.com/v1').id === 'deepseek',
+    'presetFor recognises DeepSeek endpoint');
+  ok(L.presetFor('https://api.moonshot.cn/v1') && L.presetFor('https://api.moonshot.cn/v1').id === 'kimi',
+    'presetFor recognises Moonshot/Kimi endpoint');
+  ok(L.presetFor('https://api.groq.com/openai/v1') && L.presetFor('https://api.groq.com/openai/v1').id === 'groq',
+    'presetFor recognises Groq endpoint');
   ok(L.isLocalUrl('http://localhost:11434/v1') === true, 'localhost counts as local');
   ok(L.needsKey('http://localhost:11434/v1') === false, 'local endpoint needs no key');
   ok(L.needsKey('https://api.openai.com/v1') === true, 'remote endpoint needs key');
@@ -1117,8 +1147,11 @@ const diagrams = window.GenDiagrams(sample);
   const sbRelax = G(sample, null, { tempo: 'relax' });
   ok(sbRelax.tempo.bpm === 100 && sbRelax.tempo.id === 'relax', 'relax tempo sets 100 BPM');
 
-  ok(Object.keys(sb.concepts).length === 8, 'eight motion concepts defined');
+  ok(Object.keys(sb.concepts).length === 9, 'nine motion concepts defined (incl. 3d-explainer)');
   ok(sb.beats.every(b => b.motionVerb && b.gsapEasing), 'every beat defines an explicit motion verb and GSAP easing');
+  ok(sb.beats.every(b => b.aiVisualPrompt && b.cameraMotionPrompt), 'every beat defines 3D visual prompt and camera motion prompt');
+  const sb3d = G(sample, null, { concept: '3d-explainer', ratio: '9:16' });
+  ok(sb3d.concept.id === '3d-explainer' && sb3d.concept.name.indexOf('3D Spatial') > -1, '3d-explainer concept selected');
   ok(sb.proceduralAudio.indexOf('cash:') > -1 && sb.proceduralAudio.indexOf('keytype:') > -1 && sb.proceduralAudio.indexOf('scan:') > -1 && sb.proceduralAudio.indexOf('heartbeat:') > -1 && sb.proceduralAudio.indexOf('siren:') > -1 && sb.proceduralAudio.indexOf('geiger:') > -1, 'procedural audio synth implements 22 instruments');
   ok(sb.assetMatrix && Array.isArray(sb.assetMatrix.broll) && Array.isArray(sb.assetMatrix.sfx) && sb.assetMatrix.directSearchUrls, 'comprehensive multi-platform asset matrix generated');
 
@@ -1159,6 +1192,116 @@ const diagrams = window.GenDiagrams(sample);
   // Empty data fallback
   const sbEmpty = G({});
   ok(sbEmpty && sbEmpty.totalDuration === 60.0 && sbEmpty.beats.length === 5, 'empty data produces honest 60s fallback storyboard');
+}
+
+// 34. Task Kanban and Checkpoint Engine (Ide 2)
+{
+  const KB = window.Kanban;
+  ok(KB && typeof KB.deriveTasks === 'function', 'Kanban module exposes deriveTasks');
+  ok(typeof KB.generateMasterPrompt === 'function', 'Kanban module exposes generateMasterPrompt');
+  ok(typeof KB.generateTaskPrompt === 'function', 'Kanban module exposes generateTaskPrompt');
+
+  const sample = window.StudioSample;
+  const spec = window.Spec.build(sample, { score: 90, level: 'Siap' });
+  const roadmap = window.GenRoadmap(sample);
+  const tasks = KB.deriveTasks(spec, roadmap, {});
+
+  ok(tasks.length >= 15, 'derived tasks has 15+ granular tasks');
+  const phases = [...new Set(tasks.map(t => t.phase))];
+  ok(phases.length >= 4, 'tasks cover all 4 phases');
+
+  const layers = [...new Set(tasks.map(t => t.layer))];
+  ok(layers.includes('frontend') && layers.includes('backend') && layers.includes('foundation'), 'tasks cover frontend, backend, foundation');
+
+  const checkpoints = tasks.filter(t => t.isCheckpoint);
+  ok(checkpoints.length >= 2, 'tasks have at least 2 hard checkpoints');
+  ok(checkpoints.some(c => c.checkpointReason.indexOf('Pergantian') > -1), 'checkpoints explain phase or layer transition');
+
+  const masterPrompt = KB.generateMasterPrompt(tasks, spec);
+  ok(masterPrompt.indexOf('# MASTER PROMPT EKSEKUSI AGENT') > -1, 'master prompt has header');
+  ok(masterPrompt.indexOf('HARD CHECKPOINT') > -1, 'master prompt specifies hard checkpoint rule');
+  ok(masterPrompt.indexOf(tasks[0].id) > -1, 'master prompt lists tasks');
+
+  const taskPrompt = KB.generateTaskPrompt(tasks[0], spec);
+  ok(taskPrompt.indexOf('INSTRUKSI TASK CODING AGENT') > -1, 'task prompt has header');
+  ok(taskPrompt.indexOf(tasks[0].id) > -1, 'task prompt contains task ID');
+
+  // SpecPack.taskRunner & scripts/task-runner.js (Ide 3)
+  ok(typeof window.SpecPack.taskRunner === 'function', 'SpecPack exposes taskRunner generator');
+  const runnerScript = window.SpecPack.taskRunner();
+  ok(runnerScript.indexOf('#!/usr/bin/env node') > -1, 'taskRunner has node shebang');
+  ok(runnerScript.indexOf('CHECKPOINT TERDETEKSI') > -1, 'taskRunner includes checkpoint warning');
+
+  const cliRunner = require(path.join(__dirname, '..', 'scripts', 'task-runner.js'));
+  const testSampleTasks = '# Tasks\n## Fondasi\n- [ ] T0.1 Setup\n- [ ] T0.2 Mockup UI\n## Req 1\n- [ ] T1.1 API DB';
+  const parsedCliTasks = cliRunner.parseTasks(testSampleTasks);
+  ok(parsedCliTasks.length === 3, 'cli task runner parses 3 tasks');
+  ok(parsedCliTasks[1].layer === 'frontend', 'cli task runner identifies frontend layer');
+  ok(parsedCliTasks[1].isCheckpoint === true, 'cli task runner flags layer checkpoint');
+
+  // Test state persistence
+  S.setTaskState('T0.1', 'in-progress');
+  ok(S.data.taskStates['T0.1'] === 'in-progress', 'setTaskState sets task state in StudioState');
+  S.setTaskState('T0.1', 'done');
+  ok(S.data.taskStates['T0.1'] === 'done', 'setTaskState marks task as done');
+  S.clearRun();
+  ok(Object.keys(S.data.taskStates).length === 0, 'clearRun clears task states');
+
+  // Cinematic 3D Visual & Audio Design System (Ide 6)
+  const C = window.Cinematic;
+  ok(C && typeof C.composeScene === 'function', 'Cinematic module exposes composeScene');
+  ok(typeof C.soundDesign === 'function', 'Cinematic module exposes soundDesign');
+  ok(typeof C.listCatalog === 'function', 'Cinematic module exposes listCatalog');
+
+  const sampleC = window.StudioSample;
+  const specC = window.Spec.build(sampleC, { score: 90, level: 'Siap' });
+  const sbC = window.GenStoryboard(sampleC, specC, { concept: 'ui-journey', ratio: '16:9', tempo: 'standard' });
+
+  ok(sbC.beats.length === 5, 'storyboard has 5 beats');
+  ok(sbC.beats.every(b => b.cinematic && b.cinematic.cameraRig && b.cinematic.depthStack), 'every beat carries cinematic scene');
+  ok(sbC.beats.every(b => b.soundDesign && Array.isArray(b.soundDesign.buses)), 'every beat carries sound design');
+
+  const scene0 = sbC.beats[0].cinematic;
+  ok(scene0.aspectRatio === '16:9', 'cinematic scene carries aspect ratio');
+  ok(scene0.fps === 30, 'cinematic scene fps is 30');
+  ok(Array.isArray(scene0.vfx) && scene0.vfx.length >= 2, 'cinematic scene has VFX list');
+
+  const cat = C.listCatalog();
+  ok(Array.isArray(cat.cameraRigs) && cat.cameraRigs.length >= 8, 'catalog lists 8+ camera rigs');
+  ok(Array.isArray(cat.transitions) && cat.transitions.length >= 8, 'catalog lists 8+ transitions');
+  ok(Array.isArray(cat.colorGrades) && cat.colorGrades.length >= 6, 'catalog lists 6+ color grades');
+  ok(Array.isArray(cat.audioBuses) && cat.audioBuses.length === 4, 'catalog lists 4 audio buses');
+
+  ok(typeof C.CAMERA_RIGS['orbit-360'] === 'object', 'CAMERA_RIGS exposes orbit-360');
+  ok(typeof C.COLOR_GRADES['cinematic-teal-orange'] === 'object', 'COLOR_GRADES exposes cinematic-teal-orange');
+
+  // Template Browser & Codebase Scaffold (Ide 7)
+  const TB = window.TemplateBrowser;
+  ok(TB && Array.isArray(TB.TEMPLATES) && TB.TEMPLATES.length >= 8, 'TemplateBrowser exposes 8+ templates');
+  ok(typeof TB.matchTemplate === 'function', 'TemplateBrowser exposes matchTemplate');
+  ok(typeof TB.scaffoldMarkdown === 'function', 'TemplateBrowser exposes scaffoldMarkdown');
+
+  const nextTpl = TB.matchTemplate({ frontend: 'Next.js (App Router)', backend: 'Node.js (Hono / Fastify)', database: 'Neon (Serverless Postgres)', deployment: 'Vercel' });
+  ok(nextTpl && nextTpl.id === 'nextjs-saas', 'matchTemplate picks nextjs-saas for Next.js stack');
+
+  const vanillaTpl = TB.matchTemplate({ frontend: 'HTML CSS JS vanilla', backend: 'Cloudflare Workers', database: 'Cloudflare D1', deployment: 'Cloudflare Pages' });
+  ok(vanillaTpl && vanillaTpl.id === 'vanilla-cf', 'matchTemplate picks vanilla-cf for vanilla stack');
+
+  const filtered = TB.templatesByTier('lean');
+  ok(Array.isArray(filtered) && filtered.length >= 2, 'templatesByTier filters lean tier');
+
+  const byStack = TB.templatesByStack({ frontend: 'React (Vite SPA)' });
+  ok(Array.isArray(byStack) && byStack.length >= 1, 'templatesByStack filters by frontend');
+
+  const md = TB.scaffoldMarkdown(nextTpl, window.StudioSample ? window.StudioSample : {});
+  ok(md.indexOf('# SCAFFOLD:') > -1, 'scaffoldMarkdown has header');
+  ok(md.indexOf('## Struktur File') > -1, 'scaffoldMarkdown has file tree section');
+  ok(md.indexOf('## Perintah Instalasi') > -1, 'scaffoldMarkdown has install command');
+  ok(md.indexOf('## Variabel Environment') > -1, 'scaffoldMarkdown has env vars');
+  ok(md.indexOf('nextjs-saas') > -1 || md.indexOf('Next.js SaaS Starter') > -1, 'scaffoldMarkdown names template');
+
+  const tree = TB.fileTreeText(nextTpl);
+  ok(typeof tree === 'string' && tree.indexOf('package.json') > -1, 'fileTreeText includes package.json');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.

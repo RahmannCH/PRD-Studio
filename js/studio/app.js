@@ -101,7 +101,7 @@
     });
 
     /* ---------- Tombol export: aktif hanya kalau ada hasil ---------- */
-    var exportActs = ['copy-prd', 'dl-prd', 'dl-bab', 'dl-spec-pack', 'dl-json', 'share-link', 'dl-roadmap-csv', 'print', 'ai-polish', 'ai-advise',
+    var exportActs = ['copy-prd', 'dl-prd', 'dl-bab', 'dl-prototype', 'dl-spec-pack', 'dl-json', 'share-link', 'dl-roadmap-csv', 'print', 'ai-polish', 'ai-advise',
       'dl-html', 'dl-brief', 'dl-spec-yaml', 'copy-mermaid', 'copy-all-prompt', 'dl-prompts',
       'copy-video-prompt', 'copy-storyboard', 'dl-storyboard', 'dl-video-pack', 'ai-polish-video'];
     function setExportEnabled(on) {
@@ -169,6 +169,9 @@
         if (window.RenderOut.storyboard) {
           window.RenderOut.storyboard(r.storyboard);
         }
+        if (window.RenderOut.kanban) {
+          window.RenderOut.kanban(r);
+        }
         badge(r.score);
         paintResultGaps(r.gaps);
         setExportEnabled(true);
@@ -201,6 +204,9 @@
       $('promptDiv').innerHTML = '<p class="empty">10 prompt akan muncul setelah kamu menekan Susun.</p>';
       var sbDiv = $('storyboardTimeline');
       if (sbDiv) sbDiv.innerHTML = '<p class="empty">Storyboard 60 detik akan muncul setelah kamu menekan Susun.</p>';
+      if (window.RenderOut.clearKanban) {
+        window.RenderOut.clearKanban();
+      }
       badge(null);
       paintResultGaps([]);
       var clr = $('resultGapsClear');
@@ -396,6 +402,13 @@
         if (!guard()) return;
         var txt = window.Exporter.bundle(S.data.productName, S.data.lastResult);
         window.Exporter.download('PAKET-LENGKAP-' + window.Exporter.slug(S.data.productName) + '.md', txt);
+      },
+      'dl-prototype': function () {
+        if (!guard()) return;
+        var spec = S.data.lastResult.spec;
+        var protoHtml = window.SpecRender.prototypeHtml(spec);
+        window.Exporter.download('PROTOTYPE-' + window.Exporter.slug(S.data.productName) + '.html', protoHtml, 'text/html');
+        window.UX.toast('Prototipe HTML DesainPakeAI berhasil diunduh.');
       },
       'dl-spec-pack': function () {
         if (!guard()) return;

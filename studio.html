@@ -144,8 +144,38 @@
       <div class="step" data-step="6" hidden>
         <h2>Batasan teknis dan target kualitas</h2>
         <p class="hint">Tulis sejujurnya. Target tanpa angka akan ditandai sebagai gap.</p>
+        <div class="stack-matrix-box">
+          <div class="stack-presets-bar">
+            <span class="stack-presets-label">Preset Arsitektur Siap Pakai:</span>
+            <div class="stack-preset-chips" id="stackPresetChips" role="group" aria-label="Preset Arsitektur">
+              <button type="button" class="btn btn-ghost btn-xs" data-stack-preset="saas-modern">Fullstack SaaS (TanStack)</button>
+              <button type="button" class="btn btn-ghost btn-xs" data-stack-preset="nextjs-fullstack">Next.js App Router</button>
+              <button type="button" class="btn btn-ghost btn-xs" data-stack-preset="vite-baas">Lean BaaS (Vite+Supabase)</button>
+              <button type="button" class="btn btn-ghost btn-xs" data-stack-preset="mobile-expo">Mobile (Expo+Turso)</button>
+              <button type="button" class="btn btn-ghost btn-xs" data-stack-preset="vanilla-cf">Vanilla (CF Pages+D1)</button>
+            </div>
+          </div>
+          <div class="stack-grid-4">
+            <div class="stack-col">
+              <label class="stack-col-label" for="stackFrontend">Frontend</label>
+              <select autocomplete="off" id="stackFrontend" class="input input-sm"></select>
+            </div>
+            <div class="stack-col">
+              <label class="stack-col-label" for="stackBackend">Backend</label>
+              <select autocomplete="off" id="stackBackend" class="input input-sm"></select>
+            </div>
+            <div class="stack-col">
+              <label class="stack-col-label" for="stackDatabase">Database</label>
+              <select autocomplete="off" id="stackDatabase" class="input input-sm"></select>
+            </div>
+            <div class="stack-col">
+              <label class="stack-col-label" for="stackDeployment">Deployment</label>
+              <select autocomplete="off" id="stackDeployment" class="input input-sm"></select>
+            </div>
+          </div>
+        </div>
         <div class="row2">
-          <div class="field"><label for="stackPref">Stack pilihan</label><select autocomplete="off" id="stackPref"><option value="HTML CSS JS vanilla">HTML CSS JS vanilla</option><option value="Next.js + Tailwind">Next.js + Tailwind</option><option value="Flutter">Flutter</option><option value="Belum tahu, minta saran">Belum tahu, minta saran</option></select></div>
+          <div class="field"><label for="stackPref">Stack pilihan</label><input type="text" autocomplete="off" id="stackPref" class="input" placeholder="Contoh: TanStack Start, Hono, PostgreSQL, Docker" value="HTML CSS JS vanilla"></div>
           <div class="field"><label for="integrations">Integrasi (satu per baris)</label><textarea autocomplete="off" id="integrations" placeholder="Printer thermal XPrinter&#10;WhatsApp untuk kirim struk"></textarea></div>
         </div>
         <div class="field"><label for="nfr">Target non fungsional</label><textarea autocomplete="off" id="nfr" placeholder="Buka di HP RAM 2GB di bawah 3 detik, bisa offline, PIN untuk kasir" aria-describedby="nfrHint"></textarea><small id="nfrHint">Contoh baik menyebut angka: di bawah 3 detik, 100 persen offline tersimpan.</small></div>
@@ -198,6 +228,7 @@
       <button class="tab" type="button" role="tab" data-tab="diagram" aria-selected="false" id="tab-diagram" aria-controls="out-diagram" tabindex="-1">Diagram</button>
       <button class="tab" type="button" role="tab" data-tab="prompt" aria-selected="false" id="tab-prompt" aria-controls="out-prompt" tabindex="-1">Prompt P0-P9</button>
       <button class="tab" type="button" role="tab" data-tab="video" aria-selected="false" id="tab-video" aria-controls="out-video" tabindex="-1">Video / Storyboard</button>
+      <button class="tab" type="button" role="tab" data-tab="kanban" aria-selected="false" id="tab-kanban" aria-controls="out-kanban" tabindex="-1">Task Kanban &amp; Checkpoint</button>
     </div>
     <div class="output" id="out-prd" role="tabpanel" aria-labelledby="tab-prd" tabindex="0">
       <nav class="toc" id="prdToc" aria-label="Daftar isi PRD"></nav>
@@ -209,6 +240,7 @@
         <button class="btn btn-ghost btn-sm" data-act="dl-brief" type="button" disabled>Unduh brief (.md)</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-spec-yaml" type="button" disabled>Unduh spec (.yaml)</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-bab" type="button" disabled>Unduh semua (.md)</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-prototype" type="button" disabled title="Unduh prototipe web interaktif runnable (DesainPakeAI)">Unduh Prototipe HTML</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-spec-pack" type="button" disabled title="Berkas requirements, design, tasks, traceability, dan AGENTS untuk AI coding agent">Unduh Spec Pack</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-json" type="button" disabled>Unduh .json</button>
         <button class="btn btn-ghost btn-sm" data-act="share-link" type="button" disabled title="Salin tautan berisi jawabanmu (terkompresi) — siapa pun yang membuka tautan akan melihat proyek yang sama">Salin tautan</button>
@@ -269,6 +301,7 @@
               <button class="chip" type="button" role="radio" aria-checked="false" data-concept="brutalist-blue">Brutalist Blueprint</button>
               <button class="chip" type="button" role="radio" aria-checked="false" data-concept="investigative-leak">Arsip Dokumen Bocor</button>
               <button class="chip" type="button" role="radio" aria-checked="false" data-concept="cyber-surveillance">Telemetri Forensik</button>
+              <button class="chip" type="button" role="radio" aria-checked="false" data-concept="3d-explainer">3D Spatial Explainer</button>
             </div>
         </div>
         <div class="video-cfg-group">
@@ -294,6 +327,59 @@
         <button class="btn btn-ghost btn-sm" data-act="copy-storyboard" type="button" disabled>Salin tabel storyboard (.md)</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-storyboard" type="button" disabled>Unduh STORYBOARD.md</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-video-pack" type="button" disabled title="Unduh seluruh paket proyek video HyperFrames runnable (11 berkas: index.html root, 5 frame sub-komposisi, storyboard, frame.md, prompt, audio synth, linter)">Unduh Paket Proyek Video (11 berkas)</button>
+      </div>
+    </div>
+    <div class="output" id="out-kanban" role="tabpanel" aria-labelledby="tab-kanban" tabindex="0" hidden>
+      <div class="kanban-head-bar">
+        <div class="kanban-filter-group">
+          <label for="kanbanLayerFilter" class="kanban-filter-label">Layer:</label>
+          <select id="kanbanLayerFilter" class="input input-sm">
+            <option value="all">Semua Layer</option>
+            <option value="frontend">Frontend (UI / Stub)</option>
+            <option value="backend">Backend (API / DB)</option>
+            <option value="foundation">Fondasi &amp; Model</option>
+          </select>
+          <label for="kanbanPhaseFilter" class="kanban-filter-label">Fase:</label>
+          <select id="kanbanPhaseFilter" class="input input-sm">
+            <option value="all">Semua Fase</option>
+            <option value="1">Fase 1 (Fondasi &amp; UI Mock)</option>
+            <option value="2">Fase 2 (Core Logic)</option>
+            <option value="3">Fase 3 (Integrasi &amp; API)</option>
+            <option value="4">Fase 4 (Hardening &amp; Rilis)</option>
+          </select>
+        </div>
+        <div class="kanban-action-group">
+          <span class="kanban-counter" id="kanbanCounter">0 / 0 task selesai</span>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnCopyMasterPrompt">Salin Master Prompt</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnDownloadRunner">Unduh Runner (.js)</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnCopyRunnerCmd">Salin Perintah CLI</button>
+        </div>
+      </div>
+      <div class="kanban-checkpoint-notice">
+        <strong>Aturan Checkpoint Agent:</strong> Selesaikan Frontend dan Halaman Pertama di atas data tiruan/stub sebelum pindah ke Backend. Agent wajib berhenti dan minta konfirmasi tiap kali layer atau fase berganti.
+      </div>
+      <div class="kanban-board" id="kanbanBoard">
+        <div class="kanban-col" data-col="planned">
+          <div class="kanban-col-head">
+            <span class="kanban-col-title">Rencana / Backlog</span>
+            <span class="kanban-col-badge" id="badgePlanned">0</span>
+          </div>
+          <div class="kanban-cards" id="cardsPlanned"><p class="empty">Belum ada task. Tekan Susun untuk menghasilkan task.</p></div>
+        </div>
+        <div class="kanban-col" data-col="in-progress">
+          <div class="kanban-col-head">
+            <span class="kanban-col-title">Sedang Dikerjakan</span>
+            <span class="kanban-col-badge" id="badgeInProgress">0</span>
+          </div>
+          <div class="kanban-cards" id="cardsInProgress"></div>
+        </div>
+        <div class="kanban-col" data-col="done">
+          <div class="kanban-col-head">
+            <span class="kanban-col-title">Selesai</span>
+            <span class="kanban-col-badge" id="badgeDone">0</span>
+          </div>
+          <div class="kanban-cards" id="cardsDone"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -373,6 +459,7 @@
                 <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="brutalist-blue">Brutalist Blueprint</button>
                 <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="investigative-leak">Arsip Dokumen Bocor</button>
                 <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="cyber-surveillance">Telemetri Forensik</button>
+                <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="3d-explainer">3D Spatial Explainer</button>
               </div>
             </div>
             <div class="row2 v-cfg-row">
@@ -546,12 +633,15 @@
 <script src="js/studio/generator-roadmap.js"></script>
 <script src="js/studio/generator-prompt.js"></script>
 <script src="js/studio/generator-storyboard.js"></script>
+<script src="js/studio/cinematic.js"></script>
+<script src="js/studio/template-browser.js"></script>
 <script src="js/studio/diagrams.js"></script>
 <script src="js/studio/exporter.js"></script>
 <script src="js/studio/criteria.js"></script>
 <script src="js/studio/spec-pack.js"></script>
 <script src="js/studio/coach.js"></script>
 <script src="js/studio/undo.js"></script>
+<script src="js/studio/kanban.js"></script>
 <script src="js/studio/render.js"></script>
 <script src="js/studio/palette.js"></script>
 <script src="js/studio/llm-adapter.js"></script>

@@ -970,6 +970,34 @@
           body.appendChild(col3);
 
           card.appendChild(body);
+
+          // Prompt Visual 3D & Kamera Motion untuk AI Tooling
+          if (b.aiVisualPrompt || b.cameraMotionPrompt) {
+            var promptBar = document.createElement('div');
+            promptBar.className = 'sb-card-prompt-bar';
+            var pBarHtml = '';
+            if (b.aiVisualPrompt) {
+              pBarHtml += '<div class="sb-prompt-item">' +
+                '<div class="sb-prompt-head">' +
+                '<span class="sb-prompt-label">🔮 Prompt Visual 3D (Midjourney / Flux)</span>' +
+                '<button class="btn btn-ghost btn-sm sb-copy-prompt-btn" type="button" data-copy-val="' + escHtml(b.aiVisualPrompt) + '">Salin Prompt 3D</button>' +
+                '</div>' +
+                '<p class="sb-prompt-text">' + escHtml(b.aiVisualPrompt) + '</p>' +
+                '</div>';
+            }
+            if (b.cameraMotionPrompt) {
+              pBarHtml += '<div class="sb-prompt-item">' +
+                '<div class="sb-prompt-head">' +
+                '<span class="sb-prompt-label">🎥 Prompt Kamera Motion (Runway / Kling / Luma)</span>' +
+                '<button class="btn btn-ghost btn-sm sb-copy-prompt-btn" type="button" data-copy-val="' + escHtml(b.cameraMotionPrompt) + '">Salin Prompt Kamera</button>' +
+                '</div>' +
+                '<p class="sb-prompt-text">' + escHtml(b.cameraMotionPrompt) + '</p>' +
+                '</div>';
+            }
+            promptBar.innerHTML = pBarHtml;
+            card.appendChild(promptBar);
+          }
+
           box.appendChild(card);
         });
 
@@ -1034,6 +1062,14 @@
                 window.RenderOut.stopAudioSimulation();
               } else {
                 window.RenderOut.startAudioSimulation(sb);
+              }
+              return;
+            }
+            var cpBtn = e.target.closest('.sb-copy-prompt-btn');
+            if (cpBtn) {
+              var val = cpBtn.getAttribute('data-copy-val') || '';
+              if (val && window.RenderOut && window.RenderOut.copyText) {
+                window.RenderOut.copyText(val, cpBtn);
               }
               return;
             }
@@ -1156,6 +1192,226 @@
     clearDiff: function () {
       var box = document.getElementById('diffBox');
       if (box) box.innerHTML = '';
+    },
+    kanban: function (res) {
+      if (!window.Kanban) return;
+      var S = window.StudioState;
+      var spec = res && res.spec;
+      var roadmap = res && res.roadmap;
+      if (!spec) return;
+
+      var tasks = window.Kanban.deriveTasks(spec, roadmap, S.data.taskStates || {});
+      var layerFilter = document.getElementById('kanbanLayerFilter');
+      var phaseFilter = document.getElementById('kanbanPhaseFilter');
+      var cardsPlanned = document.getElementById('cardsPlanned');
+      var cardsInProgress = document.getElementById('cardsInProgress');
+      var cardsDone = document.getElementById('cardsDone');
+      var badgePlanned = document.getElementById('badgePlanned');
+      var badgeInProgress = document.getElementById('badgeInProgress');
+      var badgeDone = document.getElementById('badgeDone');
+      var counter = document.getElementById('kanbanCounter');
+      var btnMaster = document.getElementById('btnCopyMasterPrompt');
+      var btnDownload = document.getElementById('btnDownloadRunner');
+      var btnCopyCmd = document.getElementById('btnCopyRunnerCmd');
+
+      if (!cardsPlanned || !cardsInProgress || !cardsDone) return;
+
+      function updateBoard() {
+        var lf = layerFilter ? layerFilter.value : 'all';
+        var pf = phaseFilter ? phaseFilter.value : 'all';
+
+        cardsPlanned.innerHTML = '';
+        cardsInProgress.innerHTML = '';
+        cardsDone.innerHTML = '';
+
+        var total = tasks.length;
+        var doneCount = 0;
+        var pCount = 0, ipCount = 0, dCount = 0;
+
+        tasks.forEach(function (t) {
+          var st = S.data.taskStates && S.data.taskStates[t.id] ? S.data.taskStates[t.id] : (t.status || 'planned');
+          t.status = st;
+          if (st === 'done') doneCount++;
+
+          if (lf !== 'all' && t.layer !== lf) return;
+          if (pf !== 'all' && String(t.phase) !== String(pf)) return;
+
+          var card = document.createElement('div');
+          card.className = 'kanban-card';
+          card.setAttribute('data-task-id', t.id);
+
+          var top = document.createElement('div');
+          top.className = 'kanban-card-top';
+
+          var idSpan = document.createElement('span');
+          idSpan.className = 'kanban-card-id';
+          idSpan.textContent = t.id;
+          top.appendChild(idSpan);
+
+          var badge = document.createElement('span');
+          badge.className = 'kanban-badge ' + (t.layer === 'frontend' ? 'kanban-badge-fe' : (t.layer === 'backend' ? 'kanban-badge-be' : 'kanban-badge-foundation'));
+          badge.textContent = t.layer === 'frontend' ? 'Frontend' : (t.layer === 'backend' ? 'Backend' : 'Fondasi');
+          top.appendChild(badge);
+
+          card.appendChild(top);
+
+          var title = document.createElement('div');
+          title.className = 'kanban-card-title';
+          title.textContent = t.title;
+          card.appendChild(title);
+
+          var meta = document.createElement('div');
+          meta.className = 'kanban-card-meta';
+          meta.textContent = t.phaseName;
+          card.appendChild(meta);
+
+          if (t.isCheckpoint) {
+            var cpNote = document.createElement('div');
+            cpNote.className = 'kanban-card-checkpoint';
+            cpNote.textContent = '[CHECKPOINT] ' + t.checkpointReason;
+            card.appendChild(cpNote);
+          }
+
+          var actions = document.createElement('div');
+          actions.className = 'kanban-card-actions';
+
+          var btnPrompt = document.createElement('button');
+          btnPrompt.type = 'button';
+          btnPrompt.className = 'btn btn-ghost btn-xs';
+          btnPrompt.textContent = 'Salin Prompt';
+          btnPrompt.addEventListener('click', function () {
+            var pText = window.Kanban.generateTaskPrompt(t, spec);
+            copyText(pText, btnPrompt);
+          });
+          actions.appendChild(btnPrompt);
+
+          var moveGroup = document.createElement('div');
+          moveGroup.className = 'kanban-move-btns';
+
+          if (st === 'planned') {
+            var btnWork = document.createElement('button');
+            btnWork.type = 'button';
+            btnWork.className = 'btn btn-ghost btn-xs';
+            btnWork.textContent = 'Kerjakan';
+            btnWork.addEventListener('click', function () {
+              S.setTaskState(t.id, 'in-progress');
+              updateBoard();
+            });
+            moveGroup.appendChild(btnWork);
+          } else if (st === 'in-progress') {
+            var btnBack = document.createElement('button');
+            btnBack.type = 'button';
+            btnBack.className = 'btn btn-ghost btn-xs';
+            btnBack.textContent = 'Backlog';
+            btnBack.addEventListener('click', function () {
+              S.setTaskState(t.id, 'planned');
+              updateBoard();
+            });
+            moveGroup.appendChild(btnBack);
+
+            var btnFin = document.createElement('button');
+            btnFin.type = 'button';
+            btnFin.className = 'btn btn-primary btn-xs';
+            btnFin.textContent = 'Selesai';
+            btnFin.addEventListener('click', function () {
+              S.setTaskState(t.id, 'done');
+              updateBoard();
+            });
+            moveGroup.appendChild(btnFin);
+          } else if (st === 'done') {
+            var btnReopen = document.createElement('button');
+            btnReopen.type = 'button';
+            btnReopen.className = 'btn btn-ghost btn-xs';
+            btnReopen.textContent = 'Buka Lagi';
+            btnReopen.addEventListener('click', function () {
+              S.setTaskState(t.id, 'in-progress');
+              updateBoard();
+            });
+            moveGroup.appendChild(btnReopen);
+          }
+
+          actions.appendChild(moveGroup);
+          card.appendChild(actions);
+
+          if (st === 'in-progress') {
+            cardsInProgress.appendChild(card);
+            ipCount++;
+          } else if (st === 'done') {
+            cardsDone.appendChild(card);
+            dCount++;
+          } else {
+            cardsPlanned.appendChild(card);
+            pCount++;
+          }
+        });
+
+        if (badgePlanned) badgePlanned.textContent = pCount;
+        if (badgeInProgress) badgeInProgress.textContent = ipCount;
+        if (badgeDone) badgeDone.textContent = dCount;
+
+        if (pCount === 0 && (!cardsPlanned.children || !cardsPlanned.children.length)) {
+          cardsPlanned.innerHTML = '<p class="empty">Tidak ada task pada filter ini.</p>';
+        }
+        if (ipCount === 0 && (!cardsInProgress.children || !cardsInProgress.children.length)) {
+          cardsInProgress.innerHTML = '<p class="empty">Tidak ada task aktif.</p>';
+        }
+        if (dCount === 0 && (!cardsDone.children || !cardsDone.children.length)) {
+          cardsDone.innerHTML = '<p class="empty">Belum ada task selesai.</p>';
+        }
+
+        if (counter) {
+          var pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+          counter.textContent = doneCount + ' / ' + total + ' task selesai (' + pct + '%)';
+        }
+      }
+
+      if (layerFilter && !layerFilter.dataset.bound) {
+        layerFilter.dataset.bound = 'true';
+        layerFilter.addEventListener('change', updateBoard);
+      }
+      if (phaseFilter && !phaseFilter.dataset.bound) {
+        phaseFilter.dataset.bound = 'true';
+        phaseFilter.addEventListener('change', updateBoard);
+      }
+      if (btnMaster && !btnMaster.dataset.bound) {
+        btnMaster.dataset.bound = 'true';
+        btnMaster.addEventListener('click', function () {
+          var mPrompt = window.Kanban.generateMasterPrompt(tasks, spec);
+          copyText(mPrompt, btnMaster);
+        });
+      }
+      if (btnDownload && !btnDownload.dataset.bound) {
+        btnDownload.dataset.bound = 'true';
+        btnDownload.addEventListener('click', function () {
+          if (!window.SpecPack || !window.Exporter) return;
+          var runnerCode = window.SpecPack.taskRunner();
+          window.Exporter.download('task-runner.js', runnerCode, 'application/javascript');
+        });
+      }
+      if (btnCopyCmd && !btnCopyCmd.dataset.bound) {
+        btnCopyCmd.dataset.bound = 'true';
+        btnCopyCmd.addEventListener('click', function () {
+          copyText('node scripts/task-runner.js --next', btnCopyCmd);
+        });
+      }
+
+      updateBoard();
+    },
+    clearKanban: function () {
+      var p = document.getElementById('cardsPlanned');
+      var ip = document.getElementById('cardsInProgress');
+      var d = document.getElementById('cardsDone');
+      var bp = document.getElementById('badgePlanned');
+      var bip = document.getElementById('badgeInProgress');
+      var bd = document.getElementById('badgeDone');
+      var counter = document.getElementById('kanbanCounter');
+      if (p) p.innerHTML = '<p class="empty">Belum ada task. Tekan Susun untuk menghasilkan task.</p>';
+      if (ip) ip.innerHTML = '';
+      if (d) d.innerHTML = '';
+      if (bp) bp.textContent = '0';
+      if (bip) bip.textContent = '0';
+      if (bd) bd.textContent = '0';
+      if (counter) counter.textContent = '0 / 0 task selesai';
     }
   };
 })();

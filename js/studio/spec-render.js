@@ -251,5 +251,160 @@ window.SpecRender = (function () {
     '@media (max-width:640px){.doc{padding:24px 18px}.doc-foot{padding:14px 18px 32px}}'
   ].join('\n');
 
-  return { markdown: markdown, brief: brief, json: json, yaml: yaml, html: html, mdToHtml: mdToHtml };
+  function prototypeHtml(spec) {
+    var pName = (spec && spec.meta && spec.meta.nama) || 'Aplikasi';
+    var oneLiner = (spec && spec.summary && spec.summary.oneLiner) || 'Prototipe Web Interaktif';
+    var role = (spec && spec.summary && spec.summary.primaryUser) || 'Pengguna';
+    var stack = (spec && spec.meta && spec.meta.stackPref) || 'HTML, CSS, JS vanilla';
+
+    var entity = (spec && spec.entities && spec.entities[0]) || { label: 'Item', fields: [{ n: 'id', t: 'string' }, { n: 'nama', t: 'string' }, { n: 'kategori', t: 'string' }] };
+    var entityName = entity.label || 'Data';
+    var fields = (entity.fields && entity.fields.length) ? entity.fields : [{ n: 'nama', t: 'string' }, { n: 'kategori', t: 'string' }];
+
+    var stories = (spec && spec.stories) || [];
+
+    var out = [];
+    out.push('<!DOCTYPE html>');
+    out.push('<html lang="id">');
+    out.push('<head>');
+    out.push('<meta charset="utf-8">');
+    out.push('<meta name="viewport" content="width=device-width, initial-scale=1">');
+    out.push('<title>' + esc(pName) + ' - Prototipe UI (DesainPakeAI)</title>');
+    out.push('<style>');
+    out.push(':root {');
+    out.push('  --brand: #0284c7;');
+    out.push('  --brand-hover: #0369a1;');
+    out.push('  --bg: #0f172a;');
+    out.push('  --surface: #1e293b;');
+    out.push('  --surface-card: #243248;');
+    out.push('  --line: #334155;');
+    out.push('  --text: #f8fafc;');
+    out.push('  --text-muted: #94a3b8;');
+    out.push('  --success: #10b981;');
+    out.push('  --radius: 8px;');
+    out.push('  --font: system-ui, -apple-system, sans-serif;');
+    out.push('}');
+    out.push('* { box-sizing: border-box; margin: 0; padding: 0; }');
+    out.push('body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.5; padding-bottom: 40px; }');
+    out.push('.topbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: var(--surface); border-bottom: 1px solid var(--line); }');
+    out.push('.brand-title { font-size: 18px; font-weight: 700; color: var(--text); }');
+    out.push('.brand-tag { font-size: 11px; padding: 3px 8px; border-radius: 99px; background: rgba(2, 132, 199, 0.2); color: var(--brand); border: 1px solid rgba(2, 132, 199, 0.4); margin-left: 8px; }');
+    out.push('.role-pill { font-size: 12px; color: var(--text-muted); background: var(--line); padding: 4px 10px; border-radius: 99px; }');
+    out.push('.container { max-width: 1040px; margin: 24px auto; padding: 0 16px; }');
+    out.push('.hero { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; }');
+    out.push('.hero h1 { font-size: 22px; margin-bottom: 6px; }');
+    out.push('.hero p { font-size: 14px; color: var(--text-muted); }');
+    out.push('.grid-layout { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }');
+    out.push('@media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }');
+    out.push('.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 20px; }');
+    out.push('.card-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }');
+    out.push('.form-group { margin-bottom: 12px; }');
+    out.push('label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }');
+    out.push('input, select { width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface-card); color: var(--text); font-size: 14px; }');
+    out.push('input:focus { outline: none; border-color: var(--brand); }');
+    out.push('.btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; border-radius: 6px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.15s; }');
+    out.push('.btn-primary { background: var(--brand); color: #fff; width: 100%; }');
+    out.push('.btn-primary:hover { background: var(--brand-hover); }');
+    out.push('.btn-action { background: var(--surface-card); color: var(--text); border: 1px solid var(--line); padding: 6px 12px; font-size: 12px; margin-right: 6px; margin-bottom: 6px; }');
+    out.push('.btn-action:hover { border-color: var(--brand); color: var(--brand); }');
+    out.push('table { width: 100%; border-collapse: collapse; font-size: 13px; }');
+    out.push('th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); }');
+    out.push('th { color: var(--text-muted); font-size: 12px; text-transform: uppercase; }');
+    out.push('.badge-mock { background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 2px 6px; border-radius: 4px; font-size: 11px; }');
+    out.push('.toast { position: fixed; bottom: 20px; right: 20px; background: var(--surface-card); border: 1px solid var(--brand); color: var(--text); padding: 12px 18px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); display: none; }');
+    out.push('.token-box { background: var(--surface-card); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 11px; color: var(--text-muted); overflow-x: auto; white-space: pre; }');
+    out.push('</style>');
+    out.push('</head>');
+    out.push('<body>');
+    out.push('<nav class="topbar">');
+    out.push('  <div><span class="brand-title">' + esc(pName) + '</span><span class="brand-tag">DesainPakeAI Prototype</span></div>');
+    out.push('  <div class="role-pill">Peran: ' + esc(role) + '</div>');
+    out.push('</nav>');
+    out.push('<main class="container">');
+    out.push('  <div class="hero">');
+    out.push('    <h1>' + esc(pName) + '</h1>');
+    out.push('    <p>' + esc(oneLiner) + ' | Stack: ' + esc(stack) + '</p>');
+    out.push('  </div>');
+    out.push('  <div class="card">');
+    out.push('    <div class="card-title">Aksi dan Fitur Utama (Klik untuk Uji Interaksi)</div>');
+    out.push('    <div id="actionChips">');
+    for (var s = 0; s < stories.length; s++) {
+      out.push('      <button type="button" class="btn btn-action" onclick="runSim(' + s + ')">' + esc(stories[s].action) + '</button>');
+    }
+    out.push('    </div>');
+    out.push('  </div>');
+    out.push('  <div class="grid-layout">');
+    out.push('    <div class="card">');
+    out.push('      <div class="card-title">Form Input ' + esc(entityName) + '</div>');
+    out.push('      <form id="mockForm" onsubmit="addItem(event)">');
+    for (var f = 0; f < fields.length; f++) {
+      if (fields[f].n === 'id') continue;
+      out.push('        <div class="form-group">');
+      out.push('          <label for="f_' + f + '">' + esc(fields[f].n) + '</label>');
+      out.push('          <input id="f_' + f + '" name="' + esc(fields[f].n) + '" placeholder="Isi ' + esc(fields[f].n) + '" required>');
+      out.push('        </div>');
+    }
+    out.push('        <button type="submit" class="btn btn-primary">+ Tambah ke Data Mock</button>');
+    out.push('      </form>');
+    out.push('    </div>');
+    out.push('    <div class="card">');
+    out.push('      <div class="card-title">Daftar ' + esc(entityName) + ' (Tersimpan Lokal)</div>');
+    out.push('      <table>');
+    out.push('        <thead><tr>');
+    for (var h = 0; h < fields.length; h++) {
+      if (fields[h].n === 'id') continue;
+      out.push('<th>' + esc(fields[h].n) + '</th>');
+    }
+    out.push('<th>Status</th></tr></thead>');
+    out.push('        <tbody id="tableBody">');
+    out.push('          <tr>');
+    for (var d = 0; d < fields.length; d++) {
+      if (fields[d].n === 'id') continue;
+      out.push('<td>Contoh ' + esc(fields[d].n) + ' 1</td>');
+    }
+    out.push('<td><span class="badge-mock">Mock Data</span></td></tr>');
+    out.push('        </tbody>');
+    out.push('      </table>');
+    out.push('    </div>');
+    out.push('  </div>');
+    out.push('  <div class="card">');
+    out.push('    <div class="card-title">Design Tokens (DesainPakeAI System)</div>');
+    out.push('    <div class="token-box">:root {\n  --brand: #0284c7;\n  --bg: #0f172a;\n  --surface: #1e293b;\n  --text: #f8fafc;\n  --radius: 8px;\n  --font: system-ui, sans-serif;\n}</div>');
+    out.push('  </div>');
+    out.push('</main>');
+    out.push('<div id="toast" class="toast"></div>');
+    out.push('<script>');
+    out.push('var toastEl = document.getElementById("toast");');
+    out.push('function showToast(msg) {');
+    out.push('  toastEl.textContent = msg;');
+    out.push('  toastEl.style.display = "block";');
+    out.push('  setTimeout(function() { toastEl.style.display = "none"; }, 2500);');
+    out.push('}');
+    out.push('function runSim(idx) {');
+    out.push('  showToast("Simulasi Fitur: Aksi berhasil dieksekusi di lingkungan prototipe!");');
+    out.push('}');
+    out.push('function addItem(e) {');
+    out.push('  e.preventDefault();');
+    out.push('  var tb = document.getElementById("tableBody");');
+    out.push('  var inputs = e.target.querySelectorAll("input");');
+    out.push('  var row = document.createElement("tr");');
+    out.push('  inputs.forEach(function(inp) {');
+    out.push('    var cell = document.createElement("td");');
+    out.push('    cell.textContent = inp.value;');
+    out.push('    row.appendChild(cell);');
+    out.push('    inp.value = "";');
+    out.push('  });');
+    out.push('  var statusCell = document.createElement("td");');
+    out.push('  statusCell.innerHTML = "<span class=\\\"badge-mock\\\">Tersimpan</span>";');
+    out.push('  row.appendChild(statusCell);');
+    out.push('  tb.appendChild(row);');
+    out.push('  showToast("Data baru berhasil ditambahkan ke tabel mock!");');
+    out.push('}');
+    out.push('</script>');
+    out.push('</body>');
+    out.push('</html>');
+    return out.join('\n');
+  }
+
+  return { markdown: markdown, brief: brief, json: json, yaml: yaml, html: html, prototypeHtml: prototypeHtml, mdToHtml: mdToHtml };
 })();

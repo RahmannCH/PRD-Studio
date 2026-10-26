@@ -39,6 +39,38 @@
       keyUrl: 'https://openrouter.ai/keys'
     },
     {
+      id: 'deepseek',
+      name: 'DeepSeek (V3 / R1)',
+      baseUrl: 'https://api.deepseek.com/v1',
+      model: 'deepseek-chat',
+      keyHint: 'API key dari platform.deepseek.com (dimulai "sk-").',
+      keyUrl: 'https://platform.deepseek.com/api_keys'
+    },
+    {
+      id: 'kimi',
+      name: 'Moonshot AI / Kimi (K3 / K1.5)',
+      baseUrl: 'https://api.moonshot.cn/v1',
+      model: 'moonshot-v1-auto',
+      keyHint: 'API key dari platform.moonshot.cn (dimulai "sk-").',
+      keyUrl: 'https://platform.moonshot.cn/console/api-keys'
+    },
+    {
+      id: 'groq',
+      name: 'Groq (Ultra-Fast Inference)',
+      baseUrl: 'https://api.groq.com/openai/v1',
+      model: 'llama-3.3-70b-versatile',
+      keyHint: 'API key gratis dari console.groq.com/keys (dimulai "gsk_").',
+      keyUrl: 'https://console.groq.com/keys'
+    },
+    {
+      id: 'minimax',
+      name: 'MiniMax (Hailuo AI)',
+      baseUrl: 'https://api.minimax.chat/v1',
+      model: 'abab6.5s-chat',
+      keyHint: 'API key dari platform.minimaxi.com.',
+      keyUrl: 'https://platform.minimaxi.com'
+    },
+    {
       id: 'ollama',
       name: 'Ollama (lokal, tanpa API key)',
       baseUrl: 'http://localhost:11434/v1',
@@ -71,6 +103,10 @@
       if (/generativelanguage\.googleapis\.com/.test(b)) hit = presetById('gemini');
       else if (/api\.openai\.com/.test(b)) hit = presetById('openai');
       else if (/openrouter\.ai/.test(b)) hit = presetById('openrouter');
+      else if (/deepseek\.com/.test(b)) hit = presetById('deepseek');
+      else if (/moonshot\.cn/.test(b)) hit = presetById('kimi');
+      else if (/groq\.com/.test(b)) hit = presetById('groq');
+      else if (/minimax\.chat|minimaxi\.com/.test(b)) hit = presetById('minimax');
       else if (/localhost|127\./.test(b)) hit = presetById('ollama');
     }
     return hit;

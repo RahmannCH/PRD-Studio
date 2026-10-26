@@ -22,6 +22,7 @@
     visualNeeds: '', audio: ['Tanpa audio'],
     stackPref: 'HTML CSS JS vanilla', integrations: '', nfr: '',
     step: 1, lastResult: null, history: [], checks: {}, copied: {},
+    taskStates: {},
     nameEdited: false, varRole: '', varTone: '', varTarget: '', varFormat: '',
     promptEdits: {}, successMetrics: '', risks: '', assumptions: '', dependencies: '',
     /* Catatan AI yang sudah diterima user (kartu Terima di panel usulan AI).
@@ -153,6 +154,7 @@
       };
     }).slice(0, 10);
     if (!out.checks || typeof out.checks !== 'object' || Array.isArray(out.checks)) out.checks = {};
+    if (!out.taskStates || typeof out.taskStates !== 'object' || Array.isArray(out.taskStates)) out.taskStates = {};
     if (!out.copied || typeof out.copied !== 'object' || Array.isArray(out.copied)) out.copied = {};
     if (!out.promptEdits || typeof out.promptEdits !== 'object' || Array.isArray(out.promptEdits)) out.promptEdits = {};
     /* aiNotes dari payload impor bisa berbentuk apa saja; paksa ke bentuk
@@ -477,10 +479,23 @@
     },
     clearRun: function () {
       data.checks = {};
+      data.taskStates = {};
       data.copied = {};
       data.promptEdits = {};
       data.lastResult = null;
       save();
+    },
+    setTaskState: function (id, state) {
+      if (!id) return false;
+      if (!data.taskStates || typeof data.taskStates !== 'object') data.taskStates = {};
+      var prev = data.taskStates[id];
+      data.taskStates[id] = String(state || 'planned');
+      if (!save()) {
+        if (prev != null) data.taskStates[id] = prev;
+        else delete data.taskStates[id];
+        return false;
+      }
+      return true;
     },
     reset: function () {
       var h = data.history || [];

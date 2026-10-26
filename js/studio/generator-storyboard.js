@@ -84,6 +84,14 @@
       cameraStyle: 'CCTV tilt stepped, scanning line sweep vertikal, glitch jump cut saat anomali terdeteksi',
       bgStyle: 'Cold Surveillance Navy (#040812) dengan reticle HUD hijau/cyan dan barcode ticker dinamis',
       cardStyle: 'Tactical HUD visor glass panel dengan corner targeting brackets dan status bar hijau/merah'
+    },
+    '3d-explainer': {
+      id: '3d-explainer',
+      name: '3D Spatial & Visual Explainer (Tau Yang Penting & How Come)',
+      tagline: 'Potongan melintang 3D isometrik, orbit kamera dinamis, leader lines data, pencahayaan rim-light',
+      cameraStyle: 'Orbit turntable 3D continuo (scale 1.0 -> 1.15, yaw -15deg -> 12deg), didampingi Motivated Snap-Zoom 2.2x saat fakta mendarat, dipadu depth of field rack focus',
+      bgStyle: 'Deep Obsidian (#06080F) bertekstur partikel mikro 3D, ambient radial glow ganda (cyan 18% & amber 12%), kabut volumetrik tipis',
+      cardStyle: 'Isometric 3D cross-section cutaway container dengan aksen leader lines SVG penunjuk data, reticle sudut HUD, dan border rim-light kaca tipis'
     }
   };
 
@@ -178,6 +186,9 @@
         rules: ['depth-of-field-blur', 'motion-blur-streak', 'reactive-displacement'],
         motionVerb: 'SLAMS',
         gsapEasing: 'power4.out',
+        paradoxHook: 'Bagaimana mungkin sistem lama ini terus memakan biaya dan waktu tanpa ada yang menyadari?',
+        aiVisualPrompt: 'Isometric 3D cross-section cutaway diagram of crumbling manual paper documents and broken cash register, photorealistic octane render, dramatic rim lighting in crimson red and dark amber, volumetric atmospheric dust, 8k resolution, clean black obsidian background, highly detailed micro-textures --ar ' + (isVertical ? '9:16' : '16:9') + ' --style raw',
+        cameraMotionPrompt: 'Slow continuous forward dolly push toward floating isometric cross-section, shallow depth of field, 60fps micro-motion, subtle atmospheric smoke drift, cinematic macro lens focus',
         vo: 'Setiap hari, ' + problem.slice(0, 85) + ' [jeda 0.5s]. Waktu terbuang sia-sia hanya untuk pekerjaan berulang.',
         headline: 'MASALAH LAMA, BIAYA BESAR',
         subtext: problem.slice(0, 65),
@@ -234,6 +245,8 @@
         rules: ['spring-pop-entrance', 'split-tilt-cards', 'svg-path-draw'],
         motionVerb: 'SPRINGS',
         gsapEasing: 'back.out(1.8)',
+        aiVisualPrompt: 'Futuristic floating 3D glass hardware interface of ' + name + ', isometric perspective, glowing cyan neon edge lines, sleek matte metallic enclosure, photorealistic octane render, studio key lighting, transparent acrylic chassis, volumetric rim glow, 8k --ar ' + (isVertical ? '9:16' : '16:9') + ' --style raw',
+        cameraMotionPrompt: 'Fast orbital camera rotation 45 degrees revealing sleek 3D hardware device, dynamic key light sweep, smooth acceleration into static lockup, 60fps',
         vo: 'Kenalkan ' + name + ' [jeda 0.4s]. ' + firstSentence(oneLiner, 'Solusi yang mengubah cara kerja selamanya') + '.',
         headline: name.toUpperCase(),
         subtext: oneLiner.slice(0, 75),
@@ -289,6 +302,8 @@
         rules: ['multi-phase-camera', 'cursor-click-ripple', 'press-release-spring', 'waterfall-entry'],
         motionVerb: 'STEPS',
         gsapEasing: 'power2.inOut',
+        aiVisualPrompt: 'High-tech 3-layer modular isometric bento box showing ' + must1.slice(0, 30) + ', floating illuminated holographic data streams, physical tactile buttons with amber glow, raytraced reflections on dark tinted glass, 8k cinematic render --ar ' + (isVertical ? '9:16' : '16:9') + ' --style raw',
+        cameraMotionPrompt: 'Dynamic coordinate snap-zoom into active interaction node, followed by smooth horizontal pan across three modular layers, 60fps steadycam motion',
         vo: 'Tiga langkah selesai [jeda 0.3s]. Pertama, ' + must1.slice(0, 60) + ' [jeda 0.4s]. Kedua, ' + must2.slice(0, 60) + ' [jeda 0.4s]. Dan ketiga, ' + must3.slice(0, 60) + '.',
         headline: 'TIGA LANGKAH INSTAN',
         subtext: '1. ' + must1.slice(0, 30) + ' | 2. ' + must2.slice(0, 30) + ' | 3. ' + must3.slice(0, 30),
@@ -345,6 +360,8 @@
         rules: ['counting-dynamic-scale', 'stat-bars-and-fills', 'vertical-spring-ticker'],
         motionVerb: 'COUNTS UP',
         gsapEasing: 'power3.out',
+        aiVisualPrompt: 'Massive 3D glowing holographic numeric counter ' + nfrMetric.slice(0, 25) + ' rising from an isometric grid platform, dynamic bar charts with neon green gradient glow, particle laser telemetry lines, dark tech aesthetic, Unreal Engine 5 render, 8k --ar ' + (isVertical ? '9:16' : '16:9') + ' --style raw',
+        cameraMotionPrompt: 'Low-angle isometric 3D upward camera tilt while numeric gauge fills to peak, pulsating grid lighting, micro-shake on impact landing, 60fps',
         vo: 'Teruji dan terbukti [jeda 0.4s]. ' + nfrMetric + ' [jeda 0.4s]. Fondasi ' + stack + ' memastikan keandalan tanpa kompromi.',
         headline: 'BUKTI PERFORMA TANGGUH',
         subtext: nfrMetric + ' · Efisiensi maksimal teruji',
@@ -399,6 +416,8 @@
         rules: ['scale-swap-transition', 'depth-scatter-assemble', 'magnetic-button-hover'],
         motionVerb: 'LOCKS IN',
         gsapEasing: 'elastic.out(1, 0.4)',
+        aiVisualPrompt: 'Monolithic floating 3D emblem logo of ' + name + ' assembled from precision CNC machined brushed metal pieces, radiant laser halo behind logo, floating pill CTA button with glowing arrow, cinematic studio rim lighting, 8k wallpaper --ar ' + (isVertical ? '9:16' : '16:9') + ' --style raw',
+        cameraMotionPrompt: 'Smooth continuous push-through past floating data streams locking onto hero central 3D logo, gentle deceleration into elegant 2.5s hold, 60fps',
         vo: 'Tinggalkan cara lama [jeda 0.3s]. Beralih ke ' + name + ' hari ini dan buktikan sendiri.',
         headline: name.toUpperCase(),
         subtext: 'Buka sekarang · Tanpa akun · Langsung pakai',
@@ -437,6 +456,14 @@
       }
     ];
 
+    /* Pasang desain sinematik 3D & audio spasial ke setiap babak */
+    if (window.Cinematic && typeof window.Cinematic.composeScene === 'function') {
+      beats.forEach(function (b) {
+        b.cinematic = window.Cinematic.composeScene(b, concept, tempo, ratio);
+        b.soundDesign = window.Cinematic.soundDesign(b, concept, tempo);
+      });
+    }
+
     function toMarkdownTable() {
       var lines = [];
       lines.push('| Detik | Babak & Blueprint | Narasi VO (~' + tempo.wpm + ' WPM) | Visual Kinetik & Layout | Kamera & VFX | Sound Effects (SFX Cue Sheet) | Resep Aset Mandiri (AI Agent) |');
@@ -453,6 +480,7 @@
         if (b.assets.sfxKeys && b.assets.sfxKeys.length) assetItems.push('🎧 **SFX Library:** ' + b.assets.sfxKeys.join(', '));
         if (b.assets.dossierStamp) assetItems.push('🏷️ **Stempel:** `' + b.assets.dossierStamp + '`');
         if (b.assets.uiMockup) assetItems.push('💻 **UI:** ' + b.assets.uiMockup);
+        if (b.aiVisualPrompt) assetItems.push('🔮 **Prompt 3D:** `' + esc(b.aiVisualPrompt.slice(0, 90)) + '…`');
         var assetStr = assetItems.join('<br>');
 
         lines.push('| **' + b.timecode + '** | **' + b.role + '**<br>_Blueprint: ' + b.blueprint + '_<br>_Motion: ' + b.motionVerb + ' (' + b.gsapEasing + ')_ | ' + esc(b.vo) + ' | **' + esc(b.headline) + '**<br>' + esc(b.subtext) + '<br>_' + esc(b.layout) + '_ | ' + esc(b.camera) + ' | ' + sfxStr + ' | ' + assetStr + ' |');
@@ -936,6 +964,8 @@
         if (b.assets.sfxKeys && b.assets.sfxKeys.length) lines.push('- **Pustaka SFX:** `' + b.assets.sfxKeys.join('`, `') + '`');
         if (b.assets.dossierStamp) lines.push('- **Stempel Investigasi:** `' + b.assets.dossierStamp + '`');
         if (b.assets.uiMockup) lines.push('- **UI Mockup:** ' + b.assets.uiMockup);
+        if (b.aiVisualPrompt) lines.push('- **🔮 Prompt Visual 3D (Midjourney/Flux):** `' + b.aiVisualPrompt + '`');
+        if (b.cameraMotionPrompt) lines.push('- **🎥 Prompt Kamera Motion (Runway/Kling):** `' + b.cameraMotionPrompt + '`');
       });
       lines.push('');
       lines.push('## Protokol Eksekusi Mandiri untuk AI Agent:');

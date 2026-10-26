@@ -42,6 +42,114 @@
     });
   }
 
+  function initStackMatrix() {
+    var K = window.Knowledge;
+    if (!K || !K.stacks) return;
+    var cats = ['frontend', 'backend', 'database', 'deployment'];
+    var ids = {
+      frontend: 'stackFrontend',
+      backend: 'stackBackend',
+      database: 'stackDatabase',
+      deployment: 'stackDeployment'
+    };
+    cats.forEach(function (cat) {
+      var sel = $(ids[cat]);
+      if (!sel || sel.options.length > 0) return;
+      var opts = K.stacks[cat] || [];
+      opts.forEach(function (o) {
+        var opt = document.createElement('option');
+        opt.value = o.label;
+        opt.textContent = o.label;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener('change', function () {
+        updateStackPrefFromSelects();
+      });
+    });
+
+    var chipsWrap = $('stackPresetChips');
+    if (chipsWrap) {
+      chipsWrap.addEventListener('click', function (e) {
+        var btn = e.target.closest('button[data-stack-preset]');
+        if (!btn) return;
+        var pId = btn.getAttribute('data-stack-preset');
+        var presets = K.presets || [];
+        for (var i = 0; i < presets.length; i++) {
+          if (presets[i].id === pId) {
+            applyStackPreset(presets[i]);
+            break;
+          }
+        }
+      });
+    }
+  }
+
+  function applyStackPreset(p) {
+    var fe = $('stackFrontend');
+    var be = $('stackBackend');
+    var db = $('stackDatabase');
+    var dep = $('stackDeployment');
+    var pref = $('stackPref');
+    if (fe) fe.value = p.frontend;
+    if (be) be.value = p.backend;
+    if (db) db.value = p.database;
+    if (dep) dep.value = p.deployment;
+    if (pref) {
+      if (window.Undo) window.Undo.mark();
+      pref.value = p.combined;
+      S.data.stackPref = p.combined;
+      collect();
+      refresh(true);
+      if (window.UX && window.UX.toast) {
+        window.UX.toast('Preset arsitektur diterapkan: ' + p.name);
+      }
+    }
+  }
+
+  function updateStackPrefFromSelects() {
+    var K = window.Knowledge;
+    var fe = $('stackFrontend');
+    var be = $('stackBackend');
+    var db = $('stackDatabase');
+    var dep = $('stackDeployment');
+    var pref = $('stackPref');
+    if (!pref || !K || !K.composeStack) return;
+    var combined = K.composeStack(
+      fe ? fe.value : '',
+      be ? be.value : '',
+      db ? db.value : '',
+      dep ? dep.value : ''
+    );
+    if (window.Undo) window.Undo.mark();
+    pref.value = combined;
+    S.data.stackPref = combined;
+    collect();
+    refresh(true);
+  }
+
+  function syncStackSelectsFromPref(v) {
+    if (!v) return;
+    var K = window.Knowledge;
+    if (!K || !K.stacks) return;
+    var fe = $('stackFrontend');
+    var be = $('stackBackend');
+    var db = $('stackDatabase');
+    var dep = $('stackDeployment');
+    if (!fe || !be || !db || !dep) return;
+
+    ['frontend', 'backend', 'database', 'deployment'].forEach(function (cat) {
+      var sel = cat === 'frontend' ? fe : cat === 'backend' ? be : cat === 'database' ? db : dep;
+      var opts = K.stacks[cat] || [];
+      for (var i = 0; i < opts.length; i++) {
+        var lbl = opts[i].label;
+        if (lbl !== 'Biarkan AI pilih' && v.indexOf(lbl) >= 0) {
+          sel.value = lbl;
+          break;
+        }
+      }
+    });
+  }
+
   function hydrate() {
     FIELDS.forEach(function (f) {
       var el = $(f);
@@ -73,6 +181,7 @@
       var el = $(id);
       if (el) el.value = S.data[id] == null ? '' : S.data[id];
     });
+    syncStackSelectsFromPref(S.data.stackPref);
     showStep(S.data.step || 1, true, true);
     refresh(true);
   }
@@ -306,6 +415,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    initStackMatrix();
     hydrate();
     FIELDS.forEach(function (f) {
       var el = $(f);

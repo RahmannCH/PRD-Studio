@@ -762,6 +762,118 @@
     }
   ];
 
+  var STACK_CATALOG = {
+    frontend: [
+      { id: 'ai-pilih', label: 'Biarkan AI pilih' },
+      { id: 'tanstack-start', label: 'TanStack Start' },
+      { id: 'nextjs', label: 'Next.js (App Router)' },
+      { id: 'react-vite', label: 'React (Vite SPA)' },
+      { id: 'remix', label: 'React Router / Remix' },
+      { id: 'astro', label: 'Astro' },
+      { id: 'vue-nuxt', label: 'Vue.js / Nuxt' },
+      { id: 'sveltekit', label: 'SvelteKit' },
+      { id: 'solid', label: 'Solid / SolidStart' },
+      { id: 'expo', label: 'Expo (React Native)' },
+      { id: 'flutter', label: 'Flutter' },
+      { id: 'tauri', label: 'Tauri (Desktop)' },
+      { id: 'vanilla', label: 'HTML CSS JS vanilla' }
+    ],
+    backend: [
+      { id: 'ai-pilih', label: 'Biarkan AI pilih' },
+      { id: 'nodejs-hono', label: 'Node.js (Hono / Fastify)' },
+      { id: 'bun-elysia', label: 'Bun (Elysia)' },
+      { id: 'python-fastapi', label: 'Python (FastAPI)' },
+      { id: 'go-echo', label: 'Go (Echo / Fiber)' },
+      { id: 'rust-axum', label: 'Rust (Axum)' },
+      { id: 'laravel', label: 'Laravel (PHP)' },
+      { id: 'spring-boot', label: 'Java (Spring Boot)' },
+      { id: 'cloudflare-workers', label: 'Cloudflare Workers' },
+      { id: 'supabase', label: 'Supabase (BaaS)' },
+      { id: 'pocketbase', label: 'PocketBase (BaaS)' }
+    ],
+    database: [
+      { id: 'ai-pilih', label: 'Biarkan AI pilih' },
+      { id: 'postgresql', label: 'PostgreSQL' },
+      { id: 'neon', label: 'Neon (Serverless Postgres)' },
+      { id: 'supabase-db', label: 'Supabase Postgres' },
+      { id: 'prisma-postgres', label: 'Prisma Postgres' },
+      { id: 'mysql', label: 'MySQL' },
+      { id: 'sqlite', label: 'SQLite' },
+      { id: 'turso', label: 'Turso (libSQL)' },
+      { id: 'cloudflare-d1', label: 'Cloudflare D1' },
+      { id: 'mongodb', label: 'MongoDB' },
+      { id: 'redis', label: 'Redis / Upstash' }
+    ],
+    deployment: [
+      { id: 'ai-pilih', label: 'Biarkan AI pilih' },
+      { id: 'docker', label: 'Docker' },
+      { id: 'vercel', label: 'Vercel' },
+      { id: 'railway', label: 'Railway' },
+      { id: 'render', label: 'Render' },
+      { id: 'fly', label: 'Fly.io' },
+      { id: 'cloudflare-pages', label: 'Cloudflare Pages' },
+      { id: 'coolify', label: 'Coolify (PaaS)' },
+      { id: 'vps', label: 'VPS (Linux)' }
+    ]
+  };
+
+  var STARTER_PRESETS = [
+    {
+      id: 'saas-modern',
+      name: 'Fullstack SaaS (TanStack)',
+      frontend: 'TanStack Start',
+      backend: 'Node.js (Hono / Fastify)',
+      database: 'PostgreSQL',
+      deployment: 'Docker',
+      combined: 'TanStack Start + Hono + PostgreSQL + Docker'
+    },
+    {
+      id: 'nextjs-fullstack',
+      name: 'Next.js App Router',
+      frontend: 'Next.js (App Router)',
+      backend: 'Node.js (Hono / Fastify)',
+      database: 'Neon (Serverless Postgres)',
+      deployment: 'Vercel',
+      combined: 'Next.js + Neon Postgres + Vercel'
+    },
+    {
+      id: 'vite-baas',
+      name: 'Lean BaaS (Vite+Supabase)',
+      frontend: 'React (Vite SPA)',
+      backend: 'Supabase (BaaS)',
+      database: 'Supabase Postgres',
+      deployment: 'Cloudflare Pages',
+      combined: 'React Vite + Supabase + Cloudflare Pages'
+    },
+    {
+      id: 'mobile-expo',
+      name: 'Mobile (Expo+Turso)',
+      frontend: 'Expo (React Native)',
+      backend: 'Node.js (Hono / Fastify)',
+      database: 'Turso (libSQL)',
+      deployment: 'Railway',
+      combined: 'Expo React Native + Hono + Turso'
+    },
+    {
+      id: 'vanilla-cf',
+      name: 'Vanilla (CF Pages+D1)',
+      frontend: 'HTML CSS JS vanilla',
+      backend: 'Cloudflare Workers',
+      database: 'Cloudflare D1',
+      deployment: 'Cloudflare Pages',
+      combined: 'HTML CSS JS vanilla + Cloudflare D1'
+    }
+  ];
+
+  function composeStack(fe, be, db, dep) {
+    var parts = [];
+    if (fe && fe !== 'ai-pilih') parts.push(fe);
+    if (be && be !== 'ai-pilih') parts.push(be);
+    if (db && db !== 'ai-pilih') parts.push(db);
+    if (dep && dep !== 'ai-pilih') parts.push(dep);
+    return parts.length ? parts.join(', ') : 'Belum tahu, minta saran';
+  }
+
   function matchFeatures(text) {
     var seen = {};
     var out = [];
@@ -793,7 +905,10 @@
     entitiesToErd: entitiesToErd,
     endpointsToMarkdown: endpointsToMarkdown,
     riskToText: riskToText,
-    labelToErd: labelToErd
+    labelToErd: labelToErd,
+    stacks: STACK_CATALOG,
+    presets: STARTER_PRESETS,
+    composeStack: composeStack
   };
   syncIndustrySpec();
 })();
