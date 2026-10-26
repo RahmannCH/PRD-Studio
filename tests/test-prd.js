@@ -68,6 +68,7 @@ load('reverse-engineer.js');
 load('prd-analytics.js');
 load('code-scaffold.js');
 load('dep-graph.js');
+load('prd-templates.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -1818,6 +1819,63 @@ const diagrams = window.GenDiagrams(sample);
   const dgEmptyAnalysis = DG.analyzeGraph(dgEmpty, {});
   ok(dgEmptyAnalysis.nodeCount === 0, 'empty graph has 0 nodes');
   ok(dgEmptyAnalysis.criticalPath.totalDuration === 0, 'empty critical path is 0');
+
+  // PRD Template Library (Ide 18)
+  const PT = window.PRDTemplateLibrary;
+  ok(PT && typeof PT.listTemplates === 'function', 'PRDTemplateLibrary exposes listTemplates');
+  ok(typeof PT.getTemplate === 'function', 'PRDTemplateLibrary exposes getTemplate');
+  ok(typeof PT.applyTemplate === 'function', 'PRDTemplateLibrary exposes applyTemplate');
+  ok(typeof PT.templateSpec === 'function', 'PRDTemplateLibrary exposes templateSpec');
+
+  const ptList = PT.listTemplates();
+  ok(Array.isArray(ptList) && ptList.length >= 5, 'listTemplates returns 5+ templates');
+
+  const ptIds = ptList.map(function (t) { return t.id; });
+  ok(ptIds.indexOf('saas-b2b') > -1, 'saas-b2b template present');
+  ok(ptIds.indexOf('ecommerce') > -1, 'ecommerce template present');
+  ok(ptIds.indexOf('mobile-app') > -1, 'mobile-app template present');
+
+  const ptTmpl = PT.getTemplate('saas-b2b');
+  ok(ptTmpl && ptTmpl.id === 'saas-b2b', 'getTemplate returns template');
+  ok(ptTmpl.answers && ptTmpl.answers.productName, 'template has answers');
+  ok(Array.isArray(ptTmpl.entities) && ptTmpl.entities.length > 0, 'template has entities');
+  ok(Array.isArray(ptTmpl.endpoints) && ptTmpl.endpoints.length > 0, 'template has endpoints');
+
+  const ptNull = PT.getTemplate('nonexistent');
+  ok(ptNull === null, 'getTemplate returns null for unknown');
+
+  const ptIndustries = PT.industries();
+  ok(Array.isArray(ptIndustries) && ptIndustries.length > 0, 'industries returns array');
+
+  const ptByInd = PT.templatesByIndustry('SaaS');
+  ok(Array.isArray(ptByInd) && ptByInd.length >= 1, 'templatesByIndustry filters by industry');
+
+  // applyTemplate merges defaults
+  const ptAnswers = PT.applyTemplate('ecommerce', {});
+  ok(ptAnswers.productName === 'Toko Online', 'applyTemplate sets productName');
+  ok(ptAnswers.mustHave && ptAnswers.mustHave.length > 0, 'applyTemplate sets mustHave');
+
+  // applyTemplate respects user overrides
+  const ptAnswers2 = PT.applyTemplate('ecommerce', { productName: 'My Store' });
+  ok(ptAnswers2.productName === 'My Store', 'applyTemplate respects user override');
+
+  // templateSpec
+  const ptSpec = PT.templateSpec('mobile-app');
+  ok(ptSpec && ptSpec.meta && ptSpec.meta.productName, 'templateSpec returns spec with meta');
+  ok(Array.isArray(ptSpec.entities), 'templateSpec has entities');
+  ok(Array.isArray(ptSpec.endpoints), 'templateSpec has endpoints');
+  ok(ptSpec.templateId === 'mobile-app', 'templateSpec has templateId');
+
+  const ptSpecNull = PT.templateSpec('nonexistent');
+  ok(ptSpecNull === null, 'templateSpec returns null for unknown');
+
+  // All templates have required fields
+  PT.listTemplates().forEach(function (t) {
+    var full = PT.getTemplate(t.id);
+    ok(full.answers && full.answers.productName, t.id + ' has productName');
+    ok(Array.isArray(full.entities), t.id + ' has entities array');
+    ok(Array.isArray(full.endpoints), t.id + ' has endpoints array');
+  });
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
