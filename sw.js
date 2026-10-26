@@ -58,6 +58,7 @@ const CORE = [
   'js/studio/cinematic.js',
   'js/studio/template-browser.js',
   'js/studio/chat-mode.js',
+  'js/studio/quality-gate.js',
   'js/studio/render.js',
   'js/studio/palette.js',
   'js/studio/llm-adapter.js',

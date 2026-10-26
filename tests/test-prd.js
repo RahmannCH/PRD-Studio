@@ -60,6 +60,7 @@ load('kanban.js');
 load('cinematic.js');
 load('template-browser.js');
 load('chat-mode.js');
+load('quality-gate.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -1382,6 +1383,35 @@ const diagrams = window.GenDiagrams(sample);
   const deleted = CM.deleteSession(sess.id);
   ok(deleted === true, 'deleteSession returns true');
   ok(CM.loadSession(sess.id) === null, 'deleteSession removes session');
+
+  // Quality Gate Dashboard & PRD Health Score (Ide 10)
+  const QG = window.QualityGate;
+  ok(QG && typeof QG.analyze === 'function', 'QualityGate exposes analyze');
+  ok(typeof QG.reportMarkdown === 'function', 'QualityGate exposes reportMarkdown');
+  ok(Array.isArray(QG.DIMENSIONS) && QG.DIMENSIONS.length === 5, 'QualityGate has 5 dimensions');
+
+  const sampleQ = window.StudioSample;
+  const specQ = window.Spec.build(sampleQ, { score: 90, level: 'Siap' });
+  const analysisQ = QG.analyze(specQ);
+  ok(analysisQ && typeof analysisQ.healthScore === 'number', 'analyze returns healthScore');
+  ok(analysisQ.healthScore >= 0 && analysisQ.healthScore <= 100, 'healthScore in range 0-100');
+  ok(['A','B','C','D','F'].indexOf(analysisQ.grade) > -1, 'grade is A-F');
+  ok(Array.isArray(analysisQ.dimensions) && analysisQ.dimensions.length === 5, 'analysis has 5 dimensions');
+  ok(Array.isArray(analysisQ.topIssues), 'analysis has topIssues array');
+  ok(typeof analysisQ.summary === 'string' && analysisQ.summary.length > 0, 'analysis has summary');
+
+  const reportQ = QG.reportMarkdown(analysisQ);
+  ok(reportQ.indexOf('# Quality Gate Report') > -1, 'reportMarkdown has header');
+  ok(reportQ.indexOf('Health Score:') > -1, 'reportMarkdown has health score');
+  ok(reportQ.indexOf('| Dimensi |') > -1, 'reportMarkdown has dimension table');
+
+  // Empty spec yields low score
+  const emptyAnalysis = QG.analyze({});
+  ok(emptyAnalysis.healthScore < 60, 'empty spec yields low health score');
+
+  // Grade function
+  ok(QG.gradeFromScore(95) === 'A', 'gradeFromScore 95 = A');
+  ok(QG.gradeFromScore(50) === 'F', 'gradeFromScore 50 = F');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
