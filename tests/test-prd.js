@@ -72,6 +72,7 @@ load('prd-templates.js');
 load('export-hub.js');
 load('prd-diff.js');
 load('prd-autofix.js');
+load('prd-search.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -2048,6 +2049,67 @@ const diagrams = window.GenDiagrams(sample);
   // Clean spec report
   const afCleanReport = AF.reportMarkdown(afComplete);
   ok(typeof afCleanReport === 'string', 'clean report is string');
+
+  // PRD Search & Filter (Ide 22)
+  const PS = window.PRDSearch;
+  ok(PS && typeof PS.searchProjects === 'function', 'PRDSearch exposes searchProjects');
+  ok(typeof PS.combinedFilter === 'function', 'PRDSearch exposes combinedFilter');
+  ok(typeof PS.sortProjects === 'function', 'PRDSearch exposes sortProjects');
+
+  const psProjects = [
+    { name: 'Kasir', data: { productName: 'Kasir Warung', problem: 'Pencatatan transaksi', industry: 'Retail' }, score: 85, createdAt: '2026-01-01' },
+    { name: 'SaaS', data: { productName: 'SaaS Platform', problem: 'Manajemen tim', industry: 'SaaS' }, score: 45, createdAt: '2026-02-01' },
+    { name: 'Mobile', data: { productName: 'Mobile App', problem: 'Feed sosial', industry: 'Mobile' }, score: 92, createdAt: '2026-03-01' }
+  ];
+
+  // searchProjects
+  const psSearch = PS.searchProjects(psProjects, 'kasir');
+  ok(psSearch.length === 1, 'searchProjects finds kasir');
+
+  const psSearchAll = PS.searchProjects(psProjects, '');
+  ok(psSearchAll.length === 3, 'empty query returns all');
+
+  const psSearchNone = PS.searchProjects(psProjects, 'zzzznotfound');
+  ok(psSearchNone.length === 0, 'no match returns empty');
+
+  // filterByIndustry
+  const psInd = PS.filterByIndustry(psProjects, 'SaaS');
+  ok(psInd.length === 1, 'filterByIndustry filters SaaS');
+
+  const psIndAll = PS.filterByIndustry(psProjects, 'all');
+  ok(psIndAll.length === 3, 'filterByIndustry all returns all');
+
+  // filterByStatus
+  const psStatus = PS.filterByStatus(psProjects, 'complete');
+  ok(psStatus.length === 2, 'filterByStatus complete returns 2 (85,92)');
+
+  // filterByScoreRange
+  const psRange = PS.filterByScoreRange(psProjects, 50, 90);
+  ok(psRange.length === 1, 'filterByScoreRange 50-90 returns 1 (85)');
+
+  // filterByDateRange
+  const psDate = PS.filterByDateRange(psProjects, '2026-02-01', '2026-03-01');
+  ok(psDate.length === 2, 'filterByDateRange returns 2');
+
+  // sortProjects
+  const psSortedAsc = PS.sortProjects(psProjects, 'score', 'asc');
+  ok(psSortedAsc[0].score === 45, 'sortProjects asc by score');
+
+  const psSortedDesc = PS.sortProjects(psProjects, 'score', 'desc');
+  ok(psSortedDesc[0].score === 92, 'sortProjects desc by score');
+
+  const psSortedName = PS.sortProjects(psProjects, 'name', 'asc');
+  ok(psSortedName[0].data.productName === 'Kasir Warung', 'sortProjects asc by name');
+
+  // combinedFilter
+  const psCombined = PS.combinedFilter(psProjects, { query: 'a', industry: 'all', minScore: 50, sortBy: 'score', sortOrder: 'desc' });
+  ok(Array.isArray(psCombined), 'combinedFilter returns array');
+
+  // highlightMatch
+  const psHl = PS.highlightMatch('Hello World', 'world');
+  ok(psHl.indexOf('**world**') > -1 || psHl.indexOf('**World**') > -1, 'highlightMatch wraps match');
+  const psHlNone = PS.highlightMatch('Hello World', 'xyz');
+  ok(psHlNone === 'Hello World', 'highlightMatch no match returns original');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
