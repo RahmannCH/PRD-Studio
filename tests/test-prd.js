@@ -64,6 +64,7 @@ load('quality-gate.js');
 load('version-control.js');
 load('agent-prompt-library.js');
 load('collab-review.js');
+load('reverse-engineer.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -1601,6 +1602,48 @@ const diagrams = window.GenDiagrams(sample);
   const replyId = review3.comments[0].replies[0].id;
   const foundReply = CR.findComment(review3.comments, replyId);
   ok(foundReply !== null, 'findComment finds nested reply');
+
+  // Reverse Engineering Assistant (Ide 14)
+  const RE = window.ReverseEngineer;
+  ok(RE && typeof RE.reverseEngineer === 'function', 'ReverseEngineer exposes reverseEngineer');
+  ok(typeof RE.extractEntities === 'function', 'ReverseEngineer exposes extractEntities');
+  ok(typeof RE.extractFeatures === 'function', 'ReverseEngineer exposes extractFeatures');
+  ok(typeof RE.toAnswers === 'function', 'ReverseEngineer exposes toAnswers');
+  ok(typeof RE.reportMarkdown === 'function', 'ReverseEngineer exposes reportMarkdown');
+
+  const reText = 'Aplikasi Kasir Warung adalah sistem pencatatan transaksi retail. Pengguna bisa mencatat transaksi offline dan sinkron saat online. Sistem mendukung cetak struk thermal 58mm. Pengguna adalah ibu pemilik warung. Target: transaksi selesai di bawah 30 detik. Risiko: printer putus di jam sibuk. Langkah: 1. Buka layar kasir, 2. Ketuk barang, 3. Terima uang, 4. Cetak struk.';
+  const reResult = RE.reverseEngineer(reText);
+  ok(reResult && reResult.productName, 'reverseEngineer returns productName');
+  ok(reResult.entities.length >= 0, 'reverseEngineer returns entities');
+  ok(reResult.features.length >= 1, 'reverseEngineer extracts features');
+  ok(reResult.flows.length >= 1, 'reverseEngineer extracts flows');
+  ok(reResult.nfr.length >= 0, 'reverseEngineer returns nfr');
+  ok(reResult.risks.length >= 1, 'reverseEngineer extracts risks');
+  ok(reResult.metrics.length >= 1, 'reverseEngineer extracts metrics');
+  ok(reResult.stats.featureCount === reResult.features.length, 'stats featureCount matches');
+
+  const reAnswers = RE.toAnswers(reResult);
+  ok(typeof reAnswers === 'object', 'toAnswers returns object');
+  ok(reAnswers.mustHave && reAnswers.mustHave.indexOf('mencatat') > -1, 'toAnswers maps features to mustHave');
+  ok(reAnswers.mainFlow && reAnswers.mainFlow.length > 0, 'toAnswers maps flow to mainFlow');
+
+  const reMd = RE.reportMarkdown(reResult);
+  ok(reMd.indexOf('# Reverse Engineering Report') > -1, 'reportMarkdown has header');
+  ok(reMd.indexOf('## Entitas Terdeteksi') > -1, 'reportMarkdown has entities section');
+  ok(reMd.indexOf('## Fitur Terdeteksi') > -1, 'reportMarkdown has features section');
+
+  // Empty text
+  const reEmpty = RE.reverseEngineer('');
+  ok(reEmpty.entities.length === 0, 'empty text yields no entities');
+  ok(reEmpty.features.length === 0, 'empty text yields no features');
+
+  // extractEntities standalone
+  const ents = RE.extractEntities('Kasir adalah sistem pencatatan. Admin mengelola data.');
+  ok(Array.isArray(ents), 'extractEntities returns array');
+
+  // extractFeatures standalone
+  const feats = RE.extractFeatures('Sistem bisa mencatat transaksi. Dapat mencetak struk.');
+  ok(Array.isArray(feats) && feats.length >= 1, 'extractFeatures returns features');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
