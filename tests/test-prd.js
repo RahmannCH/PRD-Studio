@@ -62,6 +62,7 @@ load('template-browser.js');
 load('chat-mode.js');
 load('quality-gate.js');
 load('version-control.js');
+load('agent-prompt-library.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -1472,6 +1473,43 @@ const diagrams = window.GenDiagrams(sample);
   VC.saveVersion('proj3', snapBranch);
   const featVersions = VC.versionsByBranch('proj3', 'feature-x');
   ok(featVersions.length === 1, 'versionsByBranch filters by branch');
+
+  // AI Agent Prompt Library & Adapter (Ide 12)
+  const APL = window.AgentPromptLibrary;
+  ok(APL && typeof APL.generatePrompt === 'function', 'AgentPromptLibrary exposes generatePrompt');
+  ok(typeof APL.listAgents === 'function', 'AgentPromptLibrary exposes listAgents');
+  ok(typeof APL.matchAgent === 'function', 'AgentPromptLibrary exposes matchAgent');
+
+  const agents = APL.listAgents();
+  ok(Array.isArray(agents) && agents.length === 6, 'listAgents returns 6 agents');
+  ok(agents.some(a => a.id === 'cursor'), 'cursor agent present');
+  ok(agents.some(a => a.id === 'claude-code'), 'claude-code agent present');
+  ok(agents.some(a => a.id === 'copilot'), 'copilot agent present');
+
+  const sampleApl = window.StudioSample;
+  const specApl = window.Spec.build(sampleApl, { score: 90, level: 'Siap' });
+  const cursorPrompt = APL.generatePrompt('cursor', specApl, 'Kasir Warung');
+  ok(typeof cursorPrompt === 'string' && cursorPrompt.indexOf('.cursorrules') > -1, 'cursor prompt has cursorrules header');
+  ok(cursorPrompt.indexOf('Kasir Warung') > -1, 'cursor prompt includes project name');
+
+  const claudePrompt = APL.generatePrompt('claude-code', specApl, 'Kasir Warung');
+  ok(claudePrompt.indexOf('CLAUDE.md') > -1, 'claude-code prompt has CLAUDE.md header');
+
+  const allPrompts = APL.generateAllPrompts(specApl, 'Kasir Warung');
+  ok(typeof allPrompts === 'object', 'generateAllPrompts returns object');
+  ok(Object.keys(allPrompts).length === 6, 'generateAllPrompts generates 6 prompts');
+
+  ok(APL.matchAgent('cursor ide') === 'cursor', 'matchAgent recognizes cursor');
+  ok(APL.matchAgent('claude code cli') === 'claude-code', 'matchAgent recognizes claude-code');
+  ok(APL.matchAgent('github copilot') === 'copilot', 'matchAgent recognizes copilot');
+  ok(APL.matchAgent('windsurf codeium') === 'windsurf', 'matchAgent recognizes windsurf');
+  ok(APL.matchAgent('aider cli') === 'aider', 'matchAgent recognizes aider');
+  ok(APL.matchAgent('devin ai') === 'devin', 'matchAgent recognizes devin');
+  ok(APL.matchAgent('unknown') === null, 'matchAgent returns null for unknown');
+
+  const comparison = APL.agentComparison();
+  ok(Array.isArray(comparison) && comparison.length === 6, 'agentComparison returns 6 entries');
+  ok(comparison[0].bestPractices.length > 0, 'comparison includes best practices');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
