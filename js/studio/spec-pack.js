@@ -351,6 +351,12 @@ window.SpecPack = (function () {
     return sb ? sb.masterPrompt : '';
   }
 
+  function nleMarkers(data, res) {
+    var spec = specOf(data, res);
+    var sb = (window.GenStoryboard) ? window.GenStoryboard(data, spec) : null;
+    return sb ? sb.nleMarkers : '';
+  }
+
   function antiPptLinter() {
     return [
       '#!/usr/bin/env node',
@@ -515,6 +521,7 @@ window.SpecPack = (function () {
       { name: 'STORYBOARD-' + slug + '.md', text: sb.markdown, type: 'text/markdown' },
       { name: 'FRAME-' + slug + '.md', text: sb.frameSpec, type: 'text/markdown' },
       { name: 'AGENT-HYPERFRAMES-' + slug + '.md', text: sb.masterPrompt, type: 'text/markdown' },
+      { name: 'MARKERS-' + slug + '.csv', text: sb.nleMarkers || '', type: 'text/csv' },
       { name: 'index.html', text: sb.rootHtml || '', type: 'text/html' }
     ];
     (sb.subcompHtmls || []).forEach(function (f) {
@@ -523,6 +530,42 @@ window.SpecPack = (function () {
     out.push({ name: 'sfx-synth.js', text: sb.proceduralAudio || '', type: 'application/javascript' });
     out.push({ name: 'lint-anti-ppt.js', text: antiPptLinter(), type: 'application/javascript' });
     return out;
+  }
+
+  function inferStack(data) {
+    var sp = String((data && data.stackPref) || '').toLowerCase();
+    var fe = 'ai-pilih', be = 'ai-pilih', db = 'ai-pilih', dep = 'ai-pilih';
+    if (/tanstack/.test(sp)) fe = 'TanStack Start';
+    else if (/next\.?js/.test(sp)) fe = 'Next.js (App Router)';
+    else if (/react.*vite|vite.*react/.test(sp)) fe = 'React (Vite SPA)';
+    else if (/expo/.test(sp)) fe = 'Expo (React Native)';
+    else if (/svelte/.test(sp)) fe = 'SvelteKit';
+    else if (/vue|nuxt/.test(sp)) fe = 'Vue.js / Nuxt';
+    else if (/astro/.test(sp)) fe = 'Astro';
+    else if (/vanilla|html css js/.test(sp)) fe = 'HTML CSS JS vanilla';
+    if (/hono|fastify|node/.test(sp)) be = 'Node.js (Hono / Fastify)';
+    else if (/fastapi|python/.test(sp)) be = 'Python (FastAPI)';
+    else if (/echo|fiber|go\b/.test(sp)) be = 'Go (Echo / Fiber)';
+    else if (/axum|rust/.test(sp)) be = 'Rust (Axum)';
+    else if (/supabase/.test(sp)) be = 'Supabase (BaaS)';
+    else if (/cloudflare workers/.test(sp)) be = 'Cloudflare Workers';
+    else if (/laravel/.test(sp)) be = 'Laravel (PHP)';
+    else if (/spring/.test(sp)) be = 'Java (Spring Boot)';
+    if (/neon/.test(sp)) db = 'Neon (Serverless Postgres)';
+    else if (/postgres/.test(sp)) db = 'PostgreSQL';
+    else if (/supabase/.test(sp)) db = 'Supabase Postgres';
+    else if (/turso/.test(sp)) db = 'Turso (libSQL)';
+    else if (/cloudflare d1|d1\b/.test(sp)) db = 'Cloudflare D1';
+    else if (/sqlite/.test(sp)) db = 'SQLite';
+    else if (/mongo/.test(sp)) db = 'MongoDB';
+    else if (/mysql/.test(sp)) db = 'MySQL';
+    if (/vercel/.test(sp)) dep = 'Vercel';
+    else if (/docker/.test(sp)) dep = 'Docker';
+    else if (/cloudflare pages/.test(sp)) dep = 'Cloudflare Pages';
+    else if (/railway/.test(sp)) dep = 'Railway';
+    else if (/fly\.?io/.test(sp)) dep = 'Fly.io';
+    else if (/render/.test(sp)) dep = 'Render';
+    return { frontend: fe, backend: be, database: db, deployment: dep };
   }
 
   function files(data, res, opts) {
@@ -538,6 +581,14 @@ window.SpecPack = (function () {
     if (opts && opts.includeVideo) {
       return base.concat(videoFiles(data, res));
     }
+    if (opts && opts.includeScaffold) {
+      var stack = inferStack(data);
+      var tpl = (window.TemplateBrowser && typeof window.TemplateBrowser.matchTemplate === 'function') ? window.TemplateBrowser.matchTemplate(stack) : null;
+      if (tpl) {
+        var sc = (window.TemplateBrowser && typeof window.TemplateBrowser.scaffoldMarkdown === 'function') ? window.TemplateBrowser.scaffoldMarkdown(tpl, data) : '';
+        if (sc) base = base.concat([{ name: 'SCAFFOLD-' + slug + '.md', text: sc, type: 'text/markdown' }]);
+      }
+    }
     return base;
   }
 
@@ -552,6 +603,7 @@ window.SpecPack = (function () {
     taskRunner: taskRunner,
     storyboard: storyboard,
     agentHyperframes: agentHyperframes,
+    nleMarkers: nleMarkers,
     videoFiles: videoFiles
   };
 })();

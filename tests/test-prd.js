@@ -59,6 +59,7 @@ load('undo.js');
 load('kanban.js');
 load('cinematic.js');
 load('template-browser.js');
+load('chat-mode.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -891,6 +892,10 @@ const diagrams = window.GenDiagrams(sample);
   const slug = window.Exporter.slug(sample.productName);
   const files = window.SpecPack.files(sample, res);
   ok(files.length === 6, 'spec pack has six files');
+  const scaffoldFiles = window.SpecPack.files(sample, res, { includeScaffold: true });
+  ok(scaffoldFiles.length === 7, 'spec pack with includeScaffold yields seven files');
+  ok(scaffoldFiles[6].name === 'SCAFFOLD-' + slug + '.md', 'scaffold file naming follows export convention');
+  ok(scaffoldFiles[6].text.indexOf('# SCAFFOLD:') > -1, 'scaffold file contains scaffold header');
   ok(files[0].name === 'REQUIREMENTS-' + slug + '.md' && files[4].name === 'FEATURES-' + slug + '.feature' &&
     files[5].name === 'AGENTS-' + slug + '.md', 'spec pack filenames follow the export naming');
   const req = files[0].text;
@@ -1134,9 +1139,9 @@ const diagrams = window.GenDiagrams(sample);
   const sbMd = SP.storyboard(sample);
   ok(sbMd.indexOf('00:00 - 00:06') > -1 && sbMd.indexOf('HOOK_PAIN') > -1, 'SpecPack.storyboard returns markdown table with timecodes');
   const vFiles = SP.videoFiles(sample);
-  ok(vFiles.length === 11 && vFiles[0].name.indexOf('STORYBOARD-') === 0 && vFiles[vFiles.length - 1].name === 'lint-anti-ppt.js', 'SpecPack.videoFiles returns eleven runnable video project files (incl. index.html, 5 subcomps, sfx-synth, and linter)');
+  ok(vFiles.length === 12 && vFiles[0].name.indexOf('STORYBOARD-') === 0 && vFiles[3].name.indexOf('MARKERS-') === 0 && vFiles[vFiles.length - 1].name === 'lint-anti-ppt.js', 'SpecPack.videoFiles returns twelve runnable video project files (incl. index.html, 5 subcomps, markers, sfx-synth, and linter)');
   const fullFiles = SP.files(sample, null, { includeVideo: true });
-  ok(fullFiles.length === 17, 'SpecPack.files with includeVideo returns seventeen files (6 software + 11 video)');
+  ok(fullFiles.length === 18, 'SpecPack.files with includeVideo returns eighteen files (6 software + 12 video)');
 
   // Multi-concept & 9:16 vertical ratio adaptation
   const sb916 = G(sample, null, { concept: 'kinetic-term', ratio: '9:16' });
@@ -1147,11 +1152,15 @@ const diagrams = window.GenDiagrams(sample);
   const sbRelax = G(sample, null, { tempo: 'relax' });
   ok(sbRelax.tempo.bpm === 100 && sbRelax.tempo.id === 'relax', 'relax tempo sets 100 BPM');
 
-  ok(Object.keys(sb.concepts).length === 9, 'nine motion concepts defined (incl. 3d-explainer)');
+  ok(Object.keys(sb.concepts).length === 12, 'twelve motion concepts defined (incl. 3d-explainer, engineering-cutaway, scientific-explainer, causal-metaphor)');
   ok(sb.beats.every(b => b.motionVerb && b.gsapEasing), 'every beat defines an explicit motion verb and GSAP easing');
   ok(sb.beats.every(b => b.aiVisualPrompt && b.cameraMotionPrompt), 'every beat defines 3D visual prompt and camera motion prompt');
+  ok(sb.beats.every(b => b.threeJsSnippet && b.threeJsSnippet.indexOf('THREE.') > -1), 'every beat defines a runnable Three.js procedural snippet');
+  ok(typeof sb.nleMarkers === 'string' && sb.nleMarkers.indexOf('Record In') > -1, 'storyboard produces NLE timeline markers CSV');
   const sb3d = G(sample, null, { concept: '3d-explainer', ratio: '9:16' });
   ok(sb3d.concept.id === '3d-explainer' && sb3d.concept.name.indexOf('3D Spatial') > -1, '3d-explainer concept selected');
+  const sbCutaway = G(sample, null, { concept: 'engineering-cutaway', ratio: '9:16' });
+  ok(sbCutaway.concept.id === 'engineering-cutaway' && sbCutaway.concept.name.indexOf('Potongan Melintang') > -1, 'engineering-cutaway concept selected');
   ok(sb.proceduralAudio.indexOf('cash:') > -1 && sb.proceduralAudio.indexOf('keytype:') > -1 && sb.proceduralAudio.indexOf('scan:') > -1 && sb.proceduralAudio.indexOf('heartbeat:') > -1 && sb.proceduralAudio.indexOf('siren:') > -1 && sb.proceduralAudio.indexOf('geiger:') > -1, 'procedural audio synth implements 22 instruments');
   ok(sb.assetMatrix && Array.isArray(sb.assetMatrix.broll) && Array.isArray(sb.assetMatrix.sfx) && sb.assetMatrix.directSearchUrls, 'comprehensive multi-platform asset matrix generated');
 
@@ -1173,19 +1182,23 @@ const diagrams = window.GenDiagrams(sample);
   ok(htmlSt.indexOf('data-tab="video"') > -1 && htmlSt.indexOf('id="out-video"') > -1, 'studio.html has video tab and panel');
   ok(htmlSt.indexOf('id="storyboardTimeline"') > -1, 'studio.html contains storyboard timeline container');
   ok(htmlSt.indexOf('data-act="copy-video-prompt"') > -1 && htmlSt.indexOf('data-act="dl-video-pack"') > -1, 'studio.html has video prompt and video pack buttons');
+  ok(htmlSt.indexOf('data-act="dl-nle-markers"') > -1, 'studio.html has dl-nle-markers button');
   ok(htmlSt.indexOf('id="modeSwitcher"') > -1 && htmlSt.indexOf('id="storyboardWorkspace"') > -1, 'studio.html contains dedicated mode switcher and storyboard workspace');
   ok(htmlSt.indexOf('id="videoDirector"') > -1 && htmlSt.indexOf('id="btnPullSoftware"') > -1, 'studio.html contains director form and pull software button');
   ok(htmlSt.indexOf('id="btnAiVideoDraft"') > -1 && htmlSt.indexOf('data-act="ai-polish-video"') > -1, 'studio.html has AI video draft and polish buttons');
 
   const renderSt = fs.readFileSync(path.join(root, 'render.js'), 'utf8');
   ok(renderSt.indexOf('startAudioSimulation') > -1 && renderSt.indexOf('sb-sim-btn') > -1, 'render.js implements real-time audio simulation');
+  ok(renderSt.indexOf('playBgmBeat') > -1 && renderSt.indexOf('sb-live-viewport-card') > -1, 'render.js implements live viewport preview and BGM beat loop');
 
   const appSt = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   ok(appSt.indexOf("'copy-video-prompt'") > -1 && appSt.indexOf("'dl-video-pack'") > -1 && appSt.indexOf('RenderOut.storyboard') > -1, 'app.js wires video prompt, pack download, and storyboard rendering');
+  ok(appSt.indexOf("'dl-nle-markers'") > -1, 'app.js wires dl-nle-markers export handler');
   ok(appSt.indexOf('setStudioMode') > -1 && appSt.indexOf('btnPullSoftware') > -1 && appSt.indexOf('ai-polish-video') > -1, 'app.js wires studio mode switching, director form, and AI polish');
 
   const palSt = fs.readFileSync(path.join(root, 'palette.js'), 'utf8');
   ok(palSt.indexOf('copy-video-prompt') > -1 && palSt.indexOf('dl-video-pack') > -1 && palSt.indexOf("['video', 'Video / Storyboard']") > -1, 'palette.js lists video commands in Ctrl+K');
+  ok(palSt.indexOf('dl-nle-markers') > -1, 'palette.js lists dl-nle-markers in Ctrl+K');
   ok(palSt.indexOf('Ganti Mode: PRD Software') > -1 && palSt.indexOf('Ganti Mode: Storyboard HyperFrames') > -1, 'palette.js lists studio mode switcher commands in Ctrl+K');
   ok(palSt.indexOf('ai-polish-video') > -1, 'palette.js lists ai polish video command in Ctrl+K');
 
@@ -1275,6 +1288,23 @@ const diagrams = window.GenDiagrams(sample);
   ok(typeof C.CAMERA_RIGS['orbit-360'] === 'object', 'CAMERA_RIGS exposes orbit-360');
   ok(typeof C.COLOR_GRADES['cinematic-teal-orange'] === 'object', 'COLOR_GRADES exposes cinematic-teal-orange');
 
+  // Verify engineering-cutaway cinematic scene mapping
+  const sbEng = window.GenStoryboard(sampleC, specC, { concept: 'engineering-cutaway', ratio: '9:16', tempo: 'fast' });
+  const engScene0 = sbEng.beats[0].cinematic;
+  ok(engScene0.cameraRig.id === 'dutch-stress-angle', 'engineering-cutaway beat 1 uses dutch-stress-angle rig');
+  ok(engScene0.depthStack.name.indexOf('Cutaway Strata') > -1, 'engineering-cutaway uses cutaway-strata depth stack');
+  ok(engScene0.vfx.some(v => v.id === 'stress-vector-cone'), 'engineering-cutaway beat 1 attaches stress-vector-cone VFX');
+  const engScene2 = sbEng.beats[2].cinematic;
+  ok(engScene2.vfx.some(v => v.id === 'hydraulic-pumping-spray'), 'engineering-cutaway beat 3 attaches hydraulic-pumping-spray VFX');
+
+  // Verify scientific-explainer cinematic scene mapping
+  const sbSci = window.GenStoryboard(sampleC, specC, { concept: 'scientific-explainer', ratio: '9:16', tempo: 'standard' });
+  const sciScene0 = sbSci.beats[0].cinematic;
+  ok(sciScene0.cameraRig.id === 'scale-oscillator', 'scientific-explainer beat 1 uses scale-oscillator rig');
+  ok(sciScene0.vfx.some(v => v.id === 'fresnel-planet-glow'), 'scientific-explainer beat 1 attaches fresnel-planet-glow VFX');
+  const sciScene2 = sbSci.beats[2].cinematic;
+  ok(sciScene2.vfx.some(v => v.id === 'magnetic-flux-field'), 'scientific-explainer beat 3 attaches magnetic-flux-field VFX');
+
   // Template Browser & Codebase Scaffold (Ide 7)
   const TB = window.TemplateBrowser;
   ok(TB && Array.isArray(TB.TEMPLATES) && TB.TEMPLATES.length >= 8, 'TemplateBrowser exposes 8+ templates');
@@ -1302,6 +1332,56 @@ const diagrams = window.GenDiagrams(sample);
 
   const tree = TB.fileTreeText(nextTpl);
   ok(typeof tree === 'string' && tree.indexOf('package.json') > -1, 'fileTreeText includes package.json');
+
+  // AndalAI Conversational PRD Chat Mode (Ide 9)
+  const CM = window.ChatMode;
+  ok(CM && typeof CM.createSession === 'function', 'ChatMode exposes createSession');
+  ok(typeof CM.addMessage === 'function', 'ChatMode exposes addMessage');
+  ok(typeof CM.buildRequest === 'function', 'ChatMode exposes buildRequest');
+  ok(typeof CM.extractFields === 'function', 'ChatMode exposes extractFields');
+  ok(typeof CM.exportToAnswers === 'function', 'ChatMode exposes exportToAnswers');
+
+  const sess = CM.createSession({ model: 'gpt-4.1-mini', baseUrl: 'https://api.openai.com/v1' });
+  ok(sess && sess.id && sess.messages.length === 0, 'createSession starts empty');
+  ok(sess.model === 'gpt-4.1-mini', 'createSession stores model');
+  ok(sess.status === 'active', 'createSession status active');
+
+  CM.addMessage(sess, 'user', 'Saya mau bikin kasir warung');
+  CM.addMessage(sess, 'assistant', 'Baik, apa nama produknya?');
+  ok(sess.messages.length === 2, 'addMessage appends messages');
+  ok(sess.messages[0].role === 'user', 'first message role user');
+
+  const req = CM.buildRequest(sess);
+  ok(Array.isArray(req) && req.length === 3, 'buildRequest includes system + 2 messages');
+  ok(req[0].role === 'system', 'buildRequest first is system');
+
+  const extractedJson = CM.extractFields('Baik. ```json\n[{"field":"productName","value":"Kasir Warung"},{"field":"problem","value":"catat manual"}]\n```');
+  ok(extractedJson.productName === 'Kasir Warung', 'extractFields parses JSON block productName');
+  ok(extractedJson.problem === 'catat manual', 'extractFields parses JSON block problem');
+
+  const extractedFallback = CM.extractFields('productName: Kasir Pintar\nproblem: lambat');
+  ok(extractedFallback.productName === 'Kasir Pintar', 'extractFields fallback parses productName');
+  ok(extractedFallback.problem === 'lambat', 'extractFields fallback parses problem');
+
+  CM.mergeExtracted(sess, extractedJson);
+  ok(sess.extracted.productName === 'Kasir Warung', 'mergeExtracted stores productName');
+
+  const answers = CM.exportToAnswers(sess);
+  ok(answers.productName === 'Kasir Warung', 'exportToAnswers maps productName');
+  ok(answers.problem === 'catat manual', 'exportToAnswers maps problem');
+
+  const sum = CM.summarizeSession(sess);
+  ok(sum.messageCount === 2, 'summarizeSession counts messages');
+  ok(sum.extractedCount === 2, 'summarizeSession counts extracted');
+
+  // localStorage round-trip
+  const saved = CM.saveSession(sess);
+  ok(saved === true, 'saveSession returns true');
+  const loaded = CM.loadSession(sess.id);
+  ok(loaded && loaded.id === sess.id, 'loadSession retrieves saved session');
+  const deleted = CM.deleteSession(sess.id);
+  ok(deleted === true, 'deleteSession returns true');
+  ok(CM.loadSession(sess.id) === null, 'deleteSession removes session');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.

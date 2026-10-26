@@ -749,6 +749,24 @@
         }
       } catch (e) {}
     },
+    playBgmBeat: function (isDownbeat) {
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        if (!window._sfxCtx) window._sfxCtx = new AC();
+        var c = window._sfxCtx;
+        if (c.state === 'suspended') c.resume();
+        var t = c.currentTime;
+        var o = c.createOscillator(), g = c.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(isDownbeat ? 60 : 45, t);
+        o.frequency.exponentialRampToValueAtTime(28, t + 0.12);
+        g.gain.setValueAtTime(isDownbeat ? 0.28 : 0.14, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+        o.connect(g); g.connect(c.destination);
+        o.start(t); o.stop(t + 0.13);
+      } catch (eBgm) {}
+    },
     storyboard: function (sb) {
       var targets = [
         document.getElementById('storyboardTimeline'),
@@ -792,6 +810,28 @@
           '<div class="sb-meta-item"><span class="sb-meta-k">Audio Bed & Tempo</span><span class="sb-meta-v">' + escHtml(bpmText) + '</span></div>' +
           '<div class="sb-meta-item"><span class="sb-meta-k">Struktur Narasi</span><span class="sb-meta-v">Reverse Iceberg (5 Babak)</span></div>';
         box.appendChild(metaWrap);
+
+        // 1b. Layar Miniatur Preview Live (Viewport HyperFrames)
+        var vpCard = document.createElement('div');
+        vpCard.className = 'sb-live-viewport-card ' + (sb.isVertical ? 'ratio-9-16' : 'ratio-16-9');
+        vpCard.innerHTML = '<div class="sb-vp-head">' +
+          '<div class="sb-vp-status-dot"></div>' +
+          '<span class="sb-vp-title">HyperFrames Live Viewport Preview (' + escHtml(sb.ratio) + ')</span>' +
+          '<span class="sb-vp-timecode">00:00.0</span>' +
+          '</div>' +
+          '<div class="sb-vp-stage">' +
+          '<div class="sb-vp-scanline"></div>' +
+          '<div class="sb-vp-content">' +
+          '<span class="sb-vp-role">STANDBY</span>' +
+          '<h4 class="sb-vp-headline">' + escHtml(sb.name || 'Produk') + '</h4>' +
+          '<p class="sb-vp-subtext">Tekan [▶ Putar Audio 60s] untuk memutar simulasi visual, suara narasi VO, BGM, dan SFX.</p>' +
+          '</div>' +
+          '<div class="sb-vp-hud">' +
+          '<span>' + escHtml(sb.concept ? sb.concept.name : '3D Spatial') + '</span>' +
+          '<span>30 FPS · 60.0s</span>' +
+          '</div>' +
+          '</div>';
+        box.appendChild(vpCard);
 
         // 2. Visual Rhythm Bar (Peta Audio & Beat Grid 60s)
         var rhythmBox = document.createElement('div');
@@ -1102,6 +1142,15 @@
         });
       });
 
+      var voUtterances = [];
+      if (typeof window !== 'undefined' && window.speechSynthesis && typeof window.SpeechSynthesisUtterance === 'function') {
+        sb.beats.forEach(function (b) {
+          var cleanVo = String(b.vo || '').replace(/\[jeda[^\]]*\]/gi, '').trim();
+          voUtterances.push({ sec: b.startSec, text: cleanVo, spoken: false });
+        });
+      }
+
+      var lastQuarter = -1;
       var startTime = (window.performance && performance.now) ? performance.now() : Date.now();
       function step() {
         if (!window._sbSimRunning) return;
@@ -1111,12 +1160,59 @@
         document.querySelectorAll('.sb-playhead').forEach(function (ph) {
           ph.style.left = pct;
         });
+
+        // BGM Pulse (120 BPM quarter-note)
+        var currentQuarter = Math.floor(elapsed * 2);
+        if (currentQuarter !== lastQuarter) {
+          lastQuarter = currentQuarter;
+          if (window.RenderOut && window.RenderOut.playBgmBeat) {
+            window.RenderOut.playBgmBeat(currentQuarter % 4 === 0);
+          }
+        }
+
+        // Trigger SFX
         events.forEach(function (ev) {
           if (!ev.played && elapsed >= ev.sec) {
             ev.played = true;
             window.RenderOut.playSfx(ev.type);
           }
         });
+
+        // Trigger Web Speech API VO Narration
+        voUtterances.forEach(function (vo) {
+          if (!vo.spoken && elapsed >= vo.sec) {
+            vo.spoken = true;
+            try {
+              var u = new SpeechSynthesisUtterance(vo.text);
+              u.lang = 'id-ID';
+              u.rate = 1.12;
+              window.speechSynthesis.speak(u);
+            } catch (eVo) {}
+          }
+        });
+
+        // Update Live Viewport Screen
+        var curBeat = sb.beats.filter(function (b) {
+          return elapsed >= b.startSec && elapsed < b.endSec;
+        })[0] || sb.beats[0];
+        if (curBeat) {
+          document.querySelectorAll('.sb-vp-timecode').forEach(function (tc) {
+            tc.textContent = elapsed.toFixed(1) + 's / 60.0s';
+          });
+          document.querySelectorAll('.sb-vp-role').forEach(function (r) {
+            r.textContent = curBeat.role + (curBeat.motionVerb ? ' · ' + curBeat.motionVerb : '');
+          });
+          document.querySelectorAll('.sb-vp-headline').forEach(function (hl) {
+            hl.textContent = curBeat.headline || '';
+          });
+          document.querySelectorAll('.sb-vp-subtext').forEach(function (st) {
+            st.textContent = curBeat.subtext || '';
+          });
+          document.querySelectorAll('.sb-live-viewport-card').forEach(function (card) {
+            card.classList.add('playing');
+          });
+        }
+
         if (elapsed >= 60.0) {
           window.RenderOut.stopAudioSimulation();
         } else {
@@ -1131,12 +1227,24 @@
         cancelAnimationFrame(window._sbSimRaf);
         window._sbSimRaf = null;
       }
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); } catch (eStopVo) {}
+      }
       document.querySelectorAll('.sb-sim-btn').forEach(function (btn) {
         btn.textContent = '▶ Putar Audio 60s';
         btn.classList.remove('active');
       });
       document.querySelectorAll('.sb-playhead').forEach(function (ph) {
         ph.style.left = '0%';
+      });
+      document.querySelectorAll('.sb-live-viewport-card').forEach(function (card) {
+        card.classList.remove('playing');
+      });
+      document.querySelectorAll('.sb-vp-timecode').forEach(function (tc) { tc.textContent = '00:00.0'; });
+      document.querySelectorAll('.sb-vp-role').forEach(function (r) { r.textContent = 'STANDBY'; });
+      document.querySelectorAll('.sb-vp-headline').forEach(function (hl) { hl.textContent = 'PRD Studio HyperFrames'; });
+      document.querySelectorAll('.sb-vp-subtext').forEach(function (st) {
+        st.textContent = 'Tekan [▶ Putar Audio 60s] untuk memutar simulasi visual, suara narasi VO, BGM, dan SFX.';
       });
     },
     diff: function (oldMd, newMd) {

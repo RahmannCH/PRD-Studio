@@ -301,6 +301,9 @@
               <button class="chip" type="button" role="radio" aria-checked="false" data-concept="brutalist-blue">Brutalist Blueprint</button>
               <button class="chip" type="button" role="radio" aria-checked="false" data-concept="investigative-leak">Arsip Dokumen Bocor</button>
               <button class="chip" type="button" role="radio" aria-checked="false" data-concept="cyber-surveillance">Telemetri Forensik</button>
+              <button class="chip" type="button" role="radio" aria-checked="false" data-concept="engineering-cutaway">Potongan Teknik</button>
+              <button class="chip" type="button" role="radio" aria-checked="false" data-concept="scientific-explainer">Eksplorasi Sains</button>
+              <button class="chip" type="button" role="radio" aria-checked="false" data-concept="causal-metaphor">Metafora Kausal</button>
               <button class="chip" type="button" role="radio" aria-checked="false" data-concept="3d-explainer">3D Spatial Explainer</button>
             </div>
         </div>
@@ -326,7 +329,8 @@
         <button class="btn btn-ghost btn-sm" data-act="ai-polish-video" type="button" disabled title="Poles naskah VO dan tipografi storyboard dengan AI agar lebih ritmis dan bertenaga">✨ Poles Naskah dengan AI</button>
         <button class="btn btn-ghost btn-sm" data-act="copy-storyboard" type="button" disabled>Salin tabel storyboard (.md)</button>
         <button class="btn btn-ghost btn-sm" data-act="dl-storyboard" type="button" disabled>Unduh STORYBOARD.md</button>
-        <button class="btn btn-ghost btn-sm" data-act="dl-video-pack" type="button" disabled title="Unduh seluruh paket proyek video HyperFrames runnable (11 berkas: index.html root, 5 frame sub-komposisi, storyboard, frame.md, prompt, audio synth, linter)">Unduh Paket Proyek Video (11 berkas)</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-nle-markers" type="button" disabled title="Unduh berkas timeline markers CSV untuk DaVinci Resolve, Premiere Pro, dan CapCut">Unduh Marker NLE (.csv)</button>
+        <button class="btn btn-ghost btn-sm" data-act="dl-video-pack" type="button" disabled title="Unduh seluruh paket proyek video HyperFrames runnable (12 berkas: index.html root, 5 frame sub-komposisi, storyboard, frame.md, prompt, audio synth, linter, markers)">Unduh Paket Proyek Video (12 berkas)</button>
       </div>
     </div>
     <div class="output" id="out-kanban" role="tabpanel" aria-labelledby="tab-kanban" tabindex="0" hidden>
@@ -459,6 +463,9 @@
                 <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="brutalist-blue">Brutalist Blueprint</button>
                 <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="investigative-leak">Arsip Dokumen Bocor</button>
                 <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="cyber-surveillance">Telemetri Forensik</button>
+                <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="engineering-cutaway">Potongan Teknik</button>
+                <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="scientific-explainer">Eksplorasi Sains</button>
+                <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="causal-metaphor">Metafora Kausal</button>
                 <button class="chip" type="button" role="radio" aria-checked="false" data-vconcept="3d-explainer">3D Spatial Explainer</button>
               </div>
             </div>
@@ -500,7 +507,8 @@
           <button class="btn btn-ghost btn-sm" data-act="ai-polish-video" type="button" disabled title="Poles naskah VO dan tipografi storyboard dengan AI agar lebih ritmis dan bertenaga">✨ Poles Naskah dengan AI</button>
           <button class="btn btn-ghost btn-sm" data-act="copy-storyboard" type="button" disabled>Salin tabel storyboard (.md)</button>
           <button class="btn btn-ghost btn-sm" data-act="dl-storyboard" type="button" disabled>Unduh STORYBOARD.md</button>
-          <button class="btn btn-ghost btn-sm" data-act="dl-video-pack" type="button" disabled title="Unduh seluruh paket proyek video HyperFrames runnable (11 berkas: index.html root, 5 frame sub-komposisi, storyboard, frame.md, prompt, audio synth, linter)">Unduh Paket Proyek Video (11 berkas)</button>
+          <button class="btn btn-ghost btn-sm" data-act="dl-nle-markers" type="button" disabled title="Unduh berkas timeline markers CSV untuk DaVinci Resolve, Premiere Pro, dan CapCut">Unduh Marker NLE (.csv)</button>
+          <button class="btn btn-ghost btn-sm" data-act="dl-video-pack" type="button" disabled title="Unduh seluruh paket proyek video HyperFrames runnable (12 berkas: index.html root, 5 frame sub-komposisi, storyboard, frame.md, prompt, audio synth, linter, markers)">Unduh Paket Proyek Video (12 berkas)</button>
         </div>
       </section>
     </div>
@@ -635,6 +643,7 @@
 <script src="js/studio/generator-storyboard.js"></script>
 <script src="js/studio/cinematic.js"></script>
 <script src="js/studio/template-browser.js"></script>
+<script src="js/studio/chat-mode.js"></script>
 <script src="js/studio/diagrams.js"></script>
 <script src="js/studio/exporter.js"></script>
 <script src="js/studio/criteria.js"></script>

@@ -140,7 +140,7 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   // export buttons aktif
   const exportEnabled = await page.evaluate(() => !document.querySelector('[data-act="copy-prd"]').disabled);
   ok(exportEnabled, 'copy-prd enabled after generate');
-  const allExportActs = ['dl-html', 'dl-brief', 'dl-spec-yaml', 'dl-spec-pack', 'ai-advise', 'dl-json', 'share-link', 'dl-roadmap-csv', 'ai-polish', 'copy-video-prompt', 'copy-storyboard', 'dl-storyboard', 'dl-video-pack'];
+  const allExportActs = ['dl-html', 'dl-brief', 'dl-spec-yaml', 'dl-spec-pack', 'ai-advise', 'dl-json', 'share-link', 'dl-roadmap-csv', 'ai-polish', 'copy-video-prompt', 'copy-storyboard', 'dl-storyboard', 'dl-nle-markers', 'dl-video-pack'];
   for (const act of allExportActs) {
     const dis = await page.evaluate(a => document.querySelector('[data-act="' + a + '"]').disabled, act);
     ok(!dis, 'export act enabled after generate: ' + act);
@@ -227,6 +227,12 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   await page.click('[data-act="dl-storyboard"]');
   const sbDl = await sbDlPromise;
   ok(/^STORYBOARD-.*\.md$/.test(sbDl.suggestedFilename()), 'storyboard download has proper filename', sbDl.suggestedFilename());
+
+  // Unduhan nyata MARKERS.csv (DaVinci/Premiere)
+  const nlePromise = page.waitForEvent('download', { timeout: 5000 });
+  await page.click('[data-act="dl-nle-markers"]');
+  const nleDl = await nlePromise;
+  ok(/^MARKERS-.*\.csv$/.test(nleDl.suggestedFilename()), 'NLE markers download has proper filename', nleDl.suggestedFilename());
 
   // Mode Switcher: beralih ke Dedicated Storyboard Workspace
   await page.click('#modeBtnStoryboard');

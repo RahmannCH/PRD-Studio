@@ -109,28 +109,67 @@
     concept = concept || {};
     tempo = tempo || { bpm: 120, barSec: 2.0 };
     var isVertical = ratio === '9:16';
-    var rigId = (concept && concept.id === 'kinetic-term') ? 'push-in' : 'dolly-in';
-    if (beat.id === 'beat-01') rigId = 'push-in';
-    if (beat.id === 'beat-02') rigId = 'orbit-360';
-    if (beat.id === 'beat-03') rigId = 'rack-focus';
-    if (beat.id === 'beat-05') rigId = 'crane-up';
+    var cid = (concept && concept.id) || '';
+
+    var rigId = (cid === 'kinetic-term') ? 'push-in' : 'dolly-in';
+    if (cid === 'engineering-cutaway') {
+      if (beat.id === 'beat-01') rigId = 'dutch-stress-angle';
+      else if (beat.id === 'beat-02') rigId = 'cutaway-slice';
+      else if (beat.id === 'beat-03') rigId = 'spatial-match-cut';
+      else if (beat.id === 'beat-04') rigId = 'cutaway-slice';
+      else rigId = 'macro-push';
+    } else if (cid === 'scientific-explainer') {
+      if (beat.id === 'beat-01') rigId = 'scale-oscillator';
+      else if (beat.id === 'beat-02') rigId = 'orbit-360';
+      else if (beat.id === 'beat-03') rigId = 'macro-push';
+      else if (beat.id === 'beat-04') rigId = 'spatial-match-cut';
+      else rigId = 'scale-oscillator';
+    } else if (cid === 'causal-metaphor') {
+      if (beat.id === 'beat-01') rigId = 'spatial-match-cut';
+      else if (beat.id === 'beat-02') rigId = 'dutch-stress-angle';
+      else if (beat.id === 'beat-03') rigId = 'rack-focus';
+      else if (beat.id === 'beat-04') rigId = 'cutaway-slice';
+      else rigId = 'crane-up';
+    } else if (cid === '3d-explainer') {
+      if (beat.id === 'beat-01') rigId = 'dutch-stress-angle';
+      else if (beat.id === 'beat-02') rigId = 'orbit-360';
+      else if (beat.id === 'beat-03') rigId = 'rack-focus';
+      else if (beat.id === 'beat-04') rigId = 'spatial-match-cut';
+      else rigId = 'crane-up';
+    } else {
+      if (beat.id === 'beat-01') rigId = 'push-in';
+      if (beat.id === 'beat-02') rigId = 'orbit-360';
+      if (beat.id === 'beat-03') rigId = 'rack-focus';
+      if (beat.id === 'beat-05') rigId = 'crane-up';
+    }
     var rig = CAMERA_RIGS[rigId] || CAMERA_RIGS['dolly-in'];
 
-    var depthKey = (concept && concept.id === 'object-relay') ? '5-layer-cinematic' : '3-layer';
+    var depthKey = (cid === 'object-relay' || cid === '3d-explainer') ? '5-layer-cinematic' : '3-layer';
+    if (cid === 'engineering-cutaway' || cid === 'scientific-explainer') depthKey = 'cutaway-strata';
     var depth = DEPTH_STACKS[depthKey] || DEPTH_STACKS['3-layer'];
 
-    var lightKey = (concept && concept.id === 'cyber-surveillance') ? 'neon-cyber' : ((concept && concept.id === 'investigative-leak') ? 'cold-forensic' : 'studio-3point');
+    var lightKey = (cid === 'cyber-surveillance' || cid === '3d-explainer') ? 'neon-cyber' : ((cid === 'investigative-leak') ? 'cold-forensic' : ((cid === 'engineering-cutaway') ? 'chiaroscuro' : ((cid === 'scientific-explainer') ? 'rim-dramatic' : 'studio-3point')));
     var light = LIGHTING_RIGS[lightKey] || LIGHTING_RIGS['studio-3point'];
 
     var vfx = ['film-grain', 'depth-of-field'];
-    if (beat.id === 'beat-01') vfx.push('volumetric-light');
-    if (beat.id === 'beat-03') vfx.push('motion-blur-streak');
-    if (beat.id === 'beat-04') vfx.push('bokeh-particles');
+    if (cid === 'engineering-cutaway') {
+      if (beat.id === 'beat-01') vfx.push('stress-vector-cone');
+      if (beat.id === 'beat-03') vfx.push('hydraulic-pumping-spray');
+      if (beat.id === 'beat-04') vfx.push('motion-blur-streak');
+    } else if (cid === 'scientific-explainer') {
+      if (beat.id === 'beat-01') vfx.push('fresnel-planet-glow');
+      if (beat.id === 'beat-03') vfx.push('magnetic-flux-field');
+      if (beat.id === 'beat-04') vfx.push('bokeh-particles');
+    } else {
+      if (beat.id === 'beat-01') vfx.push('volumetric-light');
+      if (beat.id === 'beat-03') vfx.push('motion-blur-streak');
+      if (beat.id === 'beat-04') vfx.push('bokeh-particles');
+    }
 
-    var transId = (beat.id === 'beat-01') ? 'zoom-blur' : ((beat.id === 'beat-02') ? 'whip-pan' : 'morph');
+    var transId = (beat.id === 'beat-01') ? 'zoom-blur' : ((beat.id === 'beat-02') ? ((cid === 'scientific-explainer' || cid === 'causal-metaphor') ? 'morph' : 'whip-pan') : ((beat.id === 'beat-03') ? 'match-cut' : ((beat.id === 'beat-04') ? 'iris-in' : 'cross-dissolve')));
     var transition = TRANSITIONS[transId] || TRANSITIONS['cut'];
 
-    var gradeKey = (concept && concept.id === 'visual-journal') ? 'warm-documentary' : ((concept && concept.id === 'cyber-surveillance') ? 'neon-cyber' : 'cinematic-teal-orange');
+    var gradeKey = (cid === 'visual-journal') ? 'warm-documentary' : ((cid === 'cyber-surveillance' || cid === '3d-explainer') ? 'neon-cyber' : ((cid === 'investigative-leak') ? 'cold-forensic' : ((cid === 'engineering-cutaway') ? 'bleach-bypass' : ((cid === 'scientific-explainer') ? 'technicolor-contrast' : 'cinematic-teal-orange'))));
     var grade = COLOR_GRADES[gradeKey] || COLOR_GRADES['cinematic-teal-orange'];
 
     return {

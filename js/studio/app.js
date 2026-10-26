@@ -103,7 +103,7 @@
     /* ---------- Tombol export: aktif hanya kalau ada hasil ---------- */
     var exportActs = ['copy-prd', 'dl-prd', 'dl-bab', 'dl-prototype', 'dl-spec-pack', 'dl-json', 'share-link', 'dl-roadmap-csv', 'print', 'ai-polish', 'ai-advise',
       'dl-html', 'dl-brief', 'dl-spec-yaml', 'copy-mermaid', 'copy-all-prompt', 'dl-prompts',
-      'copy-video-prompt', 'copy-storyboard', 'dl-storyboard', 'dl-video-pack', 'ai-polish-video'];
+      'copy-video-prompt', 'copy-storyboard', 'dl-storyboard', 'dl-nle-markers', 'dl-video-pack', 'ai-polish-video'];
     function setExportEnabled(on) {
       exportActs.forEach(function (a) {
         document.querySelectorAll('[data-act="' + a + '"]').forEach(function (b) {
@@ -492,13 +492,18 @@
         if (!sb) { window.UX.toast('Storyboard belum tersedia.'); return; }
         window.Exporter.download('STORYBOARD-' + window.Exporter.slug(S.data.productName) + '.md', sb.markdown, 'text/markdown');
       },
+      'dl-nle-markers': function () {
+        var sb = (S.data.lastResult && S.data.lastResult.storyboard) || (window.GenStoryboard && window.GenStoryboard(S.data));
+        if (!sb || !sb.nleMarkers) { window.UX.toast('Marker NLE belum tersedia.'); return; }
+        window.Exporter.download('MARKERS-' + window.Exporter.slug(S.data.productName) + '.csv', sb.nleMarkers, 'text/csv');
+      },
       'dl-video-pack': function () {
         var files = window.SpecPack.videoFiles(S.data, S.data.lastResult);
         if (!files || !files.length) { window.UX.toast('Paket video belum tersedia.'); return; }
         files.forEach(function (f, i) {
           setTimeout(function () { window.Exporter.download(f.name, f.text, f.type); }, i * 250);
         });
-        window.UX.toast('Paket Proyek Video: ' + files.length + ' berkas diunduh (index.html, 5 sub-komposisi, Storyboard, frame.md, Prompt, Synth, Linter).');
+        window.UX.toast('Paket Proyek Video: ' + files.length + ' berkas diunduh (termasuk marker NLE CSV).');
       },
       'ai-polish-video': function (b) {
         if (!window.LLM || !window.LLM.configured()) {

@@ -85,6 +85,30 @@
       bgStyle: 'Cold Surveillance Navy (#040812) dengan reticle HUD hijau/cyan dan barcode ticker dinamis',
       cardStyle: 'Tactical HUD visor glass panel dengan corner targeting brackets dan status bar hijau/merah'
     },
+    'engineering-cutaway': {
+      id: 'engineering-cutaway',
+      name: 'Potongan Melintang Teknik & Fisika Mekanikal',
+      tagline: 'Irisan isometrik 3D subterranean, distribusi tegangan nyata, aksi hidrolik pori air',
+      cameraStyle: 'Isometric cutaway 45 derajat mengunci bidang belah internal, snap-zoom ke retakan mikro dan semprotan hidrolik pori air',
+      bgStyle: 'Technical Blueprint Charcoal (#0A0D14) dengan grid koordinat teknik dan garis batas lapisan ISO',
+      cardStyle: 'Engineering strata cross-section card dengan penanda lapisan material (surface, subbase, subgrade)'
+    },
+    'scientific-explainer': {
+      id: 'scientific-explainer',
+      name: 'Eksplorasi Sains & Osilasi Skala Kosmik/Atom',
+      tagline: 'Osilasi makro-ke-mikro, perbandingan massa relatif (60kg Bumi = 35g Phobos), kurungan magnet plasma',
+      cameraStyle: 'Macro-to-micro scale sweep dari orbit kosmik ke sampel tabung 10 gram, orbit 360 derajat mengitari torus reaktor',
+      bgStyle: 'Deep Astrophysical Void (#04060E) dengan directional sunlight kontras tinggi dan pendaran atmosfer Fresnel',
+      cardStyle: 'Astrophysics telemetry pill dengan font tebal kontras tinggi (#FFCC00 / #00F0FF) dan sitasi sumber riset resmi'
+    },
+    'causal-metaphor': {
+      id: 'causal-metaphor',
+      name: 'Metafora Fisik Fenomena Kausal & Probabilitas',
+      tagline: 'Dadu cuaca 3D memvisualkan probabilitas, formula dua bahan, persamaan fisik berlapis',
+      cameraStyle: 'Planar orthographic berganti dinamis ke irisan konveksi atmosferik 10 km dan diagram gelombang fluida',
+      bgStyle: 'Atmospheric Dynamic Indigo (#080E1D) dengan isobar lines halus dan partikel termal uplift',
+      cardStyle: 'Comparative layered equation cards dengan indikator gauge silinder pengukur presipitasi mm/hari'
+    },
     '3d-explainer': {
       id: '3d-explainer',
       name: '3D Spatial & Visual Explainer (Tau Yang Penting & How Come)',
@@ -230,7 +254,8 @@
         hyperframes: {
           subcomp: '01-hook',
           path: 'compositions/frames/01-hook.html'
-        }
+        },
+        threeJsSnippet: 'const geo = new THREE.PlaneGeometry(12, 16, 32, 32); const mat = new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0.1, color: 0x1a1a24 });'
       },
       {
         id: 'beat-02',
@@ -287,7 +312,8 @@
         hyperframes: {
           subcomp: '02-value',
           path: 'compositions/frames/02-value.html'
-        }
+        },
+        threeJsSnippet: 'const geo = new THREE.BoxGeometry(10, 6, 0.8); const mat = new THREE.MeshPhysicalMaterial({ transmission: 0.9, roughness: 0.1, ior: 1.5, color: 0x00f2fe });'
       },
       {
         id: 'beat-03',
@@ -345,7 +371,8 @@
         hyperframes: {
           subcomp: '03-mechanism',
           path: 'compositions/frames/03-mechanism.html'
-        }
+        },
+        threeJsSnippet: 'const bentoGroup = new THREE.Group(); for (let i = 0; i < 3; i++) { const card = new THREE.Mesh(new THREE.BoxGeometry(4.2, 5.5, 0.4), new THREE.MeshStandardMaterial({ roughness: 0.2, metalness: 0.8, color: 0x0e1524 })); card.position.x = (i - 1) * 4.8; bentoGroup.add(card); }'
       },
       {
         id: 'beat-04',
@@ -401,7 +428,8 @@
         hyperframes: {
           subcomp: '04-proof',
           path: 'compositions/frames/04-proof.html'
-        }
+        },
+        threeJsSnippet: 'const geo = new THREE.CylinderGeometry(2, 2, 8, 32); const mat = new THREE.MeshStandardMaterial({ emissive: 0x00F2FE, emissiveIntensity: 0.8, color: 0x0e1524 });'
       },
       {
         id: 'beat-05',
@@ -452,7 +480,8 @@
         hyperframes: {
           subcomp: '05-outro',
           path: 'compositions/frames/05-outro.html'
-        }
+        },
+        threeJsSnippet: 'const geo = new THREE.TorusGeometry(4, 0.6, 16, 100); const mat = new THREE.MeshStandardMaterial({ metalness: 0.9, roughness: 0.2, color: 0x48cae4 });'
       }
     ];
 
@@ -483,7 +512,8 @@
         if (b.aiVisualPrompt) assetItems.push('🔮 **Prompt 3D:** `' + esc(b.aiVisualPrompt.slice(0, 90)) + '…`');
         var assetStr = assetItems.join('<br>');
 
-        lines.push('| **' + b.timecode + '** | **' + b.role + '**<br>_Blueprint: ' + b.blueprint + '_<br>_Motion: ' + b.motionVerb + ' (' + b.gsapEasing + ')_ | ' + esc(b.vo) + ' | **' + esc(b.headline) + '**<br>' + esc(b.subtext) + '<br>_' + esc(b.layout) + '_ | ' + esc(b.camera) + ' | ' + sfxStr + ' | ' + assetStr + ' |');
+        var cinStr = (b.cinematic) ? ('Kamera: ' + b.cinematic.cameraRig.name + ' | Lighting: ' + b.cinematic.lighting.name + ' | Grade: ' + b.cinematic.colorGrade.name) : '';
+        lines.push('| **' + b.timecode + '** | **' + b.role + '**<br>_Blueprint: ' + b.blueprint + '_<br>_Motion: ' + b.motionVerb + ' (' + b.gsapEasing + ')_ | ' + esc(b.vo) + ' | **' + esc(b.headline) + '**<br>' + esc(b.subtext) + '<br>_' + esc(b.layout) + '_ | ' + esc(b.camera) + (cinStr ? '<br>_Cinematic: ' + esc(cinStr) + '_' : '') + ' | ' + sfxStr + ' | ' + assetStr + ' |');
       });
       return lines.join('\n');
     }
@@ -984,6 +1014,41 @@
       return lines.join('\n');
     }
 
+    function toTimecode(sec, frameRate) {
+      frameRate = frameRate || 30;
+      var totalFrames = Math.round(sec * frameRate);
+      var f = totalFrames % frameRate;
+      var totalSec = Math.floor(totalFrames / frameRate);
+      var s = totalSec % 60;
+      var m = Math.floor(totalSec / 60) % 60;
+      var h = Math.floor(totalSec / 3600);
+      function pad(n) { return (n < 10 ? '0' : '') + n; }
+      return pad(h) + ':' + pad(m) + ':' + pad(s) + ':' + pad(f);
+    }
+
+    function buildNleMarkersCsv(beatsList, frameRate) {
+      frameRate = frameRate || 30;
+      var rows = ['"Record In","Record Out","Marker Name","Comment","Color"'];
+      var colorMap = {
+        'HOOK_PAIN': 'Red',
+        'VALUE_CLAIM': 'Cyan',
+        'CORE_MECHANICS': 'Green',
+        'HARD_EVIDENCE': 'Yellow',
+        'OUTRO_CTA': 'Blue'
+      };
+      (beatsList || []).forEach(function (b) {
+        var recIn = toTimecode(b.startSec, frameRate);
+        var recOut = toTimecode(b.endSec, frameRate);
+        var markerName = b.role || 'MARKER';
+        var sfxText = (b.sfx || []).map(function (s) { return s.desc; }).join('; ');
+        var comment = 'VO: ' + clean(b.vo) + ' | SFX: ' + sfxText + ' | Blueprint: ' + (b.blueprint || '-');
+        comment = comment.replace(/"/g, '""');
+        var color = colorMap[b.role] || 'Cyan';
+        rows.push('"' + recIn + '","' + recOut + '","' + markerName + '","' + comment + '","' + color + '"');
+      });
+      return rows.join('\r\n');
+    }
+
     return {
       name: name,
       slug: slug,
@@ -1006,6 +1071,7 @@
       subcompHtmls: beats.map(function (b) {
         return { name: b.hyperframes.path, text: buildSubcompositionHtml(b) };
       }),
+      nleMarkers: buildNleMarkersCsv(beats, 30),
       masterPrompt: buildMasterPrompt()
     };
   }
