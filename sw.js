@@ -67,6 +67,7 @@ const CORE = [
   'js/studio/code-scaffold.js',
   'js/studio/dep-graph.js',
   'js/studio/prd-templates.js',
+  'js/studio/export-hub.js',
   'js/studio/render.js',
   'js/studio/palette.js',
   'js/studio/llm-adapter.js',

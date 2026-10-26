@@ -69,6 +69,7 @@ load('prd-analytics.js');
 load('code-scaffold.js');
 load('dep-graph.js');
 load('prd-templates.js');
+load('export-hub.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -1876,6 +1877,75 @@ const diagrams = window.GenDiagrams(sample);
     ok(Array.isArray(full.entities), t.id + ' has entities array');
     ok(Array.isArray(full.endpoints), t.id + ' has endpoints array');
   });
+
+  // Multi-Format Export Hub (Ide 19)
+  const EH = window.ExportHub;
+  ok(EH && typeof EH.exportTo === 'function', 'ExportHub exposes exportTo');
+  ok(typeof EH.exportAll === 'function', 'ExportHub exposes exportAll');
+  ok(typeof EH.supportedFormats === 'function', 'ExportHub exposes supportedFormats');
+
+  const ehSpec = window.Spec.build(window.StudioSample, { score: 90, level: 'Siap' });
+  const ehFormats = EH.supportedFormats();
+  ok(Array.isArray(ehFormats) && ehFormats.length === 6, 'supportedFormats returns 6 formats');
+
+  // notion
+  const ehNotion = EH.exportTo(ehSpec, 'notion');
+  ok(ehNotion && ehNotion.format === 'notion', 'exportTo notion returns format');
+  ok(ehNotion.type === 'markdown', 'notion type is markdown');
+  ok(typeof ehNotion.content === 'string' && ehNotion.content.length > 0, 'notion content is string');
+
+  // confluence
+  const ehConf = EH.exportTo(ehSpec, 'confluence');
+  ok(ehConf.format === 'confluence', 'exportTo confluence returns format');
+  ok(ehConf.content.indexOf('h1.') > -1, 'confluence uses h1. heading');
+
+  // linear
+  const ehLinear = EH.exportTo(ehSpec, 'linear');
+  ok(ehLinear.format === 'linear', 'exportTo linear returns format');
+  ok(ehLinear.type === 'issues', 'linear type is issues');
+  ok(Array.isArray(ehLinear.content) && ehLinear.content.length > 0, 'linear content is issues array');
+  ok(ehLinear.content[0].title && ehLinear.content[0].labels, 'linear issue has title and labels');
+
+  // jira
+  const ehJira = EH.exportTo(ehSpec, 'jira');
+  ok(ehJira.format === 'jira', 'exportTo jira returns format');
+  ok(Array.isArray(ehJira.content) && ehJira.content.length > 0, 'jira content is issues array');
+  ok(ehJira.content[0].summary && ehJira.content[0].issuetype, 'jira issue has summary and issuetype');
+
+  // github
+  const ehGh = EH.exportTo(ehSpec, 'github');
+  ok(ehGh.format === 'github', 'exportTo github returns format');
+  ok(Array.isArray(ehGh.content) && ehGh.content.length > 0, 'github content is issues array');
+  ok(ehGh.content[0].title && ehGh.content[0].body, 'github issue has title and body');
+
+  // gdocs
+  const ehGdocs = EH.exportTo(ehSpec, 'gdocs');
+  ok(ehGdocs.format === 'gdocs', 'exportTo gdocs returns format');
+
+  // unknown format
+  const ehUnknown = EH.exportTo(ehSpec, 'unknown-format');
+  ok(ehUnknown.error, 'unknown format returns error');
+
+  // exportAll
+  const ehAll = EH.exportAll(ehSpec);
+  ok(typeof ehAll === 'object', 'exportAll returns object');
+  ok(ehAll.notion && ehAll.linear && ehAll.jira, 'exportAll has all formats');
+
+  // toNotion standalone
+  const ehN = EH.toNotion(ehSpec);
+  ok(typeof ehN === 'string' && ehN.length > 0, 'toNotion returns string');
+
+  // toConfluence standalone
+  const ehC = EH.toConfluence(ehSpec);
+  ok(typeof ehC === 'string' && ehC.indexOf('h1.') > -1, 'toConfluence returns wiki format');
+
+  // toLinear standalone
+  const ehL = EH.toLinear(ehSpec);
+  ok(Array.isArray(ehL) && ehL.length > 0, 'toLinear returns issues array');
+
+  // Empty spec
+  const ehEmpty = EH.exportTo({}, 'notion');
+  ok(ehEmpty.content.length > 0, 'empty spec still produces content');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
