@@ -70,6 +70,7 @@ load('code-scaffold.js');
 load('dep-graph.js');
 load('prd-templates.js');
 load('export-hub.js');
+load('prd-diff.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -1946,6 +1947,62 @@ const diagrams = window.GenDiagrams(sample);
   // Empty spec
   const ehEmpty = EH.exportTo({}, 'notion');
   ok(ehEmpty.content.length > 0, 'empty spec still produces content');
+
+  // PRD Diff & Merge (Ide 20)
+  const PD = window.PRDDiff;
+  ok(PD && typeof PD.diffSpecs === 'function', 'PRDDiff exposes diffSpecs');
+  ok(typeof PD.mergeSpecs === 'function', 'PRDDiff exposes mergeSpecs');
+  ok(typeof PD.diffMarkdown === 'function', 'PRDDiff exposes diffMarkdown');
+
+  const pdSpecA = { meta: { productName: 'App A' }, answers: { mustHave: 'login' }, entities: [{ label: 'User', fields: [{ n: 'id', t: 'string' }] }], endpoints: [{ m: 'GET', p: '/users' }] };
+  const pdSpecB = { meta: { productName: 'App B' }, answers: { mustHave: 'login, signup' }, entities: [{ label: 'User', fields: [{ n: 'id', t: 'string' }] }, { label: 'Post', fields: [{ n: 'title', t: 'string' }] }], endpoints: [{ m: 'GET', p: '/users' }, { m: 'POST', p: '/posts' }] };
+
+  const pdDiff = PD.diffSpecs(pdSpecA, pdSpecB);
+  ok(pdDiff && typeof pdDiff.totalChanges === 'number', 'diffSpecs returns totalChanges');
+  ok(pdDiff.hasChanges === true, 'diffSpecs detects changes');
+  ok(pdDiff.added.length > 0, 'diffSpecs detects added items');
+  ok(pdDiff.changed.length > 0, 'diffSpecs detects changed items');
+  ok(Array.isArray(pdDiff.unchanged), 'diffSpecs returns unchanged array');
+
+  // Identical specs
+  const pdDiffSame = PD.diffSpecs(pdSpecA, pdSpecA);
+  ok(pdDiffSame.hasChanges === false, 'identical specs have no changes');
+  ok(pdDiffSame.totalChanges === 0, 'identical specs totalChanges is 0');
+
+  // flattenSpec
+  const pdFlat = PD.flattenSpec(pdSpecA);
+  ok(typeof pdFlat === 'object', 'flattenSpec returns object');
+  ok(pdFlat['meta.productName'] === 'App A', 'flattenSpec includes meta.productName');
+
+  // mergeSpecs union
+  const pdMerged = PD.mergeSpecs(pdSpecA, pdSpecB, 'union');
+  ok(pdMerged.meta.productName === 'App B', 'merged meta overridden by B');
+  ok(pdMerged.entities.length === 2, 'merged entities union (2)');
+  ok(pdMerged.endpoints.length === 2, 'merged endpoints union (2)');
+
+  // mergeSpecs theirs
+  const pdTheirs = PD.mergeSpecs(pdSpecA, pdSpecB, 'theirs');
+  ok(pdTheirs.meta.productName === 'App B', 'theirs returns B');
+
+  // mergeSpecs ours
+  const pdOurs = PD.mergeSpecs(pdSpecA, pdSpecB, 'ours');
+  ok(pdOurs.meta.productName === 'App A', 'ours returns A');
+
+  // diffMarkdown
+  const pdMd = PD.diffMarkdown(pdDiff);
+  ok(pdMd.indexOf('# PRD Diff Report') > -1, 'diffMarkdown has header');
+  ok(pdMd.indexOf('Total changes:') > -1, 'diffMarkdown has total changes');
+
+  // summary
+  const pdSummary = PD.summary(pdDiff);
+  ok(typeof pdSummary.added === 'number', 'summary returns added count');
+  ok(typeof pdSummary.total === 'number', 'summary returns total');
+
+  // Empty specs
+  const pdEmpty = PD.diffSpecs({}, {});
+  ok(pdEmpty.hasChanges === false, 'empty specs have no changes');
+  const pdEmptyMerge = PD.mergeSpecs({}, {}, 'union');
+  ok(typeof pdEmptyMerge === 'object', 'merge empty specs works');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
