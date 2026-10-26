@@ -65,6 +65,7 @@ const CORE = [
   'js/studio/reverse-engineer.js',
   'js/studio/prd-analytics.js',
   'js/studio/code-scaffold.js',
+  'js/studio/dep-graph.js',
   'js/studio/render.js',
   'js/studio/palette.js',
   'js/studio/llm-adapter.js',

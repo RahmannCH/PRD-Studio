@@ -67,6 +67,7 @@ load('collab-review.js');
 load('reverse-engineer.js');
 load('prd-analytics.js');
 load('code-scaffold.js');
+load('dep-graph.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -1741,6 +1742,82 @@ const diagrams = window.GenDiagrams(sample);
 
   const testFile = CS.generateTestFile(csSpec, 'Test App');
   ok(testFile.indexOf('describe') > -1, 'generateTestFile has describe block');
+
+  // Dependency Graph & Critical Path (Ide 17)
+  const DG = window.DepGraph;
+  ok(DG && typeof DG.createGraph === 'function', 'DepGraph exposes createGraph');
+  ok(typeof DG.analyzeGraph === 'function', 'DepGraph exposes analyzeGraph');
+  ok(typeof DG.criticalPath === 'function', 'DepGraph exposes criticalPath');
+
+  const dg = DG.createGraph();
+  DG.addNode(dg, 'A', 'Task A');
+  DG.addNode(dg, 'B', 'Task B');
+  DG.addNode(dg, 'C', 'Task C');
+  DG.addNode(dg, 'D', 'Task D');
+  DG.addEdge(dg, 'A', 'B', 'blocks');
+  DG.addEdge(dg, 'A', 'C', 'blocks');
+  DG.addEdge(dg, 'B', 'D', 'blocks');
+  DG.addEdge(dg, 'C', 'D', 'blocks');
+
+  ok(Object.keys(dg.nodes).length === 4, 'graph has 4 nodes');
+  ok(dg.edges.length === 4, 'graph has 4 edges');
+
+  const dgSucc = DG.successors(dg, 'A');
+  ok(Array.isArray(dgSucc) && dgSucc.length === 2, 'successors of A returns 2');
+  const dgPred = DG.predecessors(dg, 'D');
+  ok(Array.isArray(dgPred) && dgPred.length === 2, 'predecessors of D returns 2');
+
+  const dgTopo = DG.topologicalSort(dg);
+  ok(!dgTopo.hasCycle, 'no cycle in DAG');
+  ok(dgTopo.sorted.length === 4, 'topological sort returns 4 nodes');
+  ok(dgTopo.sorted.indexOf('A') < dgTopo.sorted.indexOf('B'), 'A before B in topo order');
+
+  const dgAnalysis = DG.analyzeGraph(dg, { A: 2, B: 3, C: 1, D: 2 });
+  ok(dgAnalysis.nodeCount === 4, 'analyzeGraph nodeCount is 4');
+  ok(dgAnalysis.blocksEdges === 4, 'analyzeGraph blocksEdges is 4');
+  ok(!dgAnalysis.hasCycle, 'analyzeGraph no cycle');
+  ok(dgAnalysis.criticalPath && dgAnalysis.criticalPath.path.length > 0, 'critical path has nodes');
+  ok(dgAnalysis.roots.length === 1, 'one root node');
+  ok(dgAnalysis.leaves.length === 1, 'one leaf node');
+  ok(dgAnalysis.roots[0] === 'A', 'root is A');
+  ok(dgAnalysis.leaves[0] === 'D', 'leaf is D');
+
+  // Critical path: A(2) -> B(3) -> D(2) = 7 or A(2) -> C(1) -> D(2) = 5, so critical is A-B-D = 7
+  ok(dgAnalysis.criticalPath.totalDuration === 7, 'critical path total duration is 7');
+
+  // Cycle detection
+  const dgCycle = DG.createGraph();
+  DG.addNode(dgCycle, 'X', 'X');
+  DG.addNode(dgCycle, 'Y', 'Y');
+  DG.addEdge(dgCycle, 'X', 'Y', 'blocks');
+  DG.addEdge(dgCycle, 'Y', 'X', 'blocks');
+  const dgCycleTopo = DG.topologicalSort(dgCycle);
+  ok(dgCycleTopo.hasCycle === true, 'cycle detected');
+
+  // removeNode
+  const dg2 = DG.createGraph();
+  DG.addNode(dg2, 'P', 'P');
+  DG.addNode(dg2, 'Q', 'Q');
+  DG.addEdge(dg2, 'P', 'Q', 'blocks');
+  DG.removeNode(dg2, 'P');
+  ok(!dg2.nodes['P'], 'removeNode removes node');
+  ok(dg2.edges.length === 0, 'removeNode removes edges');
+
+  // reportMarkdown
+  const dgReport = DG.reportMarkdown(dgAnalysis);
+  ok(dgReport.indexOf('# Dependency Graph') > -1, 'reportMarkdown has header');
+  ok(dgReport.indexOf('Critical Path') > -1, 'reportMarkdown has critical path section');
+
+  // addEdge auto-creates nodes
+  const dg3 = DG.createGraph();
+  DG.addEdge(dg3, 'M', 'N', 'blocks');
+  ok(dg3.nodes['M'] && dg3.nodes['N'], 'addEdge auto-creates nodes');
+
+  // Empty graph
+  const dgEmpty = DG.createGraph();
+  const dgEmptyAnalysis = DG.analyzeGraph(dgEmpty, {});
+  ok(dgEmptyAnalysis.nodeCount === 0, 'empty graph has 0 nodes');
+  ok(dgEmptyAnalysis.criticalPath.totalDuration === 0, 'empty critical path is 0');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
