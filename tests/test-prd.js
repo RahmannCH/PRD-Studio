@@ -61,6 +61,7 @@ load('cinematic.js');
 load('template-browser.js');
 load('chat-mode.js');
 load('quality-gate.js');
+load('version-control.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -1412,6 +1413,65 @@ const diagrams = window.GenDiagrams(sample);
   // Grade function
   ok(QG.gradeFromScore(95) === 'A', 'gradeFromScore 95 = A');
   ok(QG.gradeFromScore(50) === 'F', 'gradeFromScore 50 = F');
+
+  // PRD Version Control & Diff Engine (Ide 11)
+  const VC = window.VersionControl;
+  ok(VC && typeof VC.createSnapshot === 'function', 'VersionControl exposes createSnapshot');
+  ok(typeof VC.diffSnapshots === 'function', 'VersionControl exposes diffSnapshots');
+  ok(typeof VC.diffMarkdown === 'function', 'VersionControl exposes diffMarkdown');
+
+  const v1data = { productName: 'Kasir', problem: 'manual', mustHave: 'catat' };
+  const v1spec = { score: 60, stories: [{ action: 'a' }], scope: { must: [{ text: 'm1' }] }, nfr: [{ text: 'n1' }] };
+  const snap1 = VC.createSnapshot(v1data, v1spec, { label: 'v1', branch: 'main' });
+  ok(snap1 && snap1.id && snap1.label === 'v1', 'createSnapshot creates snapshot with label');
+  ok(snap1.branch === 'main', 'createSnapshot stores branch');
+  ok(snap1.score === 60, 'createSnapshot stores score');
+
+  const v2data = { productName: 'Kasir', problem: 'otomatis', mustHave: 'catat\nlapor' };
+  const v2spec = { score: 80, stories: [{ action: 'a' }, { action: 'b' }], scope: { must: [{ text: 'm1' }, { text: 'm2' }] }, nfr: [{ text: 'n1' }, { text: 'n2' }] };
+  const snap2 = VC.createSnapshot(v2data, v2spec, { label: 'v2', branch: 'main', parent: snap1.id });
+  ok(snap2.parent === snap1.id, 'createSnapshot stores parent');
+
+  const diff = VC.diffSnapshots(snap1, snap2);
+  ok(diff && Array.isArray(diff.changes), 'diffSnapshots returns changes array');
+  ok(diff.totalChanges > 0, 'diff has changes');
+  ok(diff.addedCount >= 0 && diff.changedCount >= 0, 'diff counts are non-negative');
+  ok(diff.changes.some(c => c.field === 'problem' && c.type === 'changed'), 'diff detects problem change');
+  ok(diff.changes.some(c => c.field === 'score' && c.type === 'changed'), 'diff detects score change');
+
+  const diffMd = VC.diffMarkdown(diff);
+  ok(diffMd.indexOf('# Diff:') > -1, 'diffMarkdown has header');
+  ok(diffMd.indexOf('| Field |') > -1, 'diffMarkdown has table');
+
+  // localStorage round-trip
+  const savedVc = VC.saveVersion('proj1', snap1);
+  ok(savedVc === true, 'saveVersion returns true');
+  const listed = VC.listVersions('proj1');
+  ok(Array.isArray(listed) && listed.length === 1, 'listVersions returns saved version');
+  const got = VC.getVersion('proj1', snap1.id);
+  ok(got && got.id === snap1.id, 'getVersion retrieves snapshot');
+  const branches = VC.listBranches('proj1');
+  ok(Array.isArray(branches) && branches.indexOf('main') > -1, 'listBranches includes main');
+
+  const del = VC.deleteVersion('proj1', snap1.id);
+  ok(del === true, 'deleteVersion returns true');
+  ok(VC.getVersion('proj1', snap1.id) === null, 'deleteVersion removes version');
+
+  const cleared = VC.clearVersions('proj1');
+  ok(cleared === true, 'clearVersions returns true');
+  ok(VC.listVersions('proj1').length === 0, 'clearVersions empties list');
+
+  // Rollback
+  VC.saveVersion('proj2', snap1);
+  const rb = VC.rollback('proj2', snap1.id);
+  ok(rb && rb.data.productName === 'Kasir', 'rollback returns data');
+  ok(rb.score === 60, 'rollback returns score');
+
+  // Branch filtering
+  const snapBranch = VC.createSnapshot(v1data, v1spec, { label: 'feat', branch: 'feature-x' });
+  VC.saveVersion('proj3', snapBranch);
+  const featVersions = VC.versionsByBranch('proj3', 'feature-x');
+  ok(featVersions.length === 1, 'versionsByBranch filters by branch');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
