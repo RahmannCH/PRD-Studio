@@ -66,6 +66,7 @@ load('agent-prompt-library.js');
 load('collab-review.js');
 load('reverse-engineer.js');
 load('prd-analytics.js');
+load('code-scaffold.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -1690,6 +1691,56 @@ const diagrams = window.GenDiagrams(sample);
   ok(typeof paDist === 'object', 'scoreDistribution standalone');
   const paInd = PA.industryDistribution(paProjects);
   ok(paInd.Retail === 2 && paInd.SaaS === 1, 'industryDistribution standalone');
+
+  // PRD-to-Code Scaffold Generator (Ide 16)
+  const CS = window.CodeScaffold;
+  ok(CS && typeof CS.generateScaffold === 'function', 'CodeScaffold exposes generateScaffold');
+  ok(typeof CS.scaffoldToMarkdown === 'function', 'CodeScaffold exposes scaffoldToMarkdown');
+
+  const csSample = window.StudioSample;
+  const csSpec = window.Spec.build(csSample, { score: 90, level: 'Siap' });
+  const csScaffold = CS.generateScaffold(csSpec, 'Kasir Warung');
+  ok(csScaffold && csScaffold.projectName === 'Kasir Warung', 'generateScaffold returns projectName');
+  ok(csScaffold.fileCount >= 5, 'generateScaffold produces 5+ files');
+  ok(Array.isArray(csScaffold.files), 'generateScaffold returns files array');
+
+  const csPaths = csScaffold.files.map(function (f) { return f.path; });
+  ok(csPaths.indexOf('package.json') > -1, 'scaffold includes package.json');
+  ok(csPaths.indexOf('src/index.js') > -1, 'scaffold includes src/index.js');
+  ok(csPaths.indexOf('README.md') > -1, 'scaffold includes README.md');
+  ok(csPaths.indexOf('.gitignore') > -1, 'scaffold includes .gitignore');
+
+  const csEntityPaths = csPaths.filter(function (p) { return p.indexOf('src/models/') === 0; });
+  ok(csEntityPaths.length >= 1, 'scaffold includes entity models');
+
+  const pkgFile = csScaffold.files.filter(function (f) { return f.path === 'package.json'; })[0];
+  ok(pkgFile.content.indexOf('"name"') > -1, 'package.json has name field');
+  ok(pkgFile.content.indexOf('kasir-warung') > -1, 'package.json has slug name');
+
+  const indexFile = csScaffold.files.filter(function (f) { return f.path === 'src/index.js'; })[0];
+  ok(indexFile.content.indexOf('http.createServer') > -1, 'index.js has http server');
+  ok(indexFile.content.indexOf('/health') > -1, 'index.js has health endpoint');
+
+  const readmeFile = csScaffold.files.filter(function (f) { return f.path === 'README.md'; })[0];
+  ok(readmeFile.content.indexOf('# Kasir Warung') > -1, 'README has project title');
+
+  const csMd = CS.scaffoldToMarkdown(csScaffold);
+  ok(csMd.indexOf('# Code Scaffold:') > -1, 'scaffoldToMarkdown has header');
+  ok(csMd.indexOf('```') > -1, 'scaffoldToMarkdown has code blocks');
+
+  const csEmpty = CS.generateScaffold({}, 'Empty Project');
+  ok(csEmpty.fileCount >= 5, 'empty spec still produces scaffold');
+  ok(csEmpty.files.filter(function (f) { return f.path === 'package.json'; }).length === 1, 'empty spec has package.json');
+
+  const pkg = CS.generatePackageJson(csSpec, 'Test App');
+  ok(typeof pkg === 'string' && pkg.length > 0, 'generatePackageJson returns string');
+
+  const model = CS.generateEntityModel({ label: 'User', fields: [{ n: 'id', t: 'string' }, { n: 'name', t: 'string' }] });
+  ok(model.indexOf('function User') > -1, 'generateEntityModel creates constructor');
+  ok(model.indexOf('this.id') > -1, 'generateEntityModel includes id field');
+
+  const testFile = CS.generateTestFile(csSpec, 'Test App');
+  ok(testFile.indexOf('describe') > -1, 'generateTestFile has describe block');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
