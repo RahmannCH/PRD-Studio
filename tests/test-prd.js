@@ -73,6 +73,7 @@ load('export-hub.js');
 load('prd-diff.js');
 load('prd-autofix.js');
 load('prd-search.js');
+load('prd-onboarding.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -2110,6 +2111,49 @@ const diagrams = window.GenDiagrams(sample);
   ok(psHl.indexOf('**world**') > -1 || psHl.indexOf('**World**') > -1, 'highlightMatch wraps match');
   const psHlNone = PS.highlightMatch('Hello World', 'xyz');
   ok(psHlNone === 'Hello World', 'highlightMatch no match returns original');
+
+  // PRD Onboarding & Guided Tour (Ide 23)
+  const PO = window.PRDOnboarding;
+  ok(PO && typeof PO.createTour === 'function', 'PRDOnboarding exposes createTour');
+  ok(typeof PO.nextStep === 'function', 'PRDOnboarding exposes nextStep');
+  ok(typeof PO.progress === 'function', 'PRDOnboarding exposes progress');
+
+  const poTour = PO.createTour();
+  ok(poTour && poTour.steps.length === 7, 'createTour has 7 steps');
+  ok(poTour.currentIndex === 0, 'tour starts at index 0');
+  ok(PO.isComplete(poTour) === false, 'tour not complete initially');
+
+  const poStep0 = PO.currentStep(poTour);
+  ok(poStep0 && poStep0.id === 'welcome', 'first step is welcome');
+
+  PO.nextStep(poTour);
+  const poStep1 = PO.currentStep(poTour);
+  ok(poStep1.id === 'wizard', 'nextStep advances to wizard');
+
+  PO.prevStep(poTour);
+  ok(PO.currentStep(poTour).id === 'welcome', 'prevStep goes back');
+
+  ok(PO.progress(poTour) === 0, 'progress at first step');
+
+  PO.goToStep(poTour, 'export');
+  ok(PO.currentStep(poTour).id === 'export', 'goToStep jumps to export');
+
+  // Complete tour
+  PO.goToStep(poTour, 'done');
+  PO.nextStep(poTour);
+  ok(PO.isComplete(poTour) === true, 'tour complete after last step');
+
+  // Skip
+  const poTour2 = PO.createTour();
+  PO.skipTour(poTour2);
+  ok(PO.isComplete(poTour2) === true, 'skipTour marks complete');
+
+  // Reset
+  PO.resetTour(poTour2);
+  ok(PO.isComplete(poTour2) === false, 'resetTour resets state');
+  ok(poTour2.currentIndex === 0, 'resetTour resets index');
+
+  ok(PO.totalSteps(poTour) === 7, 'totalSteps returns 7');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.
