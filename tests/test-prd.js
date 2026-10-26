@@ -63,6 +63,7 @@ load('chat-mode.js');
 load('quality-gate.js');
 load('version-control.js');
 load('agent-prompt-library.js');
+load('collab-review.js');
 load('palette.js');
 load('llm-adapter.js');
 load('ai-advisor.js');
@@ -1510,6 +1511,96 @@ const diagrams = window.GenDiagrams(sample);
   const comparison = APL.agentComparison();
   ok(Array.isArray(comparison) && comparison.length === 6, 'agentComparison returns 6 entries');
   ok(comparison[0].bestPractices.length > 0, 'comparison includes best practices');
+
+  // PRD Collaboration & Review Mode (Ide 13)
+  const CR = window.CollabReview;
+  ok(CR && typeof CR.createReview === 'function', 'CollabReview exposes createReview');
+  ok(typeof CR.addComment === 'function', 'CollabReview exposes addComment');
+  ok(typeof CR.approve === 'function', 'CollabReview exposes approve');
+
+  const review = CR.createReview({ title: 'Review PRD Kasir', prdId: 'proj1' });
+  ok(review && review.id && review.status === 'draft', 'createReview starts in draft');
+  ok(review.title === 'Review PRD Kasir', 'createReview stores title');
+
+  CR.addReviewer(review, 'alice');
+  CR.addReviewer(review, 'bob');
+  ok(review.reviewers.length === 2, 'addReviewer adds reviewers');
+  CR.removeReviewer(review, 'bob');
+  ok(review.reviewers.length === 1, 'removeReviewer removes reviewer');
+  CR.addReviewer(review, 'bob');
+
+  CR.submitForReview(review);
+  ok(review.status === 'review', 'submitForReview changes status to review');
+
+  CR.addComment(review, 'summary', 'alice', 'Perjelas masalah utama');
+  ok(review.comments.length === 1, 'addComment adds comment');
+  ok(review.comments[0].section === 'summary', 'comment has section');
+  ok(review.comments[0].author === 'alice', 'comment has author');
+
+  // Reply
+  const parentId = review.comments[0].id;
+  CR.addComment(review, 'summary', 'bob', 'Setuju, perlu detail', parentId);
+  ok(review.comments[0].replies.length === 1, 'reply added to parent');
+
+  // Resolve
+  CR.resolveComment(review, parentId);
+  ok(review.comments[0].resolved === true, 'resolveComment marks resolved');
+  const unresolved = CR.getUnresolvedComments(review);
+  ok(unresolved.length === 1, 'getUnresolvedComments has unresolved reply');
+
+  CR.unresolveComment(review, parentId);
+  ok(review.comments[0].resolved === false, 'unresolveComment unmarks');
+
+  // Approve
+  CR.approve(review, 'alice');
+  ok(review.approvals.length === 1, 'approve records approval');
+  CR.approve(review, 'bob');
+  ok(review.status === 'approved', 'auto-approve when all reviewers approved');
+
+  // Request changes
+  const review2 = CR.createReview({ title: 'Review 2' });
+  CR.submitForReview(review2);
+  CR.requestChanges(review2, 'alice', 'Tambah metrik');
+  ok(review2.status === 'changes_requested', 'requestChanges sets status');
+
+  // Transition
+  ok(CR.canTransition(review2, 'draft') === true, 'canTransition allows valid transition');
+  ok(CR.canTransition(review2, 'approved') === false, 'canTransition blocks invalid transition');
+  CR.transition(review2, 'draft');
+  ok(review2.status === 'draft', 'transition changes status');
+
+  // Summary
+  const reviewSum = CR.reviewSummary(review);
+  ok(reviewSum.status === 'approved', 'reviewSummary status approved');
+  ok(reviewSum.approvalCount === 2, 'reviewSummary approval count');
+  ok(reviewSum.commentCount === 1, 'reviewSummary comment count (top-level)');
+  ok(reviewSum.isFullyApproved === true, 'reviewSummary isFullyApproved');
+
+  // Comments by section
+  const bySection = CR.getCommentsBySection(review);
+  ok(bySection.summary && bySection.summary.length === 1, 'getCommentsBySection groups by section');
+
+  // localStorage round-trip
+  const savedR = CR.saveReview('proj1', review);
+  ok(savedR === true, 'saveReview returns true');
+  const gotR = CR.getReview('proj1', review.id);
+  ok(gotR && gotR.id === review.id, 'getReview retrieves review');
+  const listR = CR.listReviews('proj1');
+  ok(Array.isArray(listR) && listR.length === 1, 'listReviews returns saved review');
+  const delR = CR.deleteReview('proj1', review.id);
+  ok(delR === true, 'deleteReview returns true');
+  ok(CR.getReview('proj1', review.id) === null, 'deleteReview removes review');
+
+  // Find comment (including replies)
+  const review3 = CR.createReview({ title: 'R3' });
+  CR.addComment(review3, 'general', 'alice', 'Top comment');
+  const cid = review3.comments[0].id;
+  CR.addComment(review3, 'general', 'bob', 'Reply', cid);
+  const found = CR.findComment(review3.comments, cid);
+  ok(found !== null, 'findComment finds top comment');
+  const replyId = review3.comments[0].replies[0].id;
+  const foundReply = CR.findComment(review3.comments, replyId);
+  ok(foundReply !== null, 'findComment finds nested reply');
 }
 
 /* 33. ShareLink: encode/decode async, fallback tanpa kompresi, hash parsing.

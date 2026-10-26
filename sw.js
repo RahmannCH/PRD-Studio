@@ -61,6 +61,7 @@ const CORE = [
   'js/studio/quality-gate.js',
   'js/studio/version-control.js',
   'js/studio/agent-prompt-library.js',
+  'js/studio/collab-review.js',
   'js/studio/render.js',
   'js/studio/palette.js',
   'js/studio/llm-adapter.js',
