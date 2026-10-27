@@ -50,6 +50,7 @@ load('generator-prd.js');
 load('generator-roadmap.js');
 load('generator-prompt.js');
 load('generator-storyboard.js');
+load('video-production.js');
 load('diagrams.js');
 load('exporter.js');
 load('criteria.js');
@@ -1152,10 +1153,13 @@ const diagrams = window.GenDiagrams(sample);
   ok(typeof SP.storyboard === 'function' && typeof SP.agentHyperframes === 'function', 'SpecPack exports storyboard and agentHyperframes');
   const sbMd = SP.storyboard(sample);
   ok(sbMd.indexOf('00:00 - 00:06') > -1 && sbMd.indexOf('HOOK_PAIN') > -1, 'SpecPack.storyboard returns markdown table with timecodes');
+  const production = window.VideoProduction.build({ productName: 'Video demo', videoRatio: '9:16', videoReferences: 'https://example.com/ref | pacing | accessible', videoClaims: 'Claim | https://example.com/source | verified' }, { summary: { oneLiner: 'Jelaskan mekanisme' } }, sb);
+  ok(production.indexOf('Claim ledger') > -1 && production.indexOf('https://example.com/source') > -1 && production.indexOf('Storyboard per shot') > -1, 'VideoProduction builds cited production pack from references, claims, and beats');
+  ok(production.indexOf('Quality gates') > -1 && production.indexOf('HyperFrames') > -1, 'video production pack includes execution split and quality gates');
   const vFiles = SP.videoFiles(sample);
-  ok(vFiles.length === 12 && vFiles[0].name.indexOf('STORYBOARD-') === 0 && vFiles[3].name.indexOf('MARKERS-') === 0 && vFiles[vFiles.length - 1].name === 'lint-anti-ppt.js', 'SpecPack.videoFiles returns twelve runnable video project files (incl. index.html, 5 subcomps, markers, sfx-synth, and linter)');
+  ok(vFiles.length === 13 && vFiles[0].name.indexOf('STORYBOARD-') === 0 && vFiles[3].name.indexOf('MARKERS-') === 0 && vFiles[4].name.indexOf('PRODUCTION-') === 0 && vFiles[vFiles.length - 1].name === 'lint-anti-ppt.js', 'SpecPack.videoFiles includes runnable project plus production plan');
   const fullFiles = SP.files(sample, null, { includeVideo: true });
-  ok(fullFiles.length === 18, 'SpecPack.files with includeVideo returns eighteen files (6 software + 12 video)');
+  ok(fullFiles.length === 19, 'SpecPack.files with includeVideo returns six software and thirteen video files');
 
   // Multi-concept & 9:16 vertical ratio adaptation
   const sb916 = G(sample, null, { concept: 'kinetic-term', ratio: '9:16' });

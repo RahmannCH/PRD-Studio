@@ -774,6 +774,8 @@
       var vMust3 = $('vMust3') ? $('vMust3').value.trim() : '';
       var vMetric = $('vMetric') ? $('vMetric').value.trim() : '';
       var vCta = $('vCta') ? $('vCta').value.trim() : '';
+      var vReferences = $('vReferences') ? $('vReferences').value : '';
+      var vClaims = $('vClaimLedger') ? $('vClaimLedger').value : '';
 
       var vData = {
         productName: vSubject || S.data.productName || 'Produk Baru',
@@ -783,9 +785,19 @@
         whyNow: S.data.whyNow || '',
         videoConcept: getSelectedVConcept(),
         videoRatio: getSelectedVRatio(),
-        videoTempo: getSelectedVTempo()
+        videoTempo: getSelectedVTempo(),
+        videoReferences: vReferences,
+        videoClaims: vClaims,
+        videoPlatform: 'YouTube Shorts / Reels',
+        videoObjective: vValueClaim || '',
+        videoTone: 'Explainer berbasis bukti'
       };
 
+      S.data.videoReferences = vReferences;
+      S.data.videoClaims = vClaims;
+      S.data.videoPlatform = vData.videoPlatform;
+      S.data.videoObjective = vData.videoObjective;
+      S.data.videoTone = vData.videoTone;
       var vSpec = {
         summary: {
           productName: vData.productName,

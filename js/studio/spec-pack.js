@@ -522,6 +522,7 @@ window.SpecPack = (function () {
       { name: 'FRAME-' + slug + '.md', text: sb.frameSpec, type: 'text/markdown' },
       { name: 'AGENT-HYPERFRAMES-' + slug + '.md', text: sb.masterPrompt, type: 'text/markdown' },
       { name: 'MARKERS-' + slug + '.csv', text: sb.nleMarkers || '', type: 'text/csv' },
+      { name: 'PRODUCTION-' + slug + '.md', text: (window.VideoProduction && window.VideoProduction.build) ? window.VideoProduction.build(data, spec, sb) : '', type: 'text/markdown' },
       { name: 'index.html', text: sb.rootHtml || '', type: 'text/html' }
     ];
     (sb.subcompHtmls || []).forEach(function (f) {
