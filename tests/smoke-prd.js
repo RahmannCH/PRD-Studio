@@ -96,7 +96,6 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   await page.waitForTimeout(400);
   ok(await page.getAttribute('#depthChips .chip[data-depth="standar"]', 'aria-checked') === 'true',
     'depth survives a reload (chip re-checked from store)');
-
   // chip terakhir tidak boleh dilepas
   await page.evaluate(() => { document.querySelector('#platformChips .chip[data-val="Web responsif"]').click(); });
   const pressedCount = await page.evaluate(() => document.querySelectorAll('#platformChips .chip[aria-pressed="true"]').length);
@@ -147,6 +146,7 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   }
   // unduhan nyata: brief (.md) harus menghasilkan file
   await page.click('[data-tab="prd"]');
+  await page.waitForFunction(() => window.StudioState && !!window.StudioState.data.lastResult);
   const dlPromise = page.waitForEvent('download', { timeout: 5000 });
   await page.click('[data-act="dl-brief"]');
   const dl = await dlPromise;
@@ -221,6 +221,39 @@ const ok = (c, name, extra) => { if (c) pass++; else { fail++; console.log('FAIL
   const promptClip = await page.evaluate(() => navigator.clipboard.readText());
   ok(promptClip.indexOf('npx hyperframes init') > -1 && promptClip.indexOf('HUKUM ANTI-PPT') > -1,
     'copy-video-prompt puts hyperframes master prompt into clipboard', promptClip.slice(0, 50));
+
+  // Pergantian gaya setelah generate harus tercermin pada paket video terbaru.
+  await page.click('#modeBtnStoryboard');
+  await page.locator('#vVisualStyleChips [data-visual-choice="cartoon-stage"]').click();
+  ok(await page.getAttribute('#vVisualStyleChips [data-visual-choice="cartoon-stage"]', 'aria-checked') === 'true', 'Cartoon stage can be selected after generation');
+  ok(await page.evaluate(() => window.StudioState.data.videoVisualStyle) === 'cartoon-stage', 'selected style persists to project state');
+  await page.reload();
+  await page.waitForSelector('#vVisualStyleChips [data-visual-choice="cartoon-stage"]');
+  ok(await page.getAttribute('#vVisualStyleChips [data-visual-choice="cartoon-stage"]', 'aria-checked') === 'true', 'selected style hydrates after reload');
+  ok(await page.getAttribute('#vVisualStyleChips [data-visual-choice="cartoon-stage"]', 'tabindex') === '0', 'selected radio remains keyboard focus target after reload');
+  await page.locator('#vVisualStyleChips [data-visual-choice="cartoon-stage"]').focus();
+  await page.keyboard.press('ArrowLeft');
+  ok(await page.getAttribute('#vVisualStyleChips [data-visual-choice="cartoon-collage"]', 'aria-checked') === 'true', 'visual style radio supports arrow-key navigation');
+  await page.keyboard.press('ArrowRight');
+  ok(await page.getAttribute('#vVisualStyleChips [data-visual-choice="cartoon-stage"]', 'aria-checked') === 'true', 'arrow-key selection wraps back to Cartoon stage');
+  await page.click('#modeBtnSoftware');
+  await page.click('[data-tab="video"]');
+  const packPreview = await page.evaluate(() => {
+    const data = window.VideoProduction.directorData(window.StudioState.data, {
+      vReferences: document.getElementById('vReferences').value,
+      vClaimLedger: document.getElementById('vClaimLedger').value,
+      vCta: document.getElementById('vCta').value,
+      vVisualStyle: document.querySelector('#vVisualStyleChips [aria-checked="true"]').getAttribute('data-visual-choice')
+    });
+    const result = JSON.parse(JSON.stringify(window.StudioState.data.lastResult || {}));
+    result.storyboard = window.GenStoryboard(data, result.spec, { concept: data.videoConcept, ratio: data.videoRatio, tempo: data.videoTempo, visualStyle: data.videoVisualStyle });
+    return window.SpecPack.videoFiles(data, result).filter(f => f.name.indexOf('STORYBOARD-') === 0)[0].text;
+  });
+  ok(packPreview.indexOf('Cartoon stage') > -1 && packPreview.indexOf('references/kartun-panggung.md') > -1, 'video pack regeneration includes current style');
+  const packPromise = page.waitForEvent('download', { timeout: 5000 });
+  await page.locator('[data-act="dl-video-pack"]').last().evaluate(el => el.click());
+  const packDownload = await packPromise;
+  ok(/^STORYBOARD-.*\.md$/.test(packDownload.suggestedFilename()), 'video pack starts by downloading storyboard markdown', packDownload.suggestedFilename());
 
   // Unduhan nyata STORYBOARD.md
   const sbDlPromise = page.waitForEvent('download', { timeout: 5000 });

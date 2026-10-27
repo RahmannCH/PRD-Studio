@@ -515,7 +515,10 @@ window.SpecPack = (function () {
   function videoFiles(data, res) {
     var slug = slugOf(data);
     var spec = specOf(data, res);
-    var sb = (window.GenStoryboard) ? window.GenStoryboard(data, spec) : null;
+    var sb = res && (res.storyboard || (res.lastResult && res.lastResult.storyboard));
+    if (!sb && data && data.lastResult) sb = data.lastResult.storyboard;
+    if (!sb && window.GenStoryboard) sb = window.GenStoryboard(data, spec, { visualStyle: data && data.videoVisualStyle });
+    if (sb && window.VideoProduction && window.VideoProduction.build) data = window.VideoProduction.directorData(data, res && res.videoForm || {});
     if (!sb) return [];
     var out = [
       { name: 'STORYBOARD-' + slug + '.md', text: sb.markdown, type: 'text/markdown' },

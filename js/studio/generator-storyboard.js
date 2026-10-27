@@ -119,6 +119,13 @@
     }
   };
 
+  /* Reusable visual language presets; style remains optional per video. */
+  var VISUAL_STYLES = {
+    'native': { id: 'native', name: 'Ikuti konsep gerak', source: 'PRD Studio', characteristics: 'Visual follows selected motion concept; no Bang Motion skin forced.' },
+    'cartoon-collage': { id: 'cartoon-collage', name: 'Cartoon collage', source: 'https://github.com/bangtutorial/bang-motion (MIT), references/explainer.md', characteristics: 'Kertas bertekstur hangat, cutout ilustrasi flat, palet aksen, anotasi tangan; kamera menyusuri satu dunia kolase yang berkesinambungan. Adapt prinsip, jangan salin adegan/aset.' },
+    'cartoon-stage': { id: 'cartoon-stage', name: 'Cartoon stage', source: 'https://github.com/bangtutorial/bang-motion (MIT), references/kartun-panggung.md', characteristics: 'Panggung flat cerah per lokasi, karakter/objek vektor beraksi, perubahan keadaan kontinu di tiap panggung, cut/geser bermotivasi antar panggung; tanpa caption. Bukan miniatur atau kolase kertas.' }
+  };
+
   /* Tempo & Pacing */
   var TEMPOS = {
     'relax': { id: 'relax', name: 'Santai', bpm: 100, wpm: 120, barSec: 2.4 },
@@ -137,6 +144,9 @@
     var conceptKey = opts.concept || data.videoConcept || 'ui-journey';
     if (!CONCEPTS[conceptKey]) conceptKey = 'ui-journey';
     var concept = CONCEPTS[conceptKey];
+    var styleKey = opts.visualStyle || data.videoVisualStyle || 'native';
+    if (!VISUAL_STYLES[styleKey]) styleKey = 'native';
+    var visualStyle = VISUAL_STYLES[styleKey];
 
     var tempoKey = opts.tempo || data.videoTempo || 'standard';
     if (!TEMPOS[tempoKey]) tempoKey = 'standard';
@@ -387,12 +397,12 @@
         rules: ['counting-dynamic-scale', 'stat-bars-and-fills', 'vertical-spring-ticker'],
         motionVerb: 'COUNTS UP',
         gsapEasing: 'power3.out',
-        aiVisualPrompt: 'Massive 3D glowing holographic numeric counter ' + nfrMetric.slice(0, 25) + ' rising from an isometric grid platform, dynamic bar charts with neon green gradient glow, particle laser telemetry lines, dark tech aesthetic, Unreal Engine 5 render, 8k --ar ' + (isVertical ? '9:16' : '16:9') + ' --style raw',
+        aiVisualPrompt: 'Illustrative metric counter candidate for ' + nfrMetric.slice(0, 25) + '; do not present as verified evidence unless supported by user sources. ' + (visualStyle.id === 'cartoon-stage' ? 'Flat colorful living stage, moving character interacts with a clearly labeled illustrative gauge.' : visualStyle.id === 'cartoon-collage' ? 'Warm paper collage world, cutout gauge and annotated labels; continuous camera through the collage.' : '3D metric object only where it explains scale; no unsupported proof graphics.') + ' --ar ' + (isVertical ? '9:16' : '16:9') + ' --style raw',
         cameraMotionPrompt: 'Low-angle isometric 3D upward camera tilt while numeric gauge fills to peak, pulsating grid lighting, micro-shake on impact landing, 60fps',
-        vo: 'Teruji dan terbukti [jeda 0.4s]. ' + nfrMetric + ' [jeda 0.4s]. Fondasi ' + stack + ' memastikan keandalan tanpa kompromi.',
+        vo: clean(data.videoClaims) ? 'Menurut klaim yang perlu diverifikasi: ' + nfrMetric + '. Periksa sumber sebelum menyebut hasil sebagai fakta.' : 'Target yang ingin diuji: ' + nfrMetric + '. Ini sasaran, bukan hasil uji terverifikasi.',
         headline: 'BUKTI PERFORMA TANGGUH',
-        subtext: nfrMetric + ' · Efisiensi maksimal teruji',
-        highlightWord: 'TERUJI DAN TERBUKTI',
+        subtext: clean(data.videoClaims) ? 'Klaim pengguna · status perlu diverifikasi' : 'Target rencana · belum diuji',
+        highlightWord: 'PERLU DIVERIFIKASI',
         highlightStyle: 'marker',
         layout: isVertical
           ? 'Vertical Metric Tower: Counter angka raksasa di atas, grafik batang performa di bawah'
@@ -446,9 +456,9 @@
         gsapEasing: 'elastic.out(1, 0.4)',
         aiVisualPrompt: 'Monolithic floating 3D emblem logo of ' + name + ' assembled from precision CNC machined brushed metal pieces, radiant laser halo behind logo, floating pill CTA button with glowing arrow, cinematic studio rim lighting, 8k wallpaper --ar ' + (isVertical ? '9:16' : '16:9') + ' --style raw',
         cameraMotionPrompt: 'Smooth continuous push-through past floating data streams locking onto hero central 3D logo, gentle deceleration into elegant 2.5s hold, 60fps',
-        vo: 'Tinggalkan cara lama [jeda 0.3s]. Beralih ke ' + name + ' hari ini dan buktikan sendiri.',
+        vo: clean(data.videoCta) || 'Ringkas kembali jawaban video dan simpulkan langkah berikutnya tanpa menambah janji produk.',
         headline: name.toUpperCase(),
-        subtext: 'Buka sekarang · Tanpa akun · Langsung pakai',
+        subtext: clean(data.videoCta) || 'Penutup',
         highlightWord: name.toUpperCase(),
         highlightStyle: 'pill',
         layout: 'Centered Brand Lockup: Logo besar bercahaya + Tombol Pill Aksen Buka Sekarang ↗',
@@ -485,6 +495,19 @@
       }
     ];
 
+    beats.forEach(function (b) {
+      b.visualStyle = visualStyle;
+      if (styleKey === 'cartoon-collage') {
+        b.aiVisualPrompt = 'Warm cream paper world; flat illustrated cutouts and handwritten annotation; continuous camera travels through one coherent collage. Depiction is illustrative, not documentary evidence. ' + b.headline + '. Adapt visual principles, do not copy reference frames or assets.';
+        b.layout = 'Continuous paper collage: ' + b.layout;
+        b.camera = 'Camera traverses one connected collage world; ' + b.camera;
+      } else if (styleKey === 'cartoon-stage') {
+        b.aiVisualPrompt = 'Bright flat-color living stage for one location; expressive articulated characters and props act continuously; motivated cut/slide to the next stage; no captions, no miniature diorama. Depiction is illustrative, not documentary evidence. ' + b.headline + '. Adapt visual principles, do not copy reference frames or assets.';
+        b.layout = 'Living cartoon stage: ' + b.layout;
+        b.camera = 'Camera follows continuous character action on a flat stage; ' + b.camera;
+      }
+    });
+
     /* Pasang desain sinematik 3D & audio spasial ke setiap babak */
     if (window.Cinematic && typeof window.Cinematic.composeScene === 'function') {
       beats.forEach(function (b) {
@@ -495,12 +518,20 @@
 
     function toMarkdownTable() {
       var lines = [];
+      lines.push('## Gaya visual: ' + visualStyle.name);
+      lines.push('- Sumber: ' + visualStyle.source);
+      lines.push('- Ciri: ' + visualStyle.characteristics);
+      lines.push('- Konsep gerak: ' + concept.name + ' (terpisah dari gaya visual)');
+      lines.push('');
       lines.push('| Detik | Babak & Blueprint | Narasi VO (~' + tempo.wpm + ' WPM) | Visual Kinetik & Layout | Kamera & VFX | Sound Effects (SFX Cue Sheet) | Resep Aset Mandiri (AI Agent) |');
       lines.push('|---|---|---|---|---|---|---|');
       beats.forEach(function (b) {
         var sfxStr = b.sfx.map(function (s) {
-          return '`' + s.at + '` [' + s.band + '] ' + s.desc;
+          return '`' + s.at + '` (offset relatif ke beat) [' + s.band + '] ' + s.desc;
         }).join('<br>');
+        var visualNotes = b.visualStyle.id === 'native' ? '' : '<br><b>' + esc(b.visualStyle.name) + '</b>: ' + esc(b.visualStyle.characteristics);
+        var evidenceNote = b.role === 'HARD_EVIDENCE' ? '<br><b>Status:</b> target/klaim belum diverifikasi; bukan hasil uji.' : '';
+        var assetNote = '<br><b>Status aset:</b> kueri pencarian, belum diunduh/diperoleh; lisensi belum diverifikasi.';
 
         var assetItems = [];
         if (b.assets.news && b.assets.news.length) assetItems.push('📰 **Berita:** ' + b.assets.news.join('; '));
@@ -513,12 +544,17 @@
         var assetStr = assetItems.join('<br>');
 
         var cinStr = (b.cinematic) ? ('Kamera: ' + b.cinematic.cameraRig.name + ' | Lighting: ' + b.cinematic.lighting.name + ' | Grade: ' + b.cinematic.colorGrade.name) : '';
-        lines.push('| **' + b.timecode + '** | **' + b.role + '**<br>_Blueprint: ' + b.blueprint + '_<br>_Motion: ' + b.motionVerb + ' (' + b.gsapEasing + ')_ | ' + esc(b.vo) + ' | **' + esc(b.headline) + '**<br>' + esc(b.subtext) + '<br>_' + esc(b.layout) + '_ | ' + esc(b.camera) + (cinStr ? '<br>_Cinematic: ' + esc(cinStr) + '_' : '') + ' | ' + sfxStr + ' | ' + assetStr + ' |');
+        lines.push('| **' + b.timecode + '** | **' + b.role + '**<br>_Blueprint: ' + b.blueprint + '_<br>_Motion: ' + b.motionVerb + ' (' + b.gsapEasing + ')_ | ' + esc(b.vo) + ' | **' + esc(b.headline) + '**<br>' + esc(b.subtext) + '<br>_' + esc(b.layout) + '_ | ' + esc(b.camera) + visualNotes + (cinStr ? '<br>_Cinematic: ' + esc(cinStr) + '_' : '') + evidenceNote + ' | ' + sfxStr + ' | ' + assetStr + assetNote + ' |');
       });
       return lines.join('\n');
     }
 
     function buildFrameSpec() {
+      var cartoonPalette = styleKey === 'cartoon-collage' ? {
+        background: '#F4E8D0', surface: '#FFF8EA', accent: '#E37A45', glow: 'rgba(227, 122, 69, 0.18)', danger: '#B64646', success: '#4D8B63'
+      } : {
+        background: '#FFF3C4', surface: '#FFF9E7', accent: '#278D9B', glow: 'rgba(39, 141, 155, 0.18)', danger: '#C34A42', success: '#498B50'
+      };
       return [
         '# frame.md — Design Tokens untuk HyperFrames',
         '# Dihasilkan otomatis oleh PRD Studio (Konsep: ' + concept.name + ', Rasio: ' + ratio + ', Tempo: ' + tempo.name + ')',
@@ -529,16 +565,25 @@
         'fps: 30',
         'duration: 60.0',
         'concept: "' + concept.id + '"',
+        'visual_style: "' + visualStyle.id + '"',
+        'visual_style_source: "' + visualStyle.source + '"',
+        'visual_style_characteristics: "' + visualStyle.characteristics + '"',
         'palette:',
-        '  background: "#080C14"',
-        '  surface: "#0E1524"',
-        '  surface_accent: "#162238"',
-        '  text_primary: "#F4F7FB"',
-        '  text_muted: "rgba(244, 247, 251, 0.65)"',
-        '  brand_primary: "#48CAE4"',
-        '  brand_glow: "rgba(72, 202, 228, 0.22)"',
-        '  danger: "#FF4D4D"',
-        '  success: "#00E599"',
+        '  background: "' + (styleKey === 'native' ? '#080C14' : cartoonPalette.background) + '"',
+        '  surface: "' + (styleKey === 'native' ? '#0E1524' : cartoonPalette.surface) + '"',
+        '  surface_accent: "' + (styleKey === 'native' ? '#162238' : cartoonPalette.accent) + '"',
+        '  text_primary: "' + (styleKey === 'native' ? '#F4F7FB' : '#252525') + '"',
+        '  text_muted: "' + (styleKey === 'native' ? 'rgba(244, 247, 251, 0.65)' : 'rgba(37, 37, 37, 0.70)') + '"',
+        '  brand_primary: "' + (styleKey === 'native' ? '#48CAE4' : cartoonPalette.accent) + '"',
+        '  brand_glow: "' + (styleKey === 'native' ? 'rgba(72, 202, 228, 0.22)' : cartoonPalette.glow) + '"',
+        '  danger: "' + (styleKey === 'native' ? '#FF4D4D' : cartoonPalette.danger) + '"',
+        '  success: "' + (styleKey === 'native' ? '#00E599' : cartoonPalette.success) + '"',
+        '  texture: "' + (styleKey === 'cartoon-collage' ? 'warm paper grain, cutout edge shadow, hand annotations' : styleKey === 'cartoon-stage' ? 'flat stage colors, vector characters, no paper texture' : 'none') + '"',
+        '  captions: ' + (styleKey === 'cartoon-stage' ? 'false' : 'true'),
+        'visual_policy: "Illustration is not documentary evidence; verify factual claims separately."',
+        'cinematic_policy: "' + (styleKey === 'native' ? 'Use cinematic 3D only when it clarifies the story.' : 'Avoid default neon 3D look; use selected flat cartoon language.') + '"',
+        'asset_policy: "Search query is not acquired asset; verify URL and license."',
+        'audio_policy: "Ducking is a plan until mixed audio is verified."',
         'typography:',
         '  display: "Satoshi, Plus Jakarta Sans, system-ui"',
         '  body: "Plus Jakarta Sans, system-ui"',
@@ -941,10 +986,30 @@
       lines.push('- **Tipe:** ' + type);
       lines.push('- **Target Audiens:** ' + user);
       lines.push('- **Nilai Utama:** ' + oneLiner);
-      lines.push('- **Arah Visual:** ' + styleDir);
+      lines.push('- **Arah Visual:** ' + (styleKey === 'native' ? styleDir : visualStyle.characteristics));
+      if (styleKey !== 'native') lines.push('- **Prioritas gaya:** preset visual terpilih mengalahkan arahan visual/cinematic generik; jangan menambahkan estetika neon, UI gelap, atau objek 3D kecuali beat membutuhkannya dan tetap konsisten dengan kartun.');
+      if (styleKey === 'cartoon-stage') lines.push('- **Stage rule:** hindari caption dan tipografi tempel; informasi faktual disampaikan lewat aksi diegetik panggung atau VO.');
+      if (styleKey === 'cartoon-collage') lines.push('- **Collage rule:** tekstur, cutout, anotasi dan kedalaman kertas konsisten; jangan ubah jadi panggung flat tanpa material kertas.');
       lines.push('- **Stack:** ' + stack);
       lines.push('- **Konsep Gerak:** ' + concept.name + ' (' + concept.tagline + ')');
-      lines.push('- **Rasio & Resolusi:** ' + ratio + ' (' + width + 'x' + height + ')');
+      lines.push('- **Gaya Visual Opsional:** ' + visualStyle.name + ' | Sumber: ' + visualStyle.source + ' | ' + visualStyle.characteristics);
+      if (styleKey === 'cartoon-collage') lines.push('- **Aturan Cartoon collage:** satu dunia kertas berkesinambungan, cutout ilustrasi, kamera menyusuri kolase; bukan urutan slide.');
+      if (styleKey === 'cartoon-stage') lines.push('- **Aturan Cartoon stage:** satu panggung hidup per lokasi, aksi berkelanjutan di dalam panggung, transisi cut/geser bermotivasi, tanpa caption, karakter dan objek beraksi; bukan miniatur.');
+      if (styleKey !== 'native') lines.push('- **Lisensi referensi gaya:** Bang Motion MIT. Adapt prinsip visual, jangan salin naskah, adegan khas, atau aset.');
+      lines.push('- Jangan klaim sumber per shot, aset terunduh/berlisensi, atau ducking audio aktif tanpa status verifikasi.');
+      lines.push('');
+      lines.push('## Referensi dan klaim');
+      lines.push('- Referensi video/artikel: ' + (clean(data.videoReferences) || 'belum diberikan; jangan mengaku sudah dianalisis.'));
+      lines.push('- Claim ledger: ' + (clean(data.videoClaims) || 'belum diberikan; jangan membuat angka atau bukti.'));
+      lines.push('- CTA: ' + (clean(data.videoCta) || 'tidak ditentukan; jangan membuat janji produk.'));
+      lines.push('');
+      lines.push('## Aturan kebenaran produksi');
+      lines.push('- Search query adalah kandidat, bukan aset yang sudah diperoleh. Rekonstruksi/ilustrasi bukan footage faktual.');
+      lines.push('- SFX `at` mengikuti timebase beat kecuali secara eksplisit dinyatakan global.');
+      lines.push('- Audio mix dan ducking adalah rencana saja sampai implementasi/render diperiksa.');
+      lines.push('- Setiap klaim di shot perlu URL sumber dan status verifikasi; bila belum dipetakan, nyatakan belum dipetakan.');
+      lines.push('');
+      lines.push('- **Rasio & Resolusi:** ' + ratio + ' (' + width + 'x' + height + ')');;
       lines.push('- **Tempo & Pacing:** ' + tempo.name + ' (' + tempo.bpm + ' BPM, ~' + tempo.wpm + ' WPM)');
       lines.push('- **Koreografi Kamera:** ' + concept.cameraStyle);
       lines.push('- **Desain Latar Belakang:** ' + concept.bgStyle);
@@ -1052,6 +1117,8 @@
     return {
       name: name,
       slug: slug,
+      visualStyle: visualStyle,
+      visualStyles: VISUAL_STYLES,
       totalDuration: 60.0,
       fps: 30,
       concept: concept,

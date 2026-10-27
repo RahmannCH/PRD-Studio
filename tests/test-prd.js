@@ -1124,6 +1124,15 @@ const diagrams = window.GenDiagrams(sample);
   ok(typeof G === 'function', 'GenStoryboard is exported as a function');
 
   const sb = G(sample);
+  const sbCartoonCollage = G(sample, null, { visualStyle: 'cartoon-collage' });
+  ok(sbCartoonCollage.visualStyle.id === 'cartoon-collage' && sbCartoonCollage.markdown.indexOf('Cartoon collage') > -1 && sbCartoonCollage.frameSpec.indexOf('cartoon-collage') > -1, 'optional Cartoon collage style appears in storyboard and frame spec');
+  const sbCartoonStage = G(sample, null, { visualStyle: 'cartoon-stage' });
+  ok(sbCartoonStage.visualStyle.id === 'cartoon-stage' && sbCartoonStage.markdown.indexOf('references/kartun-panggung.md') > -1, 'optional Cartoon stage style preserves source reference');
+  ok(sb.visualStyle.id === 'native', 'native motion style remains the default');
+  ok(sbCartoonCollage.frameSpec.indexOf('#F4E8D0') > -1 && sbCartoonCollage.frameSpec.indexOf('warm paper grain') > -1 && sbCartoonCollage.frameSpec.indexOf('Avoid default neon 3D look') > -1, 'Cartoon collage frame spec gives compatible warm flat style direction');
+  ok(sbCartoonStage.frameSpec.indexOf('#FFF3C4') > -1 && sbCartoonStage.frameSpec.indexOf('flat stage colors') > -1 && sbCartoonStage.frameSpec.indexOf('captions: false') > -1, 'Cartoon stage frame spec uses bright stage palette without captions');
+  ok(sbCartoonStage.masterPrompt.indexOf('Stage rule') > -1 && sbCartoonStage.masterPrompt.indexOf('objek 3D kecuali beat membutuhkannya') > -1, 'Cartoon stage master prompt resolves generic cinematic instructions in favor of selected style');
+  ok(sb.frameSpec.indexOf('#080C14') > -1, 'native frame spec retains dark palette');
   ok(sb && sb.totalDuration === 60.0 && sb.fps === 30, 'storyboard runs for exactly 60.0 seconds at 30 fps');
   ok(Array.isArray(sb.beats) && sb.beats.length === 5, 'storyboard has five distinct beats (Reverse Iceberg)');
 
@@ -1136,6 +1145,12 @@ const diagrams = window.GenDiagrams(sample);
   ok(sb.beats[2].role === 'CORE_MECHANICS' && sb.beats[2].durationSec === 24.0, 'beat 3 is core mechanics (24s)');
   ok(sb.beats[3].role === 'HARD_EVIDENCE' && sb.beats[3].durationSec === 12.0, 'beat 4 is hard evidence (12s)');
   ok(sb.beats[4].role === 'OUTRO_CTA' && sb.beats[4].durationSec === 10.0, 'beat 5 is outro CTA (10s)');
+  ok(sb.beats[3].vo.indexOf('Teruji dan terbukti') < 0, 'storyboard does not assert unsupported benchmark verification');
+  ok(sb.beats[4].vo.indexOf('Tanpa akun') < 0 && sb.beats[4].vo.indexOf('Beralih ke') < 0, 'storyboard does not invent product promises or CTA');
+  ok(G(Object.assign({}, sample, { videoCta: 'Pelajari di contoh.id' })).beats[4].vo.indexOf('Pelajari di contoh.id') > -1, 'user CTA reaches outro narration');
+  ok(sbCartoonStage.beats[3].aiVisualPrompt.indexOf('Depiction is illustrative, not documentary evidence') > -1, 'Cartoon stage evidence beat is labeled illustrative');
+  ok(sbCartoonCollage.beats[2].aiVisualPrompt.indexOf('continuous camera travels through one coherent collage') > -1, 'Cartoon collage visuals follow selected style');
+  ok(sbCartoonStage.markdown.indexOf('belum diunduh/diperoleh') > -1, 'storyboard declares generated asset queries are not acquired');
 
   // All beats have camera, layout, sfx cues, and autonomous asset queries
   ok(sb.beats.every(b => b.sfx && b.sfx.length >= 2), 'every beat has at least two timestamped SFX cues');
